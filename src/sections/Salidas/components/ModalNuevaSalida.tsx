@@ -1331,6 +1331,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                     onScan={handleScanCamara}
                   />
 
+                  {/* Dueño 25/11/2026: al elegir un producto (o hacer clic/Tab aquí), seleccionar
+                      toda la cantidad para escribir el número siguiente sin borrar a mano. */}
                   <div className="w-20 sm:w-28 shrink-0">
                     <input
                       ref={inputCantRef}
@@ -1341,6 +1343,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                       value={cantItem}
                       onChange={(e) => setCantItem(e.target.value)}
                       onKeyDown={handleKeyDownCant}
+                      onFocus={(e) => e.currentTarget.select()}
+                      onClick={(e) => e.currentTarget.select()}
                       className="w-full p-3 sm:p-2.5 min-h-[48px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] font-black text-center outline-none rounded-none bg-[var(--color-surface)]"
                       placeholder="Cant."
                     />

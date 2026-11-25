@@ -60,6 +60,9 @@ async function probar(ancho, alto) {
     await pausa(1100);
     await page.evaluate(() => document.getElementById('sugerencia-salida-0')?.click());
     await pausa(200);
+    // Dueño 25/11: al elegir el producto, el foco ya está en Cant. con todo seleccionado.
+    await page.keyboard.type('7');
+    comprobar(`${ancho}: al elegir producto la cantidad de arriba queda seleccionada`, (await valor(arriba)) === '7', `valor=${await valor(arriba)}`);
     await page.focus(arriba);
     await borrarTodo();
     await page.keyboard.type('25');
@@ -122,6 +125,14 @@ async function probar(ancho, alto) {
     await page.evaluate(() => document.querySelector('button[title="Restar 1"]')?.click());
     await pausa(150);
     comprobar(`${ancho}: botón - resta 1`, (await valor(sel)) === '9', `valor=${await valor(sel)}`);
+
+    // Dueño 25/11: clic en la cantidad de arriba también selecciona todo para reemplazar.
+    await page.focus(arriba);
+    await borrarTodo();
+    await page.keyboard.type('25');
+    await page.click(arriba);
+    await page.keyboard.type('7');
+    comprobar(`${ancho}: clic en cantidad de arriba selecciona todo`, (await valor(arriba)) === '7', `valor=${await valor(arriba)}`);
 
     // El campo de arriba sigue borrando completo.
     await page.focus(arriba);

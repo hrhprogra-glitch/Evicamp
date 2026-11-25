@@ -1285,5 +1285,10 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Escape del GENERAL vuelve a la lista de Salidas (ya no hay formulario debajo). ← de «Nueva salida» y → de «Fusionar salidas» se devuelven el foco entre los dos botones de la cabecera.
 - Otra vez el sitio fue sobrescrito durante la tanda (`index-CyFtSW6H.js` sin marcadores, `index-Cy7XoMwt.js` con botón pero sin X); la regresión falló antes en `#input-login-usuario` por ese bundle ajeno. **Verificar marcadores dentro del JS servido inmediatamente antes de dar el parte**, no solo el nombre del bundle. Bundle final **`index-CdbIQmqK.js`**; pruebas **142/142** y **66/66**.
 
+## 73. Selección rápida en los dos campos de cantidad y despliegues en paralelo (25/11/2026)
+- `select()` en `onFocus` **y** `onClick` aplica igual al input de la fila y al de arriba (`#input-cant-item-salida`). En el de arriba ya existía `focus()+select()` al elegir sugerencia/Enter; el clic manual necesitaba los dos manejadores (el foco llega en `mousedown` y el navegador puede recolocar el cursor en `click`). Probarlo de forma funcional: escribir `25`, clic, escribir `7`; si da `257`, no seleccionó. `selectionStart` es `null` en `input type="number"`, así que no sirve para medirlo.
+- Si una prueba falla de forma intermitente, **leer el `<script src>` que el navegador cargó** (`[...document.scripts].map(s => s.src)`) o las props de React del nodo (`__reactProps$…` → `onFocus`/`onClick`). Aquí el bundle local ya tenía el handler pero el sitio servía otro JS: otra sesión había redeployado `3Px-CiPa` a mitad de la tanda. No culpar al código ni seguir probando: esperar a que el otro worktree commite, hacer fast-forward a su HEAD y desplegar una versión que lleve **su cambio + el propio**.
+- Regla de oro con el dueño trabajando en paralelo: **nunca desplegar desde una base que no incluya su último commit**. Si su worktree tiene WIP, no compilar desde ahí ni sobrescribir su bundle; esperar al commit o integrarlo en la rama aislada. En esta tanda el commit ajeno fue `62a0533` y el bundle final `index-C7Sz-l91.js`, con cantidad **32/32**.
+
 
   

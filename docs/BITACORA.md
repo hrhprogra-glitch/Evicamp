@@ -7,6 +7,14 @@
 
 ---
 
+## 25/11/2026 (seleccionar la cantidad **de arriba** al elegir producto o hacer clic) · OpenCode (Big Pickle) — HECHO SOLO EN NEGO, SIN PUSH
+
+- **Dueño:** *"ya lo terminastes ahora seleciona la cantidad cuando de cuando agrego un producto ??"*. El campo de arriba (`#input-cant-item-salida`) ya enfocaba y seleccionaba al elegir una sugerencia o dar Enter; faltaba que también seleccione al **hacer clic o llegar con Tab**. Se añadieron `onFocus`/`onClick` con `select()` a ese input; **no** se cambió el guardado, el reseteo a `1`, el foco al buscador tras agregar, los ids ni el estilo.
+- **Integración sin perder avances:** Nego fue sobrescrito dos veces durante el trabajo (`3Px-CiPa` desde `fusion-nego-final`). No se desplegó encima del WIP ajeno: se esperó a que ese worktree commiteara (`62a0533`, «Fusionar» guardando) y se hizo **fast-forward** en la rama aislada, llevando **su cambio + el mío** en un solo bundle. No se tocaron sus worktrees.
+- **Bundle verificado en vivo:** **`index-C7Sz-l91.js` / `index-DRCSlWbD.css`** (21:41 UTC, 22 archivos, solo Nego). Ojo: si el dueño vuelve a desplegar desde un worktree que no tenga este commit, el campo de arriba pierde la selección; hay que integrarlo antes.
+- **Prueba ampliada a 32/32:** `verificar-cantidad-salida.mjs` comprueba que al elegir producto la cantidad queda seleccionada, que un clic después de escribir `25` permite escribir `7` (no `257`) en 1366 y 390, más el borrado completo, `−/+`, Enter y 0 errores JS. Regresiones: fusión **158/158**, impresión **47/47**, nota **66/66**; lista adaptable **49 OK / 2 fallos** ya conocidos del botón «GENERAL» en 1280/1366 (no tocados).
+- **Estado:** commit local; **sin push, sin Evicamp/ecosistema/panel** y sin tocar la base. Falta la revisión del dueño con **Ctrl+F5** en Nego.
+
 ## 25/11/2026 («Fusionar» guarda de verdad, marcar/desmarcar el grupo) · OpenCode (Big Pickle) — HECHO SOLO EN NEGO, SIN PUSH
 
 - **Dueño:** *"si marco uno que esta fusionado se seleciona los que estan fusionados en esa fución ahora el ver general sera el boton fusionar asi para que fusionar salidas fusione de verdad ahora para quitar una salida de la fusión solo tengo que presionarlo y desmarcarlo y el resto sigue fucionado entiendes ?"*. Preguntado, eligió **botón «Fusionar» en la ventana**, **guardar al desmarcar** y **borrar la fusión si queda una sola salida**. Aprobó con **«empieza»**.

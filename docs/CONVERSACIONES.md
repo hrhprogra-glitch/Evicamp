@@ -1705,3 +1705,9 @@
 - **Aviso aparte del dueño:** *"estoy trabajando aparte asi que ten cuidado en subir versiónes antigua porque estoy avanzando y no quiero perder mi avance"*. No se desplegó desde una base atrasada: se integraron sus commits más nuevos y su WIP de Inventario; el repo principal no se tocó.
 - **Hecho:** al marcar una fusionada se marcan todas las del mismo `FUS-…`; al desmarcarla se guarda en ese momento y quitan solo esa; si queda una, la base borra el grupo. «Ver general» del pie pasa a «Fusionar» y guarda de verdad. GENERAL sigue siendo solo vista.
 - **Pruebas:** **158/158** y **53/53** (más regresiones **28/28** y **47/47**), teclado, sin internet y 390/768/1366/1920. Bundle verificado en vivo **`index-3Px-CiPa.js` / `index-DRCSlWbD.css`**. Base restaurada a `FUS-0001 → SAL-1547, SAL-1548`. Commit local, sin push; falta el **Ctrl+F5** del dueño y su OK para otros sitios/GitHub.
+
+## 25/11/2026 (seleccionar la cantidad también al agregar un producto)
+- **Dueño:** *"ya lo terminastes ahora seleciona la cantidad cuando de cuando agrego un producto ??"*.
+- Se le respondió que al elegir el producto ya se enfocaba el campo de arriba con el número seleccionado, y se completó el atajo para que también se seleccione con clic/Tab (`onFocus` + `onClick` con `select()` en `#input-cant-item-salida`). Sin tocar el foco al buscador después de agregar ni el reseteo a `1`.
+- Mientras se trabajaba, Nego volvió a servir `3Px-CiPa` desde otro worktree. Para no pisar su avance se esperó a su commit `62a0533` y se integró con fast-forward; el bundle final **`index-C7Sz-l91.js` / `index-DRCSlWbD.css`** lleva **su cambio de «Fusionar» guardando + el mío**.
+- Prueba de cantidad ampliada a **32/32** (selección al elegir producto y al clic, 1366 y 390), fusión **158/158**, impresión **47/47**, nota **66/66**, 0 errores JS. Quedan los 2 fallos ajenos conocidos del botón «GENERAL». Commit local, **sin push ni otros sitios**.
