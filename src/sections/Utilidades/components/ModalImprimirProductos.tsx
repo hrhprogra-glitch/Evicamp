@@ -26,6 +26,7 @@ interface ProductoImprimir {
   name: string;
   category: string;
   stock: number;
+  minStock: number;
   unit: string;
   price: number;
 }
@@ -41,6 +42,17 @@ const COLUMNAS: { id: Columna; etiqueta: string }[] = [
 
 const escaparHtml = (valor: unknown) => String(valor ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+// Rojo = sin stock o por debajo del mínimo; naranja = a punto de agotarse.
+// Si el producto no tiene mínimo configurado (lo común en Nego), "a punto" es 5 o menos.
+const claseStock = (p: ProductoImprimir) => {
+  if (String(p.unit || '').toUpperCase().includes('CONSUMO')) return 'bien';
+  const stock = Number(p.stock) || 0;
+  const minimo = Number(p.minStock) || 0;
+  if (stock <= 0 || (minimo > 0 && stock <= minimo)) return 'bajo';
+  if (minimo > 0 ? stock <= minimo * 2 : stock <= 5) return 'punto';
+  return 'bien';
+};
 
 export const ModalImprimirProductos: React.FC<Props> = ({ onClose }) => {
   const [productos, setProductos] = useState<ProductoImprimir[]>([]);
@@ -66,7 +78,7 @@ export const ModalImprimirProductos: React.FC<Props> = ({ onClose }) => {
       setCargando(true);
       const [resProductos, resLotes, resVariantes] = await Promise.all([
         traerTodo<any>(() => supabase.from('products')
-          .select('id, name, code, category, quantity, price, unit, weight_unit, control_type, tiene_variantes, is_active')
+          .select('id, name, code, category, quantity, min_stock, price, unit, weight_unit, control_type, tiene_variantes, is_active')
           .eq('is_active', 1).order('name').order('id')),
         traerTodo<any>(() => supabase.from('batches').select('id, product_id, quantity').order('id')),
         traerTodo<any>(() => supabase.from('product_variants').select('id, product_id, quantity, is_active').eq('is_active', 1).order('id')),
@@ -108,6 +120,7 @@ export const ModalImprimirProductos: React.FC<Props> = ({ onClose }) => {
           name: p.name || 'SIN NOMBRE',
           category: p.category || 'GENERAL',
           stock: tieneVariantes ? stockVariantes + stockBase : stockBase,
+          minStock: Number(p.min_stock) || 0,
           unit: p.unit || p.weight_unit || (p.control_type === 'WEIGHT' ? 'KG' : 'UND'),
           price: Number(p.price) || 0,
         };
@@ -202,7 +215,7 @@ export const ModalImprimirProductos: React.FC<Props> = ({ onClose }) => {
       id === 'pedido' ? ' class="pedido"' : (id === 'stock' || id === 'precio') ? ' class="num"' : '';
     const cabeceras = columnasActivas
       .map((c) => `<th${claseColumna(c.id)}>${c.etiqueta}</th>`).join('');
-    const filas = filtrados.map((p) => `<tr>${columnasActivas.map((c) =>
+    const filas = filtrados.map((p) => `<tr class="${claseStock(p)}">${columnasActivas.map((c) =>
       `<td${claseColumna(c.id)}>${valorCelda(c.id, p)}</td>`).join('')}</tr>`).join('');
     const nombreEmpresa = escaparHtml(empresa.nombre || 'ECO SISTEMAS URH');
     const logo = escaparHtml(empresa.logo || logoSiumax);
@@ -233,6 +246,9 @@ th { background: #1f2937; color: #fff; font-size: 9px; text-transform: uppercase
 th:first-child, td:first-child { border-left: 2px solid #111; }
 th:last-child, td:last-child { border-right: 2px solid #111; }
 tbody tr:nth-child(even) td { background: #f3f4f6; }
+tbody tr.bajo td:not(.pedido) { color: #b91c1c; font-weight: 800; background: #fef2f2 !important; }
+tbody tr.punto td:not(.pedido) { color: #b45309; font-weight: 800; background: #fffbeb !important; }
+tbody tr.bien td:not(.pedido) { color: #111; }
 tbody td { height: 21px; }
 th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
 th.pedido, td.pedido { width: 96px; text-align: center; }
@@ -241,6 +257,11 @@ thead { display: table-header-group; }
 tr { break-inside: avoid; }
 tfoot td { background: #e8e8e8; font-weight: bold; border-top: 2px solid #111; }
 .pie { display: flex; justify-content: space-between; margin-top: 8px; padding-top: 4px; border-top: 1px solid #111; font-size: 8px; color: #444; }
+.leyenda i { display: inline-block; width: 8px; height: 8px; border: 1px solid #111; margin-left: 9px; vertical-align: middle; }
+.leyenda i:first-child { margin-left: 0; }
+.leyenda .rojo { background: #b91c1c; }
+.leyenda .naranja { background: #b45309; }
+.leyenda .negro { background: #111; }
 @media screen { html, body { overflow: hidden !important; } }
 </style></head><body>
 <div class="cabecera">
@@ -249,7 +270,7 @@ tfoot td { background: #e8e8e8; font-weight: bold; border-top: 2px solid #111; }
 </div>
 <table><thead><tr>${cabeceras}</tr></thead><tbody>${filas}</tbody>
 <tfoot><tr><td colspan="${columnasActivas.length}">Total: ${filtrados.length} producto(s)</td></tr></tfoot></table>
-<div class="pie"><span>SiuMax Nego · listado para pedido</span><span>Productos activos</span></div>
+<div class="pie"><span>SiuMax Nego · productos activos</span><span class="leyenda"><i class="rojo"></i> Bajo <i class="naranja"></i> Por pedir <i class="negro"></i> OK</span></div>
 </body></html>`;
   }, [filtrados, columnasActivas, todasCategorias, categoriasSeleccionadas, empresa]);
 

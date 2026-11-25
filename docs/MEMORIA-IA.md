@@ -28,6 +28,11 @@
 - Publicar no basta: otra sesión (`e22050d`, nombre de nota en Salidas) desplegó de nuevo desde una rama sin mi botón y Nego sirvió `index-4DjJ7A18.js`. El dueño volvió a decir que no veía «Imprimir productos». **Comprobar en vivo con navegador los ids reales de los botones**, además de mirar el bundle en el JS.
 - Cada vez que aparezca un bundle nuevo, fusionar esa rama también (`git merge --no-ff`), conservar las tres entradas en docs y volver a compilar/probar. El bundle final con todo junto es `index-D4ichCYo.js` / `index-BvV_knbV.css`.
 
+## 25/11/2026 — Colores de stock en el listado impreso
+- El dueño quiere diferenciar rápido: **rojo** = sin stock o `stock <= min_stock`, **naranja** = a punto, **negro** = bien.
+- En Nego casi ningún producto tiene `min_stock` (solo 3 de 513): usar solo `2 × min_stock` deja **cero naranjas**. Por eso, cuando `min_stock = 0`, «a punto» se definió como **stock ≤ 5**. Registrar siempre el criterio en docs; si el dueño quiere otro número, cambiar solo `claseStock()`.
+- Colorear la fila completa excepto la columna en blanco «Cant. a pedir», para que se pueda escribir y no se confunda con una alerta. La prueba debe medir el `color` calculado de las tres clases, no solo que existan.
+
 ## 25/11/2026 — Cabecera del listado: dar espacio, no dejar nada pegado al borde
 - El dueño notó que logo, título, categorías y fecha estaban «literalmente pegados a los costados». La cabecera del `srcDoc` necesita `padding` horizontal propio (14 px), no solo el `@page` de la hoja: el `srcDoc` en pantalla no respeta el margen de impresión.
 - Sepidar también `gap` entre marca y título (20 px) y entre logo y empresa (12 px); la prueba debe medir `paddingLeft/Right` y la distancia real entre `getBoundingClientRect()` de ambos bloques, no solo mirar que existan.

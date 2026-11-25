@@ -119,6 +119,25 @@ try {
     return fondoTh !== 'rgba(0, 0, 0, 0)' && fondoTh !== 'rgb(255, 255, 255)' && fondoPar !== fondoImpar;
   });
   ok('La tabla tiene encabezado oscuro y filas alternas', tablaEstilizada);
+  const coloresStock = await page.evaluate(() => {
+    const d = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument;
+    const cuenta = { bajo: 0, punto: 0, bien: 0 };
+    const colores = {};
+    for (const fila of d?.querySelectorAll('tbody tr') || []) {
+      const clase = ['bajo', 'punto', 'bien'].find((c) => fila.classList.contains(c));
+      if (!clase) continue;
+      cuenta[clase]++;
+      if (!colores[clase]) colores[clase] = getComputedStyle(fila.querySelector('td:not(.pedido)')).color;
+    }
+    return { cuenta, colores, leyenda: d?.querySelector('.leyenda')?.textContent || '' };
+  });
+  ok('Hay productos clasificados por stock (rojo, naranja y negro)',
+    coloresStock.cuenta.bajo > 0 && coloresStock.cuenta.punto > 0 && coloresStock.cuenta.bien > 0,
+    JSON.stringify(coloresStock.cuenta));
+  ok('Stock bajo sale en rojo', coloresStock.colores.bajo === 'rgb(185, 28, 28)', coloresStock.colores.bajo);
+  ok('Stock a punto sale en naranja', coloresStock.colores.punto === 'rgb(180, 83, 9)', coloresStock.colores.punto);
+  ok('Stock bien sale en negro', coloresStock.colores.bien === 'rgb(17, 17, 17)', coloresStock.colores.bien);
+  ok('La hoja explica los colores en el pie', /Bajo/.test(coloresStock.leyenda) && /Por pedir/.test(coloresStock.leyenda) && /OK/.test(coloresStock.leyenda));
   const unaFila = await page.evaluate(() => {
     const fs = [...document.querySelectorAll('[role="dialog"] fieldset')];
     return fs.length >= 2 && Math.abs(fs[0].getBoundingClientRect().top - fs[1].getBoundingClientRect().top) < 8;
