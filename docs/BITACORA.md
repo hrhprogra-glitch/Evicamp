@@ -7,6 +7,16 @@
 
 ---
 
+## 25/11/2026 (fusionar salidas en un GENERAL de solo vista, desde Nueva salida) · OpenCode (Big Pickle) — HECHO Y PROBADO SOLO EN NEGO
+
+- El dueño pidió un botón nuevo **a la derecha de Nueva salida** para juntar varias salidas en un GENERAL: ver todos los productos, devolver todo lo pendiente e imprimir un general de todo. Preguntado, eligió **«Solo vista (recomendado)»** y **«En Nueva salida (recomendado)»**, y aprobó con **«empieza»**.
+- **Código:** nuevo `src/sections/Salidas/components/ModalFusionarSalidas.tsx`. El GENERAL se arma **en memoria** desde la lista ya cargada, con una `Salida` sintética de código `GENERAL`; reutiliza `VistaPreviaSalida` para imprimir. «Devolver todo» llama a `fn_registrar_devoluciones_lote` **por cada salida**, topa cada cantidad al pendiente y pide **una sola confirmación**; no toca lo ya devuelto y no crea salida ni descuenta stock dos veces. `ModalNuevaSalida.tsx` recibe `salidas`/`onReload`, agrega `btn-fusionar-salidas` en la cabecera derecha y apila Escape con la ventana nueva; `Salidas/index.tsx` pasa la lista. Sin base, sin SQL y sin tocar el WIP ajeno ni los 4 fallos preexistentes de `select-bien-salida`.
+- **Verificación:** `npx tsc -b` EXIT 0 y `npm run build` OK: **`index-KIvGnE8B.js` / `index-BLSV1OC5.css`**. Deploy con destino explícito **solo Nego** (`deploy.cjs siumax`, 22 archivos). En vivo, dentro del JS servido están los marcadores `btn-fusionar-salidas` y `btn-fusion-ver-general`, no solo el nombre del bundle. Se usó la copia conocida de `.env.vps` (MD5 corto `BBF98048CC`): la del repo principal (`8562F26AD7`) da `client-authentication`.
+- **Pruebas:** nueva `verificar-fusionar-salidas.mjs` **114/114**: teclado (flechas mueven el selector sin cambiar valores; Enter activa sin saltar de campo; Escape cierra la vista previa, luego la fusión, luego Nueva salida), **sin internet** y en 390/768/1366/1920; elige SAL-1547 y SAL-1548, suma materiales, imprime un comprobante que dice GENERAL y trae ambos códigos, y cancela la confirmación de devolución para **no cambiar datos ni stock**. Regresión `verificar-nombre-nota-salidas.mjs` **66/66**. 0 errores de JavaScript.
+- **Estado:** commit local en el worktree `fusionar-salidas`, sin push. **Sin Evicamp, ecosistema, panel ni GitHub** hasta que el dueño lo autorice. Falta solo la revisión visual con **Ctrl+F5** en `nego.siumax.duckdns.org`.
+
+---
+
 ## 25/11/2026 (nombre escrito en una nota de Salidas: Nego, Evicamp, ecosistema, panel y GitHub) · OpenCode (Big Pickle) — HECHO EN TODOS Y SUBIDO
 
 - El dueño se quejó: *"e notado que cuando registro una nota en salida osea pongo un nombre que no esta en clientes y que sea nota en la tabla no sale el nombre de la nota si no sale asi 'cliente no registrado (nota)'"*. Aprobó con **«empeiza»**, autorizó la subida con **«subelo»** y cerró con **«perfecto subelo a siumax, evicamp y ecosistema y panel de contro y mi github»**.

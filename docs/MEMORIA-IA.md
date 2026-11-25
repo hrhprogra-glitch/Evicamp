@@ -8,6 +8,13 @@
 
 ---
 
+## 25/11/2026 — Fusionar salidas: GENERAL de solo vista, y trampas de la prueba que lo valida
+- El dueño eligió **«Solo vista»** y **«En Nueva salida»** y aprobó con **«empieza»**. Eso significa: **no crear salida, no descontar stock dos veces**; el GENERAL es una `Salida` sintética de código `GENERAL` armada en memoria con la lista ya cargada. Reutilizar `VistaPreviaSalida` evita hacer otro comprobante.
+- «Devolver todo» no es una RPC global: hay que **agrupar por salida** y llamar `fn_registrar_devoluciones_lote` una vez por cada una, con cantidades `Math.min(escrito, pendiente)`. Así lo ya devuelto no se cuenta dos veces. Una sola confirmación y, en la prueba, **cancelarla** (`#dialogo-sistema-cancelar`) para no tocar datos ni stock.
+- El botón nuevo comparte cabecera con el de cerrar: hay que apilar Escape (`useCerrarConEscape(isOpen && !salidaParaPrevia && !fusionOpen, ...)`) o Escape cerraría el formulario de atrás en vez de la ventana de arriba.
+- **Trampas de la prueba nueva**, todas detectadas antes de culpar al código: (1) `.ventana-cabecera__subtitulo` sin prefijo encuentra la ventana de **atrás**; (2) `input[data-nav-fusion]` incluye fecha y motivo, no solo las cantidades, así que «la flecha no cambia el valor» leía el motivo; (3) si no se escribe cantidad, «Devolver todo» avisa «Escribe la cantidad…» y **no abre confirmación**; (4) el CSS `uppercase` convierte «Elige» en «ELIGE», mejor contar `aria-pressed`/el contador que comparar texto.
+- El alcance era **solo Nego**: no Evicamp, ecosistema, panel ni GitHub, y sin tocar los 4 `MAL` preexistentes de `select-bien-salida`. `.env.vps` del repo principal (`8562F26AD7`) sigue sin autenticar; usar la copia conocida (`BBF98048CC`). Verificar marcadores **dentro del JS servido**, porque otro agente puede sobrescribir el bundle.
+
 ## 25/11/2026 — Salidas en pantallas pequeñas: medir antes, aislar el worktree y verificar el bundle servido
 - El dueño pide **adaptar a distintos tamaños de pantalla**, no hacer scroll horizontal. En 1366 px la lista medía **1547 px** y `VER`/`ESTADO` quedaban fuera; en 1920 px entraba. Medir con Puppeteer antes de cambiar CSS evita adivinar anchos.
 - El repo principal tiene **WIP ajeno en `TablaSalidas.tsx`**: no sobrescribirlo. Se trabajó en un worktree nuevo desde `d0d4549` (commit del bundle que servía Nego), con `node_modules` junction y copia conocida de `.env.vps` (MD5 corto `BBF98048CC`); la del repo principal (`8562F26AD7`) no autentica.

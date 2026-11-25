@@ -208,6 +208,8 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
           onSuccess={() => {
             fetchSalidas();
           }}
+          salidas={salidas}
+          onReload={fetchSalidas}
         />
       )}
 

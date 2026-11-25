@@ -1,0 +1,211 @@
+// 230 (25/11/2026): botón «Fusionar salidas» en Nueva salida y GENERAL de solo vista.
+// Verifica elegir salidas con teclado, ver todo junto, imprimir el general y que «Devolver todo»
+// pida confirmación (la prueba la CANCELA: no cambia datos ni stock).
+// Sin internet, en 390/768/1366/1920. Uso:
+//   node ai-scripts/pruebas/verificar-fusionar-salidas.mjs <carpeta tools con puppeteer-core>
+import { createRequire } from 'node:module';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const [tools] = process.argv.slice(2);
+const aqui = path.dirname(fileURLToPath(import.meta.url));
+process.loadEnvFile(path.join(aqui, '..', '..', '.env.vps'));
+const require = createRequire(path.join(tools, 'x.js'));
+const puppeteer = require('puppeteer-core');
+
+const CODIGOS = ['SAL-1547', 'SAL-1548'];
+const TAMANOS = [[390, 844], [768, 1024], [1366, 860], [1920, 1080]];
+const res = [];
+const ok = (n, c, x = '') => res.push(`${c ? 'OK ' : 'MAL'} ${n}${x ? ' — ' + x : ''}`);
+const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const nav = await puppeteer.launch({
+  executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+  headless: true,
+  defaultViewport: { width: 1366, height: 860 },
+});
+const page = await nav.newPage();
+const errores = [];
+page.on('pageerror', (e) => errores.push(e.message));
+
+const tecla = async (k, n = 1) => {
+  for (let i = 0; i < n; i++) { await page.keyboard.press(k); await pausa(110); }
+};
+const activo = () => page.evaluate(() => document.activeElement?.id || document.activeElement?.tagName || '');
+const existe = async (sel) => !!(await page.$(sel));
+const texto = async (sel) => page.$eval(sel, (e) => e.innerText || '').catch(() => '');
+
+const buscarSalidas = async () => {
+  for (const d of ['Digit4', 'Digit3']) {
+    await page.keyboard.down('Alt');
+    await tecla(d);
+    await page.keyboard.up('Alt');
+    await pausa(1100);
+    if (await existe('#buscador-salidas')) return true;
+  }
+  await page.focus('#sidebar-btn-salidas');
+  await tecla('Enter');
+  await pausa(1100);
+  return existe('#buscador-salidas');
+};
+
+const escribir = async (sel, valor) => {
+  await page.focus(sel);
+  await page.keyboard.down('Control');
+  await page.keyboard.press('A');
+  await page.keyboard.up('Control');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.type(valor);
+  await pausa(350);
+};
+
+const cerrarTodo = async () => {
+  for (let i = 0; i < 6; i++) {
+    const abiertas = await page.evaluate(() => [
+      '[data-vista-previa-salida]', '[data-dialogo-sistema]',
+      '#modal-fusionar-salidas-container', '#modal-nueva-salida-container',
+    ].filter((s) => !!document.querySelector(s)));
+    if (!abiertas.length) break;
+    await tecla('Escape');
+    await pausa(300);
+  }
+};
+
+try {
+  await page.goto('https://nego.siumax.duckdns.org', { waitUntil: 'networkidle2', timeout: 90000 });
+  await page.waitForSelector('#input-login-usuario', { timeout: 30000 });
+  await page.focus('#input-login-usuario');
+  await page.keyboard.type('admin@siumax.com');
+  await page.focus('#input-login-password');
+  await page.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE);
+  await tecla('Enter');
+  await page.waitForSelector('#sidebar-btn-salidas', { timeout: 30000 });
+  await pausa(1200);
+
+  ok('Con teclado se abre Salidas', await buscarSalidas(), `foco=${await activo()}`);
+  await page.waitForSelector('#tabla-salidas-lista [data-fila-salida="true"]', { timeout: 30000 });
+  await pausa(700);
+
+  // Todo lo que sigue corre SIN internet, con los datos ya cargados en memoria.
+  await page.setOfflineMode(true);
+  await pausa(300);
+
+  for (const [w, h] of TAMANOS) {
+    await cerrarTodo();
+    await page.setViewport({ width: w, height: h });
+    await pausa(350);
+    const tam = `${w}px`;
+
+    await page.focus('#btn-nueva-salida');
+    await tecla('Enter');
+    await pausa(500);
+    ok(`${tam}: Enter abre Nueva salida`, await existe('#modal-nueva-salida-container'));
+    const botonDerecha = await page.evaluate(() => {
+      const b = document.getElementById('btn-fusionar-salidas')?.getBoundingClientRect();
+      const m = document.getElementById('modal-nueva-salida-container')?.getBoundingClientRect();
+      return !!b && !!m && b.right > m.left + m.width / 2 && b.right <= m.right + 2;
+    });
+    ok(`${tam}: «Fusionar salidas» está en el lado derecho de la cabecera`, botonDerecha);
+
+    await page.focus('#btn-fusionar-salidas');
+    await tecla('Enter');
+    await pausa(450);
+    ok(`${tam}: Enter abre la ventana de fusión`, await existe('#modal-fusionar-salidas-container'));
+    ok(`${tam}: el buscador de salidas recibe el foco`, (await activo()) === 'buscador-fusionar-salidas', await activo());
+
+    await tecla('ArrowUp');
+    ok(`${tam}: ↑ desde el buscador sube a la X`, (await activo()) === 'btn-cerrar-fusionar-salidas', await activo());
+    await tecla('ArrowDown');
+    ok(`${tam}: ↓ desde la X baja al buscador`, (await activo()) === 'buscador-fusionar-salidas', await activo());
+
+    await escribir('#buscador-fusionar-salidas', CODIGOS[0]);
+    await tecla('Enter');
+    ok(`${tam}: Enter en el buscador no salta de campo`, (await activo()) === 'buscador-fusionar-salidas', await activo());
+
+    for (const codigo of CODIGOS) {
+      await escribir('#buscador-fusionar-salidas', codigo);
+      const idBoton = await page.evaluate(() => document.querySelector('[id^="btn-fusion-elegir-"]')?.id || '');
+      ok(`${tam}: el buscador encuentra ${codigo}`, !!idBoton, idBoton);
+      if (!idBoton) continue;
+      await page.focus(`#${idBoton}`);
+      await tecla('Enter');
+      await pausa(200);
+      const marcada = await page.$eval(`#${idBoton}`, (e) => e.getAttribute('aria-pressed') === 'true');
+      ok(`${tam}: Enter marca ${codigo} sin salir del botón`, marcada && (await activo()) === idBoton, await activo());
+    }
+    const contador = await page.evaluate(() => Array.from(document.querySelectorAll('#modal-fusionar-salidas-container span'))
+      .map((e) => (e.textContent || '').trim())
+      .find((t) => /^\d+\s+elegida\(s\)$/i.test(t)) || '');
+    ok(`${tam}: quedan 2 salidas elegidas`, contador.startsWith('2'), contador || 'sin contador');
+
+    await page.focus('#btn-fusion-ver-general');
+    await tecla('Enter');
+    await pausa(400);
+    ok(`${tam}: Enter abre el general`, await existe('#tabla-resumen-fusion'));
+    const resumen = await page.$$eval('#tabla-resumen-fusion tbody tr', (els) => els.length);
+    const detalle = await page.$$eval('tbody[data-fusion-filas] tr', (els) => els.length);
+    ok(`${tam}: el general muestra materiales sumados`, resumen > 0 && detalle > 0, `resumen=${resumen} detalle=${detalle}`);
+    const textoDetalle = await texto('tbody[data-fusion-filas]');
+    ok(`${tam}: el general trae las dos salidas`, CODIGOS.every((c) => textoDetalle.includes(c)));
+    ok(`${tam}: el general muestra el pendiente`, (await texto('#total-fusion')).includes('Pendiente:'));
+
+    const entradas = await page.$$eval('input[id^="input-devolver-fusion-"]:not([disabled])', (els) => els.map((e) => e.id));
+    ok(`${tam}: hay cantidades para devolver`, entradas.length > 0, `${entradas.length} campo(s)`);
+    if (entradas.length > 1) {
+      await page.focus(`#${entradas[0]}`);
+      await tecla('ArrowDown');
+      ok(`${tam}: ↓ pasa a la siguiente cantidad`, (await activo()) === entradas[1], await activo());
+      const valor = await page.$eval(`#${entradas[1]}`, (e) => e.value);
+      ok(`${tam}: la flecha no cambia el valor`, valor === '', `valor="${valor}"`);
+    }
+
+    await page.focus('#btn-fusion-imprimir-general');
+    await tecla('Enter');
+    await pausa(650);
+    ok(`${tam}: imprime el general`, await existe('[data-vista-previa-salida]'));
+    const vale = await page.evaluate(() => document.querySelector('[data-vista-previa-salida] iframe')?.contentDocument?.body?.innerText || '');
+    ok(`${tam}: el comprobante dice GENERAL y trae las salidas`, vale.includes('GENERAL') && CODIGOS.every((c) => vale.includes(c)),
+      vale.replace(/\s+/g, ' ').slice(0, 110));
+    await tecla('Escape');
+    await pausa(350);
+    ok(`${tam}: Escape cierra la vista previa, no la fusión`,
+      !(await existe('[data-vista-previa-salida]')) && (await existe('#modal-fusionar-salidas-container')));
+
+    // Escribir una cantidad es solo preparación: la confirmación se cancela, no se devuelve nada.
+    await page.focus(`#${entradas[0]}`);
+    await page.keyboard.type('1');
+    await pausa(200);
+    ok(`${tam}: se puede escribir la cantidad a devolver`,
+      (await page.$eval(`#${entradas[0]}`, (e) => e.value)) === '1');
+    await page.focus('#btn-fusion-devolver-todo');
+    await tecla('Enter');
+    await pausa(400);
+    ok(`${tam}: «Devolver todo» pide confirmación`, await existe('[data-dialogo-sistema]'));
+    const aviso = await texto('#dialogo-sistema-texto');
+    ok(`${tam}: la confirmación dice cuántas salidas`, aviso.includes('salida(s)'), aviso.replace(/\s+/g, ' ').slice(0, 110));
+    await page.focus('#dialogo-sistema-cancelar');
+    await tecla('Enter');
+    await pausa(350);
+    ok(`${tam}: cancelar no devuelve nada y sigue en el general`,
+      !(await existe('[data-dialogo-sistema]')) && (await existe('#tabla-resumen-fusion')));
+
+    await tecla('Escape');
+    await pausa(350);
+    ok(`${tam}: Escape cierra la fusión y vuelve a Nueva salida`,
+      !(await existe('#modal-fusionar-salidas-container')) && (await existe('#modal-nueva-salida-container')));
+    await tecla('Escape');
+    await pausa(350);
+    ok(`${tam}: Escape cierra Nueva salida`, !(await existe('#modal-nueva-salida-container')));
+  }
+
+  ok('Sin errores de JavaScript', errores.length === 0, errores.slice(0, 3).join(' | '));
+} catch (e) {
+  ok('La prueba terminó con un error', false, String(e.message || e));
+} finally {
+  await nav.close();
+}
+
+console.log('\nResultado (fusión de salidas, solo Nego, sin internet):\n' + res.join('\n'));
+const fallos = res.filter((r) => r.startsWith('MAL')).length;
+console.log(`\nRESULTADO: ${res.length - fallos}/${res.length}`);
+process.exit(fallos ? 1 : 0);
