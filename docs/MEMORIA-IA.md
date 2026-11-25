@@ -8,6 +8,13 @@
 
 ---
 
+## 25/11/2026 — Salidas en pantallas pequeñas: medir antes, aislar el worktree y verificar el bundle servido
+- El dueño pide **adaptar a distintos tamaños de pantalla**, no hacer scroll horizontal. En 1366 px la lista medía **1547 px** y `VER`/`ESTADO` quedaban fuera; en 1920 px entraba. Medir con Puppeteer antes de cambiar CSS evita adivinar anchos.
+- El repo principal tiene **WIP ajeno en `TablaSalidas.tsx`**: no sobrescribirlo. Se trabajó en un worktree nuevo desde `d0d4549` (commit del bundle que servía Nego), con `node_modules` junction y copia conocida de `.env.vps` (MD5 corto `BBF98048CC`); la del repo principal (`8562F26AD7`) no autentica.
+- **Trampa real:** el primer deploy se hizo bien pero otro trabajo desplegó después desde `pase-todos` y el sitio sirvió su bundle viejo (`C9Qd50Qv`), aunque local existía el nuevo (`CJhKMreh`). Siempre comprobar `index.html` en vivo y comparar el nombre del bundle con `dist/index.html` antes de creer una prueba fallida. La prueba debe usar `page.setCacheEnabled(false)`.
+- Arreglo que funcionó: tabla `table-layout: fixed` con porcentajes entre 1101–1366 px y tarjetas con `td::before { content: attr(data-etiqueta) }` hasta 1100 px; se conservan ids, teclado, columnas y lógica. Prueba `verificar-salidas-pantalla-pc.mjs`: **51 OK, 0 fallos** en 390/768/1024/1280/1366/1920.
+- El dueño autorizó **«si»** solo para Nego. Ecosistema, Evicamp, clientes y push requieren un OK nuevo en esa tanda; el oficial además necesita reponer iconos después de desplegar.
+
 ## 25/11/2026 — «No sale ningún usuario» puede ser una vista que falta, no usuarios que faltan
 - El dueño avisó de urgencia que en Gestión de Usuarios no aparecía nadie. **Antes de crear usuarios**, mirar la API: en ecosistema daba `HTTP 404 relation "public.empleados_publico" does not exist`; la tabla `empleados` tenía 3 filas. La pantalla (`TablaUsuarios.tsx`) lee la **vista** `empleados_publico`, no la tabla. Crear usuarios «para que salga algo» habría sido inventar datos y ocultar la causa real.
 - Esa vista existe en `siumax`, `postgres`, `servic` y `siudemo`; en `evidiary` y `creditaltoque` no hay tabla `empleados`. Revisar **todas las bases (solo lectura)** antes de escribir: el arreglo fue **solo ecosistema**.

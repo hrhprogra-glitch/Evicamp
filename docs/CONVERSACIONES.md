@@ -1599,3 +1599,12 @@
 - Se comprobó también que las RPC de crear, editar y borrar usuario están permitidas al `anon`. Una prueba real con la sesión del administrador, metida en `BEGIN; … ROLLBACK;`, editó, borró y creó un usuario sin dejar rastro: al final seguían los 3 de siempre.
 - **Pendiente de preguntarle:** si el aviso era solo del sitio de ecosistema (ya arreglado) o si además quiere usuarios nuevos en Nego. En Nego solo existe `admin@siumax.com`, así que para «controlar al resto» allí necesitaría dar la lista de usuarios, roles y claves.
 - **Estado:** commit local de la corrección. **Sin push** hasta que el dueño lo pida. Falta su revisión con **Ctrl+F5** en ecosistema.
+
+## 25/11/2026 (Salidas no cabía en pantallas de PC pequeñas)
+- **Dueño:** *"quiero que adaptes al sistema a direntes tamaños pantalla ya que salidas no sale completo si no tapado y es porque su pantalla es mas pequeña arreglar eso"*.
+- Preguntó dónde aplicarlo y respondió **«En ambos»**; aclaró que **"es una pc pero no se adecua bien a tu tamaño de pantalla"** y que **"eso pasa en todas las tablas y lista pero de la sesión salida"** (la lista de Salidas, no las ventanas).
+- Se le mostró la propuesta: tabla compacta en PC pequeña y tarjetas apiladas en pantallas muy estrechas, sin tocar teclado, ids, estilo ni lógica. Dijo **«si»** para empezar **solo en Nego**.
+- **Hecho:** en un worktree aparte desde el commit que servía el sitio, se quitó el ancho mínimo de 1080 px, se marcaron las 9 columnas con su etiqueta y se añadió CSS responsive: 1101–1366 px tabla compacta que cabe entera; ≤1100 px cada salida como tarjeta. `VER`, `ESTADO` y `DEVOLUCIONES` siguen visibles. Sin cambios de base.
+- **Despliegue:** build OK; el primer deploy fue sobrescrito por otro trabajo que subió el bundle viejo, se detectó y se repitió. Nego sirve **`index-CJhKMreh.js` / `index-D74V8jBk.css`**.
+- **Prueba:** **51 OK, 0 fallos** en 390/768/1024/1280/1366/1920, con teclado (↓↓, Enter, Escape), sin internet y 0 errores JS.
+- **Queda pendiente:** el dueño debe revisar Nego con **Ctrl+F5**. Ecosistema **no se tocó**: hace falta su OK explícito para desplegar allí y reponer iconos. Sin Evicamp, sin GitHub.
