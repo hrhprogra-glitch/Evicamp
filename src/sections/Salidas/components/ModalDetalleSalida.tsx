@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Truck, X, Printer, RotateCcw, CheckCircle, AlertTriangle, MapPin, User, Calendar, Trash2, Plus, Search } from 'lucide-react';
+import { Truck, X, Printer, RotateCcw, CheckCircle, AlertTriangle, MapPin, User, Calendar, Trash2, Plus, Search, Layers } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
@@ -8,7 +8,7 @@ import { VistaPreviaSalida } from './VistaPreviaSalida';
 import { ModalDevolucionesSalida } from './ModalDevolucionesSalida';
 import { UnidadMaterial } from './UnidadMaterial';
 import { useEmpresaComprobante } from '../empresa';
-import type { Salida, SalidaDevolucion, SalidaItem } from '../types';
+import type { Salida, SalidaDevolucion, SalidaFusion, SalidaItem } from '../types';
 
 interface ModalDetalleSalidaProps {
   salida: Salida;
@@ -16,6 +16,7 @@ interface ModalDetalleSalidaProps {
   onClose: () => void;
   onReload: () => void;
   onContinuar: (salida: Salida) => void;
+  onVerGeneral: (fusion: SalidaFusion) => void;
 }
 
 type MaterialVista = Pick<
@@ -38,6 +39,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
   onClose,
   onReload,
   onContinuar,
+  onVerGeneral,
 }) => {
   useCerrarConEscape(isOpen, onClose);
 
@@ -322,6 +324,26 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* 230: GENERAL guardado. No es una salida nueva: solo dice con quién se ve junta. */}
+            {salida.fusion && (
+              <div id="bloque-fusion-detalle" className="border-2 border-indigo-700 bg-indigo-50 p-3">
+                <p className="font-black uppercase text-indigo-800 mb-1 flex items-center gap-2">
+                  <Layers size={14} /> Fusionada con… <span className="font-bold">{salida.fusion.codigo}</span>
+                </p>
+                <p id="fusionados-detalle" className="text-[11px] font-bold uppercase break-words">
+                  {salida.fusion.salida_codigos.filter((c) => c !== salida.codigo).join(', ') || 'Sin otras salidas' }
+                </p>
+                <button
+                  id="btn-detalle-ver-general"
+                  type="button"
+                  onClick={() => onVerGeneral(salida.fusion!)}
+                  className="mt-2 px-3 py-1.5 border-2 border-indigo-800 bg-[var(--color-surface)] text-indigo-800 font-black uppercase text-[10px] flex items-center gap-1.5 cursor-pointer hover:bg-indigo-800 hover:text-white"
+                >
+                  <Layers size={13} /> Ver general
+                </button>
+              </div>
+            )}
 
             {/* Personal técnico: solo se muestra */}
             <div>

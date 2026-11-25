@@ -47,6 +47,15 @@ export interface SalidaDevolucion {
   created_at?: string;
 }
 
+// 230: GENERAL guardado de salidas. Es solo una vista: no crea salida nueva ni descuenta stock dos veces.
+export interface SalidaFusion {
+  id: number;
+  codigo: string;
+  created_at?: string;
+  salida_ids: number[];
+  salida_codigos: string[];
+}
+
 export interface Salida {
   id: number;
   codigo: string;
@@ -83,4 +92,5 @@ export interface Salida {
   trabajadores?: SalidaTrabajador[];
   items?: SalidaItem[];
   devoluciones?: SalidaDevolucion[];
+  fusion?: SalidaFusion | null;
 }
