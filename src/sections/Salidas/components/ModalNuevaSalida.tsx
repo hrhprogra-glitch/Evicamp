@@ -11,6 +11,7 @@ import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import { coincideBusqueda } from '../../../utils/busqueda';
 import { VistaPreviaSalida } from './VistaPreviaSalida';
+import { UnidadMaterial } from './UnidadMaterial';
 import { useEmpresaComprobante } from '../empresa';
 import type { TipoSalida, Salida } from '../types';
 
@@ -121,6 +122,13 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     costo_unitario: number;
     es_externo: boolean;
   }[]>([]);
+
+  // Dueño 24/11/2026: al agregar un producto no podía borrar el "1" para escribir otro número.
+  // La cantidad se controla con texto mientras se edita (clave estable por producto), así se puede
+  // borrar y volver a escribir sin que React reponga el valor viejo. Al salir del campo se suelta.
+  const [cantidadEditando, setCantidadEditando] = useState<Record<string, string>>({});
+  const claveItem = (it: { product_id?: number | null; descripcion?: string }, idx: number) =>
+    it.product_id != null ? `p${it.product_id}` : `d${it.descripcion || idx}`;
 
   // Inputs para agregar item (modo SUNAT)
   const [busquedaProd, setBusquedaProd] = useState('');
@@ -1422,9 +1430,9 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                             </span>
                           )}
                         </td>
-                        <td className="p-2 text-center font-bold">{it.unidad}</td>
+                        <td className="p-2 text-center font-bold"><UnidadMaterial unidad={it.unidad} /></td>
                         <td className="p-2">
-                          {/* Edición directa en la fila (teclado + botones -/+) */}
+                          {/* Edición directa en la fila (se puede borrar y escribir + botones -/+) */}
                           <div className="flex items-center justify-center gap-1">
                             <button
                               type="button"
@@ -1435,11 +1443,23 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                               -
                             </button>
                             <input
+                              id={`input-cantidad-item-${claveItem(it, idx)}`}
                               type="number"
                               step="any"
                               min="0.001"
-                              value={it.cantidad}
-                              onChange={(e) => handleModificarCantidad(idx, parseFloat(e.target.value))}
+                              value={cantidadEditando[claveItem(it, idx)] ?? String(it.cantidad)}
+                              onChange={(e) => {
+                                const texto = e.target.value;
+                                setCantidadEditando((m) => ({ ...m, [claveItem(it, idx)]: texto }));
+                                handleModificarCantidad(idx, parseFloat(texto));
+                              }}
+                              onBlur={() => {
+                                setCantidadEditando((m) => {
+                                  const copia = { ...m };
+                                  delete copia[claveItem(it, idx)];
+                                  return copia;
+                                });
+                              }}
                               className="w-16 p-1 text-center font-black border border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none rounded-none bg-[var(--color-surface)]"
                             />
                             <button

@@ -52,7 +52,10 @@ try {
     const d = document.getElementById('modal-detalle-salida-container');
     if (!d) return null;
     return {
-      campos: d.querySelectorAll('input,select,textarea').length,
+      // 24/11/2026: el detalle sigue siendo solo lectura, pero ahora tiene un buscador de materiales
+      // (pedido del dueño). Ese campo no edita datos, por eso no cuenta como "campo editable".
+      campos: d.querySelectorAll('input:not(#buscador-materiales-detalle),select,textarea').length,
+      buscador: !!document.getElementById('buscador-materiales-detalle'),
       quitar: d.querySelectorAll('[id^="btn-quitar-material-detalle-"]').length,
       botones: ids.filter((id) => !!document.getElementById(id)).length,
       cliente: !!document.getElementById('dato-cliente-detalle-salida'),
@@ -62,8 +65,8 @@ try {
       sobrio: d.classList.contains('ventana-sobria') && d.classList.contains('max-w-5xl'),
     };
   }, idsBotones);
-  ok('Detalle solo para ver: 0 campos y 0 X de materiales',
-    !!detalle && detalle.campos === 0 && detalle.quitar === 0, JSON.stringify(detalle));
+  ok('Detalle solo para ver: 0 campos editables y 0 X de materiales',
+    !!detalle && detalle.campos === 0 && detalle.quitar === 0 && detalle.buscador, JSON.stringify(detalle));
   // SAL-MIG-00243 ya está FINALIZADA: no muestra «Finalizar», por eso son 5 botones
   // (en la prueba original con SSH se elegía una salida EN_PROCESO y eran 6).
   ok('Detalle avisa que es solo lectura, tiene sus botones y estilo sobrio',
@@ -81,13 +84,15 @@ try {
         filas: ys.slice().sort((a, b) => a - b).reduce((n, y, i, arr) => n + (i === 0 || y - arr[i - 1] > 4 ? 1 : 0), 0),
         radio: getComputedStyle(document.getElementById('btn-eliminar-salida') || d).borderRadius,
         ancho: Math.round(d.getBoundingClientRect().width),
-        desbordes: [...d.querySelectorAll('*')].filter((e) => e.scrollWidth > e.clientWidth + 3 && e.clientWidth > 0).length,
+        // Las tablas anchas llevan overflow-x-auto a propósito: pueden desplazarse, no desbordan la ventana.
+        desbordes: [...d.querySelectorAll('*')].filter((e) => e.scrollWidth > e.clientWidth + 3 && e.clientWidth > 0
+          && getComputedStyle(e).overflowX !== 'auto').length,
         x: !!document.getElementById('btn-cerrar-detalle-salida'),
-        campos: d.querySelectorAll('input,select,textarea').length,
+        campos: d.querySelectorAll('input:not(#buscador-materiales-detalle),select,textarea').length,
       };
     }, idsBotones);
     ok(`${w}px: botones del pie en una fila, X, sin campos y sin desbordes`,
-      !!estado && estado.filas === 1 && /^0px$/.test(estado.radio) && estado.x && estado.campos === 0,
+      !!estado && estado.filas === 1 && /^0px$/.test(estado.radio) && estado.x && estado.campos === 0 && estado.desbordes === 0,
       JSON.stringify(estado));
   }
   await page.setViewport({ width: 1366, height: 860 }); await pausa(300);

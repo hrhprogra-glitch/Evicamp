@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Truck, X, Printer, RotateCcw, CheckCircle, AlertTriangle, MapPin, User, Calendar, Trash2, Plus } from 'lucide-react';
+import { Truck, X, Printer, RotateCcw, CheckCircle, AlertTriangle, MapPin, User, Calendar, Trash2, Plus, Search } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
+import { coincideBusqueda } from '../../../utils/busqueda';
 import { VistaPreviaSalida } from './VistaPreviaSalida';
 import { ModalDevolucionesSalida } from './ModalDevolucionesSalida';
+import { UnidadMaterial } from './UnidadMaterial';
 import { useEmpresaComprobante } from '../empresa';
 import type { Salida, SalidaItem } from '../types';
 
@@ -40,6 +42,8 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
   useCerrarConEscape(isOpen, onClose);
 
   const [materiales, setMateriales] = useState<MaterialVista[]>([]);
+  // Buscador del detalle: filtra SOLO los materiales que ya tiene esta salida (dueño 24/11/2026).
+  const [buscarMaterial, setBuscarMaterial] = useState('');
   const [devolver, setDevolver] = useState<Record<number, string>>({});
   const [motivoDev, setMotivoDev] = useState('Sobrante de trabajo no utilizado');
   // 228: fecha y trabajador que devolvió, elegibles en la ventana flotante.
@@ -80,6 +84,14 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
     setDevolver(cant);
     setFechaDev(hoy());
     setTrabajadorDev('');
+    setBuscarMaterial('');
+
+    // Dueño 24/11/2026: al abrir, la vista queda arriba; el imán de ventanas recuerda este panel
+    // y vuelve a él si un clic en el fondo intenta llevar el selector abajo.
+    const enfocarArriba = window.setTimeout(
+      () => document.getElementById('inicio-detalle-salida')?.focus({ preventScroll: true }),
+      0
+    );
 
     let vivo = true;
     supabase
@@ -89,7 +101,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
       .then(({ data }: { data: any[] | null }) => {
         if (vivo) setTrabajadoresCatalogo(data || []);
       });
-    return () => { vivo = false; };
+    return () => { vivo = false; window.clearTimeout(enfocarArriba); };
   }, [isOpen, salida.id]);
 
   const confirmarDevoluciones = async () => {
@@ -181,6 +193,8 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
 
   if (!isOpen) return null;
 
+  const materialesFiltrados = materiales.filter((m) => coincideBusqueda([m.descripcion, m.unidad], buscarMaterial));
+
   const getEstadoBadge = (estado: string) => {
     switch (estado) {
       case 'FINALIZADO':
@@ -199,7 +213,10 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono">
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 font-mono"
+        onMouseDown={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
+      >
         <div
           id="modal-detalle-salida-container"
           className="ventana-sobria bg-[var(--color-surface)] w-full max-w-5xl border-2 border-[var(--color-ink)] flex flex-col max-h-[calc(94dvh/var(--ui-zoom))] sm:max-h-[calc(90dvh/var(--ui-zoom))] overflow-hidden"
@@ -231,8 +248,9 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
 
           {/* Contenido con Scroll */}
           <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 font-mono text-xs space-y-4">
-            {/* Datos principales: solo se muestran, no se editan */}
-            <div className="border-2 border-[var(--color-border)] bg-[var(--color-bg)] p-3">
+            {/* Datos principales: solo se muestran, no se editan. Este panel es el ancla del foco:
+                el imán de ventanas recuerda dónde estaba el selector y vuelve aquí tras un clic afuera. */}
+            <div id="inicio-detalle-salida" tabIndex={-1} className="border-2 border-[var(--color-border)] bg-[var(--color-bg)] p-3 outline-none">
               <p className="font-black uppercase text-[var(--color-ink)] mb-2 flex items-center gap-2">
                 <User size={14} /> Cliente, trabajo y responsable
               </p>
@@ -299,6 +317,29 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
                 <MapPin size={14} /> Materiales y repuestos
                 <span className="text-[10px] font-bold text-[var(--color-muted)] normal-case">Para quitar o cambiar uno, usa «Continuar salida»</span>
               </p>
+              <div className="buscador-sobrio mb-2">
+                <div className="buscador-sobrio__icono"><Search size={16} /></div>
+                <input
+                  id="buscador-materiales-detalle"
+                  type="search"
+                  value={buscarMaterial}
+                  onChange={(e) => setBuscarMaterial(e.target.value)}
+                  placeholder="Buscar material de esta salida"
+                  aria-label="Buscar material de esta salida"
+                />
+                {buscarMaterial && (
+                  <div className="buscador-sobrio__match">
+                    <button
+                      id="btn-limpiar-buscador-materiales-detalle"
+                      type="button"
+                      title="Limpiar búsqueda"
+                      aria-label="Limpiar búsqueda"
+                      onClick={() => setBuscarMaterial('')}
+                      className="buscador-sobrio__borrar"
+                    ><X size={14} /></button>
+                  </div>
+                )}
+              </div>
               <div className="border-2 border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto custom-scrollbar">
                 <table className="w-full text-left text-[11px]">
                   <thead className="bg-[var(--color-ink)] text-white font-black uppercase">
@@ -313,10 +354,12 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--color-border)]">
-                    {materiales.length === 0 && (
-                      <tr><td colSpan={7} className="p-4 text-center text-[var(--color-muted)]">No hay materiales registrados</td></tr>
+                    {materialesFiltrados.length === 0 && (
+                      <tr><td colSpan={7} className="p-4 text-center text-[var(--color-muted)]">
+                        {buscarMaterial ? 'No hay materiales que coincidan con la búsqueda' : 'No hay materiales registrados'}
+                      </td></tr>
                     )}
-                    {materiales.map((m, idx) => {
+                    {materialesFiltrados.map((m, idx) => {
                       const pendiente = Math.max(0, Number(m.cantidad || 0) - Number(m.cantidad_devuelta || 0));
                       return (
                         <tr key={m.id || `mat-${idx}`} className="hover:bg-black/5">
@@ -324,7 +367,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
                             {m.descripcion}
                             {m.es_externo && <span className="ml-2 text-[9px] text-amber-700 font-black">EXTERNO</span>}
                           </td>
-                          <td className="p-2 text-center">{m.unidad}</td>
+                          <td className="p-2 text-center"><UnidadMaterial unidad={m.unidad} /></td>
                           <td className="p-2 text-right font-bold">{Number(m.cantidad || 0)}</td>
                           <td className="p-2 text-right font-bold text-amber-700">{Number(m.cantidad_devuelta || 0) || '-'}</td>
                           <td className="p-2 text-right font-bold">{pendiente}</td>
@@ -382,7 +425,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
                               <tr key={d.id || idx}>
                                 <td className="p-1">{d.fecha ? new Date(d.fecha).toLocaleString('es-PE') : '-'}</td>
                                 <td className="p-1 font-bold uppercase">{item?.descripcion || `Item #${d.salida_item_id}`}</td>
-                                <td className="p-1 text-right font-black text-amber-700">{d.cantidad} {item?.unidad || ''}</td>
+                                <td className="p-1 text-right font-black text-amber-700">{d.cantidad} <UnidadMaterial unidad={item?.unidad} /></td>
                                 <td className="p-1 uppercase">{nomTrab || '—'}</td>
                                 <td className="p-1 uppercase">{d.motivo || '-'}</td>
                                 <td className="p-1 uppercase">{d.usuario || '-'}</td>

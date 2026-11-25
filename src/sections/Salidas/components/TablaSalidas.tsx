@@ -148,7 +148,15 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
                         )}
                       </div>
                     </td>
-                    <td className="p-4 text-center"><span className="font-black">{s.items?.length || 0}</span></td>
+                    <td className="p-4 text-center">
+                      <span className="font-black">{s.items?.length || 0}</span>
+                      {/* Devoluciones visibles en la lista: sin esta marquita el cliente cree que se borraron meses. */}
+                      {((s.devoluciones?.length || 0) > 0 || (s.items || []).some((it) => Number(it.cantidad_devuelta) > 0)) && (
+                        <span className="block text-[9px] font-bold text-amber-700 uppercase" title="Tiene devoluciones registradas">
+                          {s.devoluciones?.length || (s.items || []).filter((it) => Number(it.cantidad_devuelta) > 0).length} dev.
+                        </span>
+                      )}
+                    </td>
                     <td className="p-4 text-center">{getEstadoBadge(s.estado)}</td>
                     <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
                       <button
