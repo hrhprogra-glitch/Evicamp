@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795624648.601548,
-    "seen": 1795624723.8054152,
-    "ast_hash": "048e7e3b766236c5d088ecc70442efa0",
+    "mtime": 1795625326.5328777,
+    "seen": 1795625367.1157742,
+    "ast_hash": "a564efdffeaa714bcb518f6b4ef8e598",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795624704.7822115,
-    "seen": 1795624723.8054168,
-    "ast_hash": "46976148d52116a958f7d2a4358f26b4",
+    "mtime": 1795625349.4898603,
+    "seen": 1795625367.1157749,
+    "ast_hash": "795fac0c382233281cdac32487b04ce8",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795624684.623487,
-    "seen": 1795624723.8054175,
-    "ast_hash": "0d843a6f1b0f336a6322c766b663d947",
+    "mtime": 1795625340.7613695,
+    "seen": 1795625367.115776,
+    "ast_hash": "8f442b21f0c750765bc38750d97b96eb",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795624668.7927232,
-    "seen": 1795624723.8054194,
-    "ast_hash": "28a86772491061f773619243a3a72c17",
+    "mtime": 1795625333.1815383,
+    "seen": 1795625367.1157777,
+    "ast_hash": "5970dc8c29e15b5594ed0cbc44ff2fbb",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2946,9 +2946,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalNuevaSalida.tsx": {
-    "mtime": 1795578545.3780549,
-    "seen": 1795582565.3809626,
-    "ast_hash": "1a267a8ef57504a88f86ef8b56bb2bcc",
+    "mtime": 1795624981.6298916,
+    "seen": 1795625367.1156864,
+    "ast_hash": "ae6977b116325558af0fac3749799e80",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/TablaSalidas.tsx": {
@@ -2958,9 +2958,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/index.tsx": {
-    "mtime": 1795573175.4338677,
-    "seen": 1795574366.6511016,
-    "ast_hash": "7c9d80e97d1eee8c17ad4d06d39bb115",
+    "mtime": 1795624981.6310253,
+    "seen": 1795625367.1156912,
+    "ast_hash": "ce7e499ac775cf5cfaa16523ea9b378f",
     "semantic_hash": ""
   },
   "src/sections/Salidas/types.ts": {
@@ -3909,6 +3909,18 @@
     "mtime": 1795620711.9101446,
     "seen": 1795621107.2102487,
     "ast_hash": "e14b00711007a78a81878f9d27040f20",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/verificar-nombre-nota-salidas.mjs": {
+    "mtime": 1795624981.6213741,
+    "seen": 1795625367.1154644,
+    "ast_hash": "83e449efca3b9aa05ee7c0a0d2167678",
+    "semantic_hash": ""
+  },
+  "src/sections/Salidas/clienteNota.ts": {
+    "mtime": 1795624981.6298916,
+    "seen": 1795625367.1156805,
+    "ast_hash": "b2d7822570cfcc7190c32960185f4557",
     "semantic_hash": ""
   }
 }

@@ -72,14 +72,24 @@ try {
   // Sin internet: la ventana debe cargar igual desde la copia local
   await page.setOfflineMode(true); await pausa(300);
   await page.focus('#btn-imprimir-productos-utilidades'); await tecla('Enter'); await pausa(2500);
-  ok('La ventana abre con Enter', !!(await page.$('#categoria-imprimir-productos')));
-  await page.waitForFunction(() => !document.querySelector('#categoria-imprimir-productos')?.disabled, { timeout: 30000 });
+  ok('La ventana abre con Enter', !!(await page.$('#casilla-todas-categorias')));
+  await page.waitForFunction(() => document.querySelectorAll('[data-categoria]').length > 1, { timeout: 30000 });
   await page.waitForSelector('iframe[title="Vista previa del listado de productos"]', { timeout: 30000 });
   await pausa(700);
   const v0 = await vista();
   ok('Sin internet carga los productos activos', v0.filas.length > 0, `${v0.filas.length} filas`);
   ok('La vista previa trae las 5 columnas por defecto', v0.cabeceras.join('|') === 'CÓDIGO|NOMBRE|CATEGORÍA|STOCK|PRECIO', v0.cabeceras.join('|'));
   ok('El encabezado dice LISTADO DE PRODUCTOS', /LISTADO DE PRODUCTOS/.test(v0.texto));
+  const hojaEstilizada = await page.evaluate(() => {
+    const d = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument;
+    return !!(d?.querySelector('.cabecera') && d?.querySelector('.pie') && /@page/.test(d?.styleSheets?.[0]?.cssRules ? [...d.styleSheets[0].cssRules].map((r) => r.cssText).join('') : ''));
+  });
+  ok('La hoja A4 lleva cabecera, pie y regla de página', hojaEstilizada);
+  const unaFila = await page.evaluate(() => {
+    const fs = [...document.querySelectorAll('[role="dialog"] fieldset')];
+    return fs.length >= 2 && Math.abs(fs[0].getBoundingClientRect().top - fs[1].getBoundingClientRect().top) < 8;
+  });
+  ok('Categorías y columnas están en una sola fila', unaFila);
   await page.setOfflineMode(false);
 
   // Quitar y volver a poner la columna Precio
@@ -95,22 +105,41 @@ try {
     await page.focus(`#${id}`); await tecla(' ');
   }
   await page.focus('#casilla-precio'); await tecla(' '); await pausa(500);
-  const marcadas = await page.$$eval('input[id^="casilla-"]', (xs) => xs.filter((x) => x.checked).map((x) => x.id));
+  const marcadas = await page.$$eval('input[data-columna]', (xs) => xs.filter((x) => x.checked).map((x) => x.id));
   ok('Siempre queda al menos una columna', marcadas.length === 1 && marcadas[0] === 'casilla-precio', marcadas.join(','));
   for (const id of ['casilla-codigo', 'casilla-nombre', 'casilla-categoria', 'casilla-stock']) {
     await page.focus(`#${id}`); await tecla(' ');
   }
   await pausa(400);
 
-  // Filtro por categoría
-  const opciones = await page.$$eval('#categoria-imprimir-productos option', (xs) => xs.map((x) => x.value));
-  ok('El filtro trae Todas más categorías reales', opciones.length > 1 && opciones[0] === 'TODAS', `${opciones.length} opciones`);
-  await page.select('#categoria-imprimir-productos', opciones[1]); await pausa(700);
+  // Categorías con casillas: se elige cuáles se imprimen y cuáles no
+  const cats = await page.$$eval('[data-categoria]', (xs) => xs.map((x) => x.dataset.categoria));
+  ok('Hay casillas para todas las categorías reales', cats.length > 1, `${cats.length} categorías`);
+  ok('Todas las categorías vienen marcadas', await page.$eval('#casilla-todas-categorias', (x) => x.checked));
+
+  // Desmarcar todo deja la hoja vacía; volver a marcar una deja solo esa categoría.
+  await page.focus('#casilla-todas-categorias'); await tecla(' '); await pausa(400);
+  ok('Se pueden desmarcar todas las categorías', (await vista()).filas.length === 0);
+  await page.focus('#casilla-categoria-0'); await tecla(' '); await pausa(700);
   const v3 = await vista();
-  const cat = opciones[1];
-  const todasCoinciden = v3.filas.length > 0 && v3.filas.every((f) => (f[2] || '') === cat);
-  ok('El filtro de categoría deja solo esa categoría', todasCoinciden, `${v3.filas.length} filas de ${cat}`);
-  await page.select('#categoria-imprimir-productos', 'TODAS'); await pausa(500);
+  const cat = cats[0];
+  const idxCat = v3.cabeceras.indexOf('CATEGORÍA');
+  const todasCoinciden = v3.filas.length > 0 && v3.filas.every((f) => (f[idxCat] || '') === cat);
+  ok('Solo se imprime la categoría elegida', todasCoinciden, `${v3.filas.length} filas de ${cat}`);
+  await page.focus('#casilla-todas-categorias'); await tecla(' '); await pausa(400);
+  await page.focus('#casilla-categoria-0'); await tecla(' '); await pausa(600);
+  const v3b = await vista();
+  const sinCat = v3b.filas.length > 0 && v3b.filas.every((f) => (f[idxCat] || '') !== cat);
+  ok('Se puede excluir una categoría', sinCat, `${v3b.filas.length} filas sin ${cat}`);
+  await page.focus('#casilla-todas-categorias'); await tecla(' '); await pausa(500);
+
+  // Columna en blanco para anotar la cantidad a pedir (opcional)
+  await page.focus('#casilla-pedido'); await tecla(' '); await pausa(600);
+  const v4 = await vista();
+  ok('La columna CANT. A PEDIR aparece', v4.cabeceras.includes('CANT. A PEDIR'), v4.cabeceras.join('|'));
+  ok('CANT. A PEDIR sale en blanco para escribir',
+    v4.filas.length > 0 && v4.filas.every((f) => (f[f.length - 1] || '').trim() === ''));
+  await tecla(' '); await pausa(400);
 
   // El botón manda a imprimir SOLO la hoja (iframe), no toda la pantalla
   await page.evaluate(() => {
@@ -123,7 +152,7 @@ try {
 
   // Escape cierra y el selector vuelve al botón
   await tecla('Escape'); await pausa(400);
-  ok('Escape cierra la ventana', !(await page.$('#categoria-imprimir-productos')));
+  ok('Escape cierra la ventana', !(await page.$('#casilla-todas-categorias')));
   ok('El foco vuelve al botón de impresión', (await foco()) === 'btn-imprimir-productos-utilidades', await foco());
 
   // Cuatro tamaños: botón, ventana y hoja visibles sin desbordes
@@ -137,7 +166,7 @@ try {
     });
     ok(`${ancho}px: botón visible sin desborde`, visible);
     await page.focus('#btn-imprimir-productos-utilidades'); await tecla('Enter'); await pausa(900);
-    await page.waitForFunction(() => !document.querySelector('#categoria-imprimir-productos')?.disabled, { timeout: 30000 });
+    await page.waitForFunction(() => document.querySelectorAll('[data-categoria]').length > 1, { timeout: 30000 });
     const v = await vista();
     ok(`${ancho}px: ventana y hoja con filas`, !!(await page.$('#btn-imprimir-productos-hoja')) && v.filas.length > 0, `${v.filas.length} filas`);
     await tecla('Escape'); await pausa(300);

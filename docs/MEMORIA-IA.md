@@ -18,6 +18,10 @@
 - Publicar no basta: otra sesión (`e22050d`, nombre de nota en Salidas) desplegó de nuevo desde una rama sin mi botón y Nego sirvió `index-4DjJ7A18.js`. El dueño volvió a decir que no veía «Imprimir productos». **Comprobar en vivo con navegador los ids reales de los botones**, además de mirar el bundle en el JS.
 - Cada vez que aparezca un bundle nuevo, fusionar esa rama también (`git merge --no-ff`), conservar las tres entradas en docs y volver a compilar/probar. El bundle final con todo junto es `index-D4ichCYo.js` / `index-BvV_knbV.css`.
 
+## 25/11/2026 — «Un lugar en blanco»: preguntar si es cantidad o dinero
+- El dueño pidió «un lugar para poner cuanto pediremos por este producto»; al preguntar eligió **CANTIDAD A PEDIR**, no monto a pagar. La columna opcional se deja vacía a propósito y **no cuenta como columna de datos** para la regla de «siempre queda al menos una».
+- Para elegir categorías pidió casillas con **todas marcadas por defecto**, no un selector único. `null` en el estado significa «todas»; al desmarcar una se materializa el conjunto. La casilla «Todas» vuelve a `null`.
+
 ## 25/11/2026 — Imprimir un listado A4 desde una ventana: el foco se queda en el iframe
 - Un `<iframe srcDoc>` es la forma más limpia de imprimir **solo la hoja** y dejar fuera la app entera (lo mismo que ya se usa en Compras). El botón debe llamar a `iframe.contentWindow.print()`, nunca a `window.print()`. La hoja se arma con HTML + `@page { size: A4 }` y estilos en línea, y el alto del iframe se ajusta en `onLoad` con `contentDocument.documentElement.scrollHeight`.
 - **Trampa real:** `iframe.contentWindow.focus()` antes de `print()` deja el teclado **dentro del iframe**. Los listeners de `window` (como `useCerrarConEscape`) no reciben ese `keydown`: Escape deja de cerrar la ventana. Arreglo: en el `keydown` del `contentDocument`, reenviar un `KeyboardEvent('keydown', {key:'Escape'})` al `window` padre, y además devolver el foco al botón justo después de `print()`.

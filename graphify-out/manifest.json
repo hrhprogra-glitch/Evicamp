@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795625326.5328777,
-    "seen": 1795625367.1157742,
-    "ast_hash": "a564efdffeaa714bcb518f6b4ef8e598",
+    "mtime": 1795626260.9355996,
+    "seen": 1795626323.8939183,
+    "ast_hash": "ecc1527a608a23faa5c540a6402886c8",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795625349.4898603,
-    "seen": 1795625367.1157749,
-    "ast_hash": "795fac0c382233281cdac32487b04ce8",
+    "mtime": 1795626288.5372157,
+    "seen": 1795626323.8939197,
+    "ast_hash": "701915bc7f566dbd0b4f00a1ccf458df",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795625340.7613695,
-    "seen": 1795625367.115776,
-    "ast_hash": "8f442b21f0c750765bc38750d97b96eb",
+    "mtime": 1795626298.346161,
+    "seen": 1795626323.8939219,
+    "ast_hash": "8d5b49ac999e469303a4da27315d99fc",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795625333.1815383,
-    "seen": 1795625367.1157777,
-    "ast_hash": "5970dc8c29e15b5594ed0cbc44ff2fbb",
+    "mtime": 1795626269.8339872,
+    "seen": 1795626323.8939254,
+    "ast_hash": "949f9f5cc11608bc0ed30293e2ab0d70",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3894,15 +3894,15 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-imprimir-productos-utilidades.mjs": {
-    "mtime": 1795620032.5486171,
-    "seen": 1795620229.4831414,
-    "ast_hash": "3c2b7e268f74d620482f28a17f4c22f6",
+    "mtime": 1795626021.3786614,
+    "seen": 1795626323.893329,
+    "ast_hash": "9a32aa2994d7574a57a4f2cc114da1e1",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/ModalImprimirProductos.tsx": {
-    "mtime": 1795620019.222978,
-    "seen": 1795620229.483523,
-    "ast_hash": "965f679447284761c973af3cf4175111",
+    "mtime": 1795625975.9139595,
+    "seen": 1795626323.8937953,
+    "ast_hash": "07531108da6c6e1688075ee8d75422f2",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-salidas-pantalla-pc.mjs": {
