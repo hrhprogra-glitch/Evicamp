@@ -1,6 +1,7 @@
-// 230 (25/11/2026): «Fusionar salidas» desde Nueva salida.
-// El GENERAL es SOLO UNA VISTA: agrupa las salidas elegidas en memoria, sin crear salida nueva
-// ni descontar stock dos veces. Desde ahí se ve todo, se devuelve lo pendiente y se imprime.
+// 230 (25/11/2026): «Fusionar salidas» desde la cabecera de Salidas.
+// El GENERAL es solo una vista de materiales: NO crea salida nueva ni descuenta stock dos veces.
+// Lo que sí se guarda en la base es el GRUPO de salidas (quién está fusionado con quién).
+// Al marcar una salida ya fusionada se marca todo su grupo; al desmarcarla se quita solo esa.
 // Teclado: las flechas solo mueven el selector; Enter activa el botón y el selector se queda.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Check, Layers, Printer, RotateCcw, Search, X } from 'lucide-react';
@@ -138,38 +139,61 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, fusione
 
   if (!isOpen) return null;
 
+  // Al elegir una salida ya fusionada se marcan TODAS las de ese general.
+  // Al desmarcarla se quita solo esa del grupo y las demás siguen fusionadas.
   const alternar = (id: number) => {
-    setElegidas((prev) => prev.includes(Number(id)) ? prev.filter((x) => x !== Number(id)) : [...prev, Number(id)]);
+    const salida = lista.find((s) => Number(s.id) === Number(id));
+    const yaMarcada = elegidas.includes(Number(id));
+    if (yaMarcada && salida?.fusion) {
+      void desvincular(Number(id), salida.fusion);
+      return;
+    }
+    if (!yaMarcada && salida?.fusion) {
+      const idGrupo = Number(salida.fusion.id);
+      const codigoGrupo = salida.fusion.codigo;
+      const idsGrupo = lista
+        .filter((s) => s.fusion && (Number(s.fusion.id) === idGrupo || s.fusion.codigo === codigoGrupo))
+        .map((s) => Number(s.id));
+      setElegidas((prev) => Array.from(new Set([...prev, ...idsGrupo])));
+      setFusionGuardada(salida.fusion);
+      return;
+    }
+    setElegidas((prev) => yaMarcada ? prev.filter((x) => x !== Number(id)) : [...prev, Number(id)]);
   };
 
-  // 230: «desvincular» saca UNA salida del GENERAL. No borra ni edita la salida real ni su stock;
-  // si el grupo estaba guardado, la X también lo quita de la base y recalcula el resumen.
-  const desvincular = async (id: number) => {
+  // Quita UNA salida del grupo guardado (no borra ni edita la salida real ni su stock).
+  // Si el grupo se queda con una sola, la propia base borra el general y la salida queda normal.
+  const desvincular = async (id: number, fusion?: SalidaFusion | null) => {
+    const salida = lista.find((s) => Number(s.id) === Number(id));
+    const grupo = fusion || fusionGuardada || salida?.fusion;
     const restantes = elegidas.filter((x) => x !== Number(id));
-    if (fusionGuardada) {
+    if (grupo) {
       setProcesando(true);
       try {
-        const { error } = await supabase.rpc('fn_desvincular_salida_fusion', {
-          p_fusion_id: fusionGuardada.id,
+        const { data, error } = await supabase.rpc('fn_desvincular_salida_fusion', {
+          p_fusion_id: Number(grupo.id),
           p_salida_id: Number(id),
         });
         if (error) throw error;
+        const res = data as any;
+        const borrado = !!res?.general_borrado || Number(res?.quedan ?? 2) < 2;
+        setFusionGuardada(borrado ? null : {
+          ...grupo,
+          salida_ids: restantes.filter((x) => (grupo.salida_ids || []).map(Number).includes(x)),
+          salida_codigos: restantes
+            .map((x) => lista.find((s) => Number(s.id) === x)?.codigo || '')
+            .filter(Boolean),
+        });
       } catch (err: any) {
         avisar(err.message || 'No se pudo desvincular la salida del general');
         setProcesando(false);
         return;
       }
       setProcesando(false);
-      setFusionGuardada(restantes.length
-        ? {
-            ...fusionGuardada,
-            salida_ids: restantes,
-            salida_codigos: fusionGuardada.salida_codigos.filter((_, idx) => fusionGuardada.salida_ids[idx] !== Number(id)),
-          }
-        : null);
       onReload();
+    } else {
+      setFusionGuardada(null);
     }
-    const salida = lista.find((s) => Number(s.id) === Number(id));
     const ids = new Set((salida?.items || []).map((it) => Number(it.id)));
     setDevolver((prev) => Object.fromEntries(Object.entries(prev).filter(([clave]) => !ids.has(Number(clave)))));
     setElegidas(restantes);
@@ -296,7 +320,7 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, fusione
                 <p className="ventana-cabecera__subtitulo">
                   {enGeneral
                     ? `${fusionGuardada ? `GENERAL ${fusionGuardada.codigo} · ` : ''}${seleccionadas.length} salida(s) · ${filas.length} material(es) · solo vista, sin crear salida`
-                    : 'Elige las salidas que quieres ver juntas'}
+                    : 'Elige salidas para fusionar · marcar una ya fusionada marca todo su grupo'}
                 </p>
               </div>
             </div>
@@ -515,13 +539,13 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, fusione
             <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 ml-auto shrink-0">
               {!enGeneral ? (
                 <button
-                  id="btn-fusion-ver-general"
+                  id="btn-fusion-ejecutar"
                   type="button"
-                  disabled={elegidas.length === 0}
-                  onClick={() => { setEnGeneral(true); setDevolver({}); }}
+                  disabled={guardando || elegidas.length === 0}
+                  onClick={() => void guardarFusion()}
                   data-nav-fusion="1000,2"
-                  className={botonCls}
-                ><Layers size={16} className="hidden sm:block" /> Ver general</button>
+                  className="h-10 px-3 bg-indigo-800 text-white font-black uppercase text-[11px] sm:text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
+                ><Layers size={16} className="hidden sm:block" /> Fusionar</button>
               ) : (
                 <>
                   <button id="btn-fusion-volver" type="button" onClick={() => setEnGeneral(false)} data-nav-fusion="1000,4" className={botonCls}>
