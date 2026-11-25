@@ -7,13 +7,22 @@
 
 ---
 
-## 25/11/2026 (Salidas no cabía en PC pequeña) · OpenCode (Big Pickle) — ARREGLADO EN NEGO, SIN PUSH NI ECOSISTEMA
+## 25/11/2026 (Salidas en PC pequeña: pase a Evicamp, ecosistema, panel de clientes y GitHub) · OpenCode (Big Pickle) — HECHO EN LOS CUATRO SITIOS Y SUBIDO
+
+- **Dueño:** *"tienes que actualizarlo a evicamp y ecosistema y github y panel para mis clientes que pagan"*. Ese OK cubre los cuatro destinos y GitHub en la misma tanda, sin pedir otro permiso para el push.
+- **Git:** rama `salidas-pantalla-pc` desde `d0d4549`, con un commit propio (`ae2df04`) que no arrastra el WIP ajeno del repo principal. Antes de subir se comprobó que `origin/fase-11-sunat` tenía **0 commits propios** y que el commit de documentación local `eb5dce1` ya estaba incorporado (cherry-pick sin cambios). Push **`f9b5fe1..ae2df04`** a `origin/fase-11-sunat`; `main` intacto.
+- **SSH:** dos intentos de deploy a Evicamp fallaron con `handshake timeout` y `Test-NetConnection` al puerto 22 daba falso (fail2ban temporal), aunque la web respondía 200. Se esperó a que se abriera (intento 29) y se usó **`node ai-scripts/deploy.cjs todos`** (destino explícito, una sola conexión y un solo build) para publicar **Evicamp, Nego, ecosistema y clientes**: **22 archivos por sitio**, bundle **`index-BeIFa2v-.js` / `index-CnaKqhb9.css`**. Nunca se llamó `deploy.cjs` sin argumento.
+- **Iconos del oficial repuestos:** `node ai-scripts/restaurar-iconos-ecosistema.cjs`, md5 **`c159d2165b6f67ea8c6126f1b49bf4d7`** en `icon-192.png` y en el logo de ecosistema.
+- **Verificación:** `verificar-bundles-salidas.mjs` **12/12** en Nego, ecosistema y Evicamp (mismo bundle, sin `min-w-[1080px]`); `verificar-salidas-pantalla-pc.mjs` **51/51 en Nego y 51/51 en ecosistema** con teclado, sin internet y 390/768/1024/1280/1366/1920, 0 errores JS; `verificar-bundle-clientes.cjs` confirma que la carpeta compartida `/var/www/siuhub-app/html` sirve el mismo JS/CSS con `tabla-salidas-scroll` y la regla `1101px`. `/suscripcion.json` de Evicamp devuelve el HTML de la app (no un JSON de plan): sin aviso de cobro.
+- **Estado:** Nego, Evicamp, ecosistema, panel de clientes y GitHub quedaron actualizados. Sin cambios de base ni SQL. Falta solo la revisión visual del dueño con **Ctrl+F5**.
+
+## 25/11/2026 (Salidas no cabía en PC pequeña, parte 1) · OpenCode (Big Pickle) — ARREGLADO PRIMERO EN NEGO
 
 - **Dueño:** *"quiero que adaptes al sistema a direntes tamaños pantalla ya que salidas no sale completo si no tapado y es porque su pantalla es mas pequeña arreglar eso"*. Confirmó *"En ambos"*, que pasa *"en todas las tablas y lista pero de la sesión salida"* y que es *"una pc pero no se adecua bien a tu tamaño de pantalla"*. Autorizó ejecutar la propuesta con **«si»**, primero en Nego.
 - **Diagnóstico en vivo:** en 1366×768 la lista de Salidas medía **1547 px** dentro de un contenedor de **1300 px**; `VER` llegaba a x≈1585 (fuera) y `ESTADO` tampococabía. En 1920×1080 sí entraba. El bundle servido venía del worktree `pase-todos` (`d0d4549`), con 9 columnas; el repo principal tiene WIP ajeno en `TablaSalidas.tsx`, que **no se tocó**.
 - **Worktree aislado:** `salidas-pantalla-pc` desde `d0d4549` (sin arrastrar WIP ajeno). En `TablaSalidas.tsx`: se quitó `min-w-[1080px]`, se añadió la clase `tabla-salidas-scroll` y `data-etiqueta` en las 9 columnas. En `index.css`: tabla compacta fija entre **1101 y 1366 px** y tarjetas apiladas hasta **1100 px**, con etiqueta visible delante de cada dato. Sin cambios de ids, teclado, colores, estilo SiuMax Sobrio ni lógica de salidas/devoluciones.
 - **Deploy y verificación:** `npm run build` OK; primer deploy de Nego fue sobrescrito por otro deploy desde `pase-todos` (el sitio sirvió `index-C9Qd50Qv.js`); se detectó comparando bundles y se repitió el deploy. El sitio sirve **`index-CJhKMreh.js` / `index-D74V8jBk.css`**. Nueva prueba `verificar-salidas-pantalla-pc.mjs` con caché desactivada: **51 OK, 0 fallos** en 390, 768, 1024, 1280, 1366 y 1920: `VER` y `ESTADO` dentro, sin desbordes, teclado (↓↓ → Enter → Escape) y sin internet, 0 errores JS.
-- **Estado:** Nego arreglado y probado. **Ecosistema y deploy oficial siguen sin tocar**: hace falta el OK explícito del dueño para desplegar y reponer iconos. Sin Evicamp, sin push. Siguiente paso: pedir ese OK antes de pasar al sitio oficial.
+- **Estado en ese momento:** Nego arreglado y probado; ecosistema y Evicamp esperaban el OK. **Ese OK llegó después y el pase completo está en la entrada de arriba.**
 
 ## 25/11/2026 (Gestión de Usuarios no mostraba nadie en ecosistema) · OpenCode (Big Pickle) — CORREGIDO EN LA BASE, SIN PUSH
 

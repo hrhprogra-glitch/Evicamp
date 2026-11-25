@@ -1600,6 +1600,13 @@
 - **Pendiente de preguntarle:** si el aviso era solo del sitio de ecosistema (ya arreglado) o si además quiere usuarios nuevos en Nego. En Nego solo existe `admin@siumax.com`, así que para «controlar al resto» allí necesitaría dar la lista de usuarios, roles y claves.
 - **Estado:** commit local de la corrección. **Sin push** hasta que el dueño lo pida. Falta su revisión con **Ctrl+F5** en ecosistema.
 
+## 25/11/2026 (el dueño manda actualizar Evicamp, ecosistema, GitHub y el panel de clientes)
+- **Dueño:** *"tienes que actualizarlo a evicamp y ecosistema y github y panel para mis clientes que pagan"*. Con ese OK se autorizaron los cuatro destinos y el push a GitHub, sin necesidad de volver a preguntar.
+- **GitHub:** se verificó que la rama `salidas-pantalla-pc` no arrastraba el trabajo ajeno del repo principal y que el commit de documentación local `eb5dce1` ya estaba incluido. Push **`f9b5fe1..ae2df04`** a `origin/fase-11-sunat`; `main` sigue intacto.
+- **Despliegue:** el VPS bloqueó el puerto SSH de forma temporal (fail2ban) y dos intentos a Evicamp dieron timeout; la web seguía funcionando. Cuando se abrió, se usó `node ai-scripts/deploy.cjs todos` en una sola conexión: **22 archivos en Evicamp, Nego, ecosistema y clientes**, con el bundle **`index-BeIFa2v-.js` / `index-CnaKqhb9.css`**. Después se repusieron los iconos del sitio oficial (md5 `c159d216…`).
+- **Pruebas:** bundles **12/12** en Nego/ecosistema/Evicamp y la carpeta compartida del panel con el mismo JS/CSS; prueba real de pantalla **51/51 en Nego y 51/51 en ecosistema**, con teclado, sin internet y 390/768/1024/1280/1366/1920, 0 errores JS. Evicamp sigue sin aviso de plan ni botón de pago.
+- Falta solo que el dueño revise con **Ctrl+F5** en Nego, Evicamp, ecosistema y el link de sus clientes. Sin cambios de base ni SQL.
+
 ## 25/11/2026 (Salidas no cabía en pantallas de PC pequeñas)
 - **Dueño:** *"quiero que adaptes al sistema a direntes tamaños pantalla ya que salidas no sale completo si no tapado y es porque su pantalla es mas pequeña arreglar eso"*.
 - Preguntó dónde aplicarlo y respondió **«En ambos»**; aclaró que **"es una pc pero no se adecua bien a tu tamaño de pantalla"** y que **"eso pasa en todas las tablas y lista pero de la sesión salida"** (la lista de Salidas, no las ventanas).
@@ -1607,4 +1614,4 @@
 - **Hecho:** en un worktree aparte desde el commit que servía el sitio, se quitó el ancho mínimo de 1080 px, se marcaron las 9 columnas con su etiqueta y se añadió CSS responsive: 1101–1366 px tabla compacta que cabe entera; ≤1100 px cada salida como tarjeta. `VER`, `ESTADO` y `DEVOLUCIONES` siguen visibles. Sin cambios de base.
 - **Despliegue:** build OK; el primer deploy fue sobrescrito por otro trabajo que subió el bundle viejo, se detectó y se repitió. Nego sirve **`index-CJhKMreh.js` / `index-D74V8jBk.css`**.
 - **Prueba:** **51 OK, 0 fallos** en 390/768/1024/1280/1366/1920, con teclado (↓↓, Enter, Escape), sin internet y 0 errores JS.
-- **Queda pendiente:** el dueño debe revisar Nego con **Ctrl+F5**. Ecosistema **no se tocó**: hace falta su OK explícito para desplegar allí y reponer iconos. Sin Evicamp, sin GitHub.
+- **Estado en ese momento:** el dueño debía revisar Nego con **Ctrl+F5**; ecosistema, Evicamp y GitHub esperaban su OK (llegó después, ver entrada siguiente).
