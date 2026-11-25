@@ -1,12 +1,12 @@
-// 25/11/2026 — Nego: prueba REAL en pantalla de la X del historial de devoluciones.
+// 25/11/2026 — Prueba REAL en pantalla de la X del historial de devoluciones.
 // Crea una salida de prueba, registra una devolución con teclado, la borra con la X,
 // verifica que el historial queda vacío y que se puede volver a registrar.
 // Teclado, sin internet, 390/768/1366/1920, 0 errores JS. Limpia todo al final.
-// Uso: node ai-scripts/pruebas/verificar-x-devolucion-nego.mjs <carpeta tools con puppeteer-core>
+// Uso: node ai-scripts/pruebas/verificar-x-devolucion-nego.mjs <carpeta tools> [nego|ecosistema]
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-const [tools] = process.argv.slice(2);
+const [tools, sitio = 'nego'] = process.argv.slice(2);
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 process.loadEnvFile(path.join(aqui, '..', '..', '.env.vps'));
 const require = createRequire(path.join(tools, 'x.js'));
@@ -14,11 +14,18 @@ const puppeteer = require('puppeteer-core');
 const reqP = createRequire(path.join(aqui, '..', '..', 'x.js'));
 const { NodeSSH } = reqP('node-ssh');
 const { conexionVps } = reqP('./ai-scripts/vps.cjs');
+const SITIOS = {
+  nego: { base: 'siumax', url: 'https://nego.siumax.duckdns.org', usuario: process.env.SIUMAX_ADMIN_USUARIO || 'admin@siumax.com', clave: process.env.SIUMAX_ADMIN_CLAVE },
+  ecosistema: { base: 'ecosistema', url: 'https://ecosistema123.duckdns.org', usuario: process.env.ECOSISTEMA_ADMIN_USUARIO, clave: process.env.ECOSISTEMA_ADMIN_CLAVE },
+};
+const cfg = SITIOS[sitio];
+if (!cfg) throw new Error(`Sitio desconocido: ${sitio}. Opciones: ${Object.keys(SITIOS).join(', ')}`);
+if (!cfg.clave) throw new Error(`Falta la clave de ${sitio} en .env.vps`);
 const sql = async (q) => {
   const s = new NodeSSH();
   await s.connect(conexionVps);
   try {
-    const r = await s.execCommand('runuser -u postgres -- psql -At -F "|" -d siumax', { stdin: q });
+    const r = await s.execCommand(`runuser -u postgres -- psql -At -F "|" -d ${cfg.base}`, { stdin: q });
     if (r.stderr && /ERROR|FATAL/i.test(r.stderr)) throw new Error(r.stderr);
     return r.stdout.trim();
   } finally { s.dispose(); }
@@ -40,6 +47,7 @@ const aceptar = async () => {
   if (await page.$('#dialogo-sistema-aceptar')) { await tecla('Enter'); await pausa(600); }
 };
 const sello = String(Date.now()).slice(-6);
+const MARCA = `PRUEBA X ${sello}`; // marca para poder borrar cualquier movimiento que quede
 const ID_CLI = 994000 + (Number(sello) % 9000);
 const NOMBRE_CLI = `ZZZ X DEV ${sello}`;
 let codigo = '';
@@ -58,11 +66,11 @@ try {
       ))))->>'codigo';`);
   idSalida = Number(await sql(`SELECT id FROM salidas WHERE codigo='${codigo}'`));
 
-  await page.goto('https://nego.siumax.duckdns.org', { waitUntil: 'networkidle2' });
+  await page.goto(cfg.url, { waitUntil: 'networkidle2' });
   await page.waitForSelector('#input-login-usuario', { timeout: 20000 });
-  await page.focus('#input-login-usuario'); await page.keyboard.type('admin@siumax.com');
+  await page.focus('#input-login-usuario'); await page.keyboard.type(cfg.usuario);
   await tecla('Enter');
-  await page.focus('#input-login-password'); await page.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE); await tecla('Enter');
+  await page.focus('#input-login-password'); await page.keyboard.type(cfg.clave); await tecla('Enter');
   await page.waitForSelector('#sidebar-btn-salidas', { timeout: 25000 }); await pausa(1200);
   await page.focus('#sidebar-btn-salidas'); await tecla('Enter'); await pausa(1000);
   await page.focus('#buscador-salidas'); await page.keyboard.type(codigo); await pausa(900);
@@ -125,7 +133,8 @@ try {
 } finally {
   await nav.close();
   try {
-    if (idSalida) await sql(`select public.fn_eliminar_salida(${idSalida}, 'LIMPIEZA PRUEBA X')`);
+    if (idSalida) await sql(`select public.fn_eliminar_salida(${idSalida}, '${MARCA}')`);
+    await sql(`DELETE FROM public.inventory_movements WHERE "user" = '${MARCA}';`);
     await sql(`DELETE FROM customers WHERE id = ${ID_CLI};`);
   } catch (e) { res.push('MAL No se pudieron borrar los datos de prueba: ' + e.message); }
   console.log(res.join('\n'));

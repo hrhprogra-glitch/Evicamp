@@ -1,6 +1,6 @@
 // 24/11/2026 — Verificación en el sitio oficial (solo lectura: no guarda salidas ni productos):
 //  · manguera en unidad M con SUNAT MTR y rollo en Opciones avanzadas (precio 0.00 permitido),
-//  · STOCK EN METROS: sugerido 100322 = 1430 M y lista 100282 = 327 M,
+//  · STOCK EN METROS: el sugerido 100322 y la lista 100282 muestran M (el número cambia con ventas/devoluciones reales),
 //  · sin texto «1 UND = 500 M», Devoluciones en columna propia, una flecha = una fila,
 //  · Salidas ofrece el ROLLO igual que Caja, con la unidad ((ROLLO x100 MT)), y 1 ROLLO se agrega como 100 M,
 //  · buscadores con tildes/espacios, sin internet y en 390/768/1366/1920.
@@ -80,7 +80,7 @@ try {
   ok('Sugerido de 100282 muestra el stock en metros (327 M)', /327(?:\.0+)?\s*M\b/.test(mangs.texto), JSON.stringify(mangs));
   await escribirEn('#input-buscar-producto-salida', 'MANGUERA DE 16');
   const m16 = await sugerencias();
-  ok('Sugerido de 100322 muestra los metros reales (1430 M)', /1430(?:\.0+)?\s*M\b/.test(m16.texto), JSON.stringify(m16));
+  ok('Sugerido de 100322 muestra el stock en metros (no rollos)', /Stock:\s*[\d.]+(?:\.0+)?\s*M\b/.test(m16.texto), JSON.stringify(m16));
   await tecla('Enter'); await pausa(300);
   const textoSalida = await page.evaluate(() => document.body.innerText);
   ok('NO aparece «1 UND = 500 M»', !/1\s*UND\s*=\s*\d+\s*M/i.test(textoSalida));

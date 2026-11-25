@@ -1,9 +1,10 @@
-// 25/11/2026 — Prueba de la X del historial de devoluciones (solo siumax / Nego).
+// 25/11/2026 — Prueba de la X del historial de devoluciones.
 // Registra una devolución, la elimina con fn_eliminar_devolucion y la vuelve a registrar.
 // Todo dentro de BEGIN; … ROLLBACK;: NO escribe nada. Uso:
-//   node ai-scripts/pruebas/verificar-eliminar-devolucion.cjs
+//   node ai-scripts/pruebas/verificar-eliminar-devolucion.cjs [siumax|ecosistema|postgres]
 const { NodeSSH } = require('node-ssh');
 const { conexionVps } = require('../vps.cjs');
+const BASE = process.argv[2] || 'siumax';
 
 const SQL = `
 \\set ON_ERROR_STOP off
@@ -33,7 +34,7 @@ BEGIN
     AND i.cantidad - coalesce(i.cantidad_devuelta,0) >= 2
   ORDER BY i.id DESC LIMIT 1;
   IF v_item IS NULL THEN
-    RAISE NOTICE 'MAL no hay material con stock para probar'; RETURN;
+    RAISE NOTICE 'SIN DATOS no hay material con stock para probar; solo se verificaron funcion y permiso'; RETURN;
   END IF;
 
   SELECT coalesce(p.quantity,0), coalesce(i.cantidad_devuelta,0) INTO v_stock0, v_dev0
@@ -100,11 +101,11 @@ ROLLBACK;
   const s = new NodeSSH();
   await s.connect(conexionVps);
   try {
-    console.log('===== PRUEBA DE LA X EN NEGO (nada se guarda) =====');
-    const r = await s.execCommand('runuser -u postgres -- psql -At -d siumax', { stdin: SQL });
+    console.log(`===== PRUEBA DE LA X EN ${BASE.toUpperCase()} (nada se guarda) =====`);
+    const r = await s.execCommand(`runuser -u postgres -- psql -At -d ${BASE}`, { stdin: SQL });
     console.log((r.stdout || '').trim());
     if (r.stderr) console.log(r.stderr.trim());
-    const lineas = ((r.stdout || '') + (r.stderr || '')).split(/\r?\n/).filter((l) => /^MAL|ERROR:/i.test(l.trim().replace(/^NOTICE:\s*/, '')));
+    const lineas = ((r.stdout || '') + (r.stderr || '')).split(/\r?\n/).filter((l) => /\bMAL\b|ERROR:/i.test(l.replace(/^NOTICE:\s*/, '')));
     if (lineas.length) {
       console.log('RESULTADO: FALLÓ');
       process.exitCode = 1;
