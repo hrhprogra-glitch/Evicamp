@@ -492,7 +492,7 @@ export const TablaProductos: React.FC<Props> = ({
                     <div className="flex flex-col items-end gap-0.5 mt-0.5" title="Presentaciones">
                       {item.presentaciones.map((pres, i) => (
                         <span key={i} className="text-[10px] font-bold text-purple-600 dark:text-purple-400 leading-none whitespace-nowrap bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 border border-purple-200 dark:border-purple-900">
-                          {pres.unidad} x{pres.factor} S/ {formatearMonto(Number(pres.precio))}
+                          {pres.unidad} x{pres.factor} {item.unit} S/ {formatearMonto(Number(pres.precio))}
                         </span>
                       ))}
                     </div>

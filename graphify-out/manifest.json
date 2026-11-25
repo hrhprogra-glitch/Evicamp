@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TablaProductos.tsx": {
-    "mtime": 1795571317.0589547,
-    "seen": 1795571958.8985286,
-    "ast_hash": "c06130613ad60475f635d78694940f11",
+    "mtime": 1795637765.6055906,
+    "seen": 1795642293.093572,
+    "ast_hash": "c003d1d610dff365944255b42576e545",
     "semantic_hash": ""
   },
   "src/sections/Inventario/components/TarjetaMetrica.tsx": {
@@ -174,9 +174,9 @@
     "semantic_hash": "215994902e0aea6d16746caf372d4fb5"
   },
   "src/sections/Inventario/index.tsx": {
-    "mtime": 1795571317.0599546,
-    "seen": 1795571958.8985305,
-    "ast_hash": "99bda0d2bcfbc7322909b3ab2b8aa277",
+    "mtime": 1795641409.776743,
+    "seen": 1795642293.093575,
+    "ast_hash": "4efbbba0046daf4f0625bb32405314c8",
     "semantic_hash": ""
   },
   "src/sections/Inventario/types.ts": {
@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795641809.4550452,
-    "seen": 1795641848.0887244,
-    "ast_hash": "a2f0db297ac575b86f02d3ef611dd142",
+    "mtime": 1795642242.5910122,
+    "seen": 1795642293.0937135,
+    "ast_hash": "33aecfe4f4c9e415cf432a3d30ce7cd9",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795641809.4560459,
-    "seen": 1795641848.0887263,
-    "ast_hash": "48ff98be7ab88294500f915f13e81b9a",
+    "mtime": 1795642260.8000283,
+    "seen": 1795642293.0937147,
+    "ast_hash": "93da69e7e288e47fe948818555f26a8a",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795641732.3688567,
-    "seen": 1795641771.2124095,
-    "ast_hash": "2787b35518dae7e9b8ec24fea95541ee",
+    "mtime": 1795642268.606459,
+    "seen": 1795642293.0937157,
+    "ast_hash": "4c10d37d35b503938cc8d4a4effadcaa",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795641831.1780038,
-    "seen": 1795641848.0887299,
-    "ast_hash": "cfaabbcd3297ffdc2a14ca941cbfdc78",
+    "mtime": 1795642274.6957572,
+    "seen": 1795642293.093718,
+    "ast_hash": "f38d69238d73c0a9c604a6530a48d1c3",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
