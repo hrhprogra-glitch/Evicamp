@@ -7,6 +7,13 @@
 
 ---
 
+## 24/11/2026 (aclaración del alcance: qué se cambió y qué no) · OpenCode (Big Pickle) — Solo respuesta
+
+- El dueño preguntó si se cambió código de ecosistema y si se hizo primero en Nego/Siumax y luego se subió a Evicamp, a su GitHub y a ecosistema.
+- **Respuesta verificada con git:** sí se cambió código, **solo de ecosistema**, en el worktree `salidas-6-cambios` (commits locales `740d665` y `a856573`) y además se corrigieron 5 filas de `products` en la base de ecosistema. **No** se cambió código de Nego/Siumax ni de Evicamp; **no** se hizo push: `fase-11-sunat` quedó en `9213105` local frente a `origin/fase-11-sunat` en `c53f160…`.
+- El push de la 228 (`a88002a`) fue un pedido **anterior y distinto**, autorizado ese mismo día. En esta tanda solo hubo deploy de ecosistema (22 archivos + iconos), sin tocar los otros dos sitios.
+- Sin cambios nuevos en código, base ni sitio; sin push.
+
 ## 24/11/2026 (revisión completa: ¿hay más productos de kilo o metro?) · OpenCode (Big Pickle) — Solo lectura
 
 - El dueño preguntó: *"ay prodcutos de kilos que hay que corregir o otros de metros o eso son los unicos revisa ??"*. Se revisaron **los 511 productos** de `products`, **las 2910 líneas** de `salida_items` y las presentaciones. No se escribió en la base ni en el sitio.

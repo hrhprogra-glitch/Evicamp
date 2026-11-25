@@ -1518,3 +1518,9 @@
 - Revisión **solo lectura** de los 511 productos, las 2910 líneas de salidas y las presentaciones: no hay productos en kilos, no hay presentaciones de kilo o metro y solo los 5 ya corregidos tienen `ref_unit='METRO'` con `ref_qty=500`. Las 59 líneas de salidas que decían `Metro` son exactamente de esos 5 productos.
 - Se le explica que hay 12 tubos con «3/5 MTS» en el nombre (ids 100336–100348), pero se venden por unidad (`ref_qty=1`) y nunca salieron como `Metro`: no se corregirán salvo que el dueño pida una nota de equivalencia distinta. `MANOMETRO` salió en la lista solo por contener la palabra «metro».
 - Sin cambios en base, código ni sitio; sin push.
+
+## 24/11/2026 (el dueño pregunta por el alcance: ecosistema, Nego, Evicamp y GitHub)
+- **Dueño:** *"perfecto una pregunta cmabiaste el codigo de ecosistema no ??? lo hicistes primero en nego siumax y luego lo subistes a evicamp mi siumaxa github y ecosistema ???"*.
+- Respuesta: **sí se cambió código de ecosistema**, directamente en un worktree limpio basado en `D:/Programación/eco-sistema` (`salidas-6-cambios`), **no primero en Nego/Siumax**. Los 6 cambios y la lectura de la equivalencia desde Inventario están en los commits locales `740d665` y `a856573`.
+- **No** se cambió código de Nego/Siumax ni de Evicamp en esta tanda y **no** se hizo push a GitHub. Deploy solo de ecosistema (22 archivos y sus iconos). El push de la 228 (`a88002a`) fue otro pedido anterior, con autorización del dueño.
+- Sin cambios nuevos; queda pendiente su revisión visual con Ctrl+F5 y cualquier push solo si lo pide.
