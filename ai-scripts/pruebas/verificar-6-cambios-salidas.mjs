@@ -64,6 +64,29 @@ try {
   await page.waitForSelector('#sidebar-btn-salidas', { timeout: 25000 }); await pausa(1200);
   ok('Login real de ecosistema con teclado', true);
 
+  // ---------- Inventario: origen corregido (24/11/2026, segunda parte del pedido) ----------
+  const inv = await page.evaluate(async () => {
+    const t = localStorage.getItem('gestorpro_sesion');
+    const h = { 'x-sesion': t };
+    const [filas, metro] = await Promise.all([
+      fetch('/rest/v1/products?select=id,name,unit,ref_unit,ref_qty,unit_weight,quantity&id=in.(100282,100298,100313,100315,100322)&order=id', { headers: h }).then((r) => r.json()),
+      fetch('/rest/v1/products?select=id&unit=ilike.*metro*', { headers: h }).then((r) => r.json()),
+    ]);
+    return {
+      filas,
+      metro: Array.isArray(metro) ? metro.length : -1,
+      resumen: filas.map((p) => ({ id: p.id, unit: p.unit, ref: p.ref_unit, qty: Number(p.ref_qty), metros: Number(p.unit_weight), stock: Number(p.quantity) })),
+    };
+  });
+  ok('Inventario: los 5 productos ya son UND con equivalencia 500 M',
+    inv.filas.length === 5 && inv.filas.every((p) => String(p.unit).toUpperCase() === 'UND'
+      && String(p.ref_unit).toUpperCase() === 'METRO' && Number(p.ref_qty) === 500 && Number(p.unit_weight) === 500),
+    JSON.stringify(inv.resumen));
+  ok('Ya queda ningún producto con unidad «Metro» en el catálogo', inv.metro === 0, JSON.stringify({ conMetro: inv.metro }));
+  ok('El stock de los 5 productos sigue igual (no se multiplicó)',
+    JSON.stringify(inv.filas.map((p) => Number(p.quantity))) === JSON.stringify([3.27, 0.5, 2.7025, 2.4625, 2.86]),
+    JSON.stringify(inv.filas.map((p) => ({ id: p.id, stock: Number(p.quantity) }))));
+
   // ---------- Detalle: buscador, foco arriba, etiqueta de unidad ----------
   await page.focus('#sidebar-btn-salidas'); await tecla('Enter'); await pausa(900);
   await abrirSalida('SAL-MIG-00243');
