@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
-import { RotateCcw, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { RotateCcw, X, Search } from 'lucide-react';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
+import { coincideBusqueda } from '../../../utils/busqueda';
+import { UnidadMaterial } from './UnidadMaterial';
 
 export type MaterialDevolucion = {
   id?: number;
@@ -50,13 +52,22 @@ export const ModalDevolucionesSalida: React.FC<ModalDevolucionesSalidaProps> = (
 }) => {
   useCerrarConEscape(isOpen, onClose);
 
+  // Buscador: filtra solo los materiales de ESTA salida que ya vienen en la ventana (dueño 24/11/2026).
+  const [buscarMaterial, setBuscarMaterial] = useState('');
+
   useEffect(() => {
     if (!isOpen) return;
-    const t = window.setTimeout(() => document.getElementById('input-devolver-0')?.focus(), 50);
+    setBuscarMaterial('');
+    // Enfoca el primer campo de devolución que se pueda escribir (los de pendiente 0 están deshabilitados).
+    const t = window.setTimeout(() => {
+      document.querySelector<HTMLInputElement>('#modal-devoluciones-flotante-container input[data-devolver]:not([disabled])')?.focus({ preventScroll: true });
+    }, 50);
     return () => window.clearTimeout(t);
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const materialesFiltrados = materiales.filter((m) => coincideBusqueda([m.descripcion, m.unidad], buscarMaterial));
 
   const inputCls = 'w-full p-2 min-h-[40px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none disabled:opacity-50';
   const total = materiales.reduce((sum, m) => {
@@ -123,8 +134,33 @@ export const ModalDevolucionesSalida: React.FC<ModalDevolucionesSalidaProps> = (
             </div>
           </div>
 
+          <div className="buscador-sobrio">
+            <div className="buscador-sobrio__icono"><Search size={16} /></div>
+            <input
+              id="buscador-materiales-devolucion"
+              type="search"
+              value={buscarMaterial}
+              onChange={(e) => setBuscarMaterial(e.target.value)}
+              placeholder="Buscar material de esta salida"
+              aria-label="Buscar material de esta salida"
+            />
+            {buscarMaterial && (
+              <div className="buscador-sobrio__match">
+                <button
+                  id="btn-limpiar-buscador-materiales-devolucion"
+                  type="button"
+                  title="Limpiar búsqueda"
+                  aria-label="Limpiar búsqueda"
+                  onClick={() => setBuscarMaterial('')}
+                  className="buscador-sobrio__borrar"
+                ><X size={14} /></button>
+              </div>
+            )}
+          </div>
+
+          {/* data-tabla-campos: tabla para escribir, las flechas se mueven entre campos en vez de quedarse en la fila */}
           <div className="border-2 border-[var(--color-border)] bg-[var(--color-surface)] overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left text-[11px]">
+            <table data-tabla-campos="true" className="w-full text-left text-[11px]">
               <thead className="bg-[var(--color-ink)] text-white font-black uppercase">
                 <tr>
                   <th className="p-2">Material</th>
@@ -137,23 +173,26 @@ export const ModalDevolucionesSalida: React.FC<ModalDevolucionesSalidaProps> = (
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-border)]">
-                {materiales.length === 0 && (
-                  <tr><td colSpan={7} className="p-4 text-center text-[var(--color-muted)]">No hay materiales para devolver</td></tr>
+                {materialesFiltrados.length === 0 && (
+                  <tr><td colSpan={7} className="p-4 text-center text-[var(--color-muted)]">
+                    {buscarMaterial ? 'No hay materiales que coincidan con la búsqueda' : 'No hay materiales para devolver'}
+                  </td></tr>
                 )}
-                {materiales.map((m, idx) => {
+                {materialesFiltrados.map((m, idx) => {
                   const pendiente = Math.max(0, Number(m.cantidad || 0) - Number(m.cantidad_devuelta || 0));
                   const cant = Number(devolver[Number(m.id)] || 0);
                   const valida = Math.min(cant, pendiente);
                   return (
                     <tr key={m.id || `dev-${idx}`} className="hover:bg-black/5">
                       <td className="p-2 font-bold uppercase">{m.descripcion}</td>
-                      <td className="p-2 text-center">{m.unidad}</td>
+                      <td className="p-2 text-center"><UnidadMaterial unidad={m.unidad} /></td>
                       <td className="p-2 text-right font-bold">{Number(m.cantidad || 0)}</td>
                       <td className="p-2 text-right font-bold text-amber-700">{Number(m.cantidad_devuelta || 0)}</td>
                       <td className="p-2 text-right font-bold">{pendiente}</td>
                       <td className="p-1">
                         <input
                           id={`input-devolver-${idx}`}
+                          data-devolver="true"
                           type="number"
                           step="any"
                           min="0"
