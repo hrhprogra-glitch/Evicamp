@@ -8,6 +8,14 @@
 
 ---
 
+## 24/11/2026 — El 409 de devoluciones en ecosistema NO era del front: era el default de `store_id`
+- Síntoma: `POST /rest/v1/rpc/fn_registrar_devoluciones_lote` → **409 Conflict** y `Error registrando devoluciones: Object`. Los 404 de `suscripcion.json` y `empleados_publico` y el aviso `beforeinstallprompt` son **ruido**, no la causa.
+- **Regla de oro aprendida:** PostgREST convierte un `23503` (foreign key) o `23505` (único) en **409**. Para saber la causa exacta, no mirar solo la consola: reproduce la llamada en `psql` dentro de `BEGIN; … ROLLBACK;` y lee `SQLSTATE` y `SQLERRM`. Así se vio `inventory_movements_store_id_fkey`.
+- Causa: `inventory_movements.store_id` tenía **DEFAULT 2** en ecosistema, pero `stores` solo tiene el id **1**. En Nego el default es 1; por eso las pruebas en Nego pasaban y el error solo salía en el sitio del cliente. **Una prueba en Nego no prueba la configuración de la base de ecosistema**: hay que revisar defaults/FK en cada base (por eso se creó `ai-scripts/pruebas/verificar-generales-devoluciones.cjs`, que compara defaults contra `stores`).
+- Segundo fallo: con `store_id=2` huérfano en filas viejas, la **primera** actualización de un lote en una transacción pasa pero la **segunda** falla (PostgreSQL vuelve a validar la FK). Reparar también las filas antiguas, no solo el default.
+- Corrección en `servidor/sql/corregir-default-store-inventario.sql`: `SET lock_timeout='5s'`, default a la primera tienda activa y `UPDATE … WHERE NOT EXISTS (SELECT 1 FROM stores …)` en `batches`, `inventory_movements`, `sales` y `cash_sessions`. Siempre con `pg_dump -Fc` previo. **No reiniciar la API.**
+- Cuidado con `ROW_COUNT()`: es variable de psql, **no función de PL/pgSQL**; dentro de un `DO` usar `GET DIAGNOSTICS v_n = ROW_COUNT;`.
+
 ## 24/11/2026 — Salidas debe ser igual que Caja: el rollo se elige en el buscador y se guarda en metros
 - El dueño preguntó si Caja y Salidas eran iguales y, al explicarle que Caja ofrecía `M` y `(ROLLO x100/400/500)` pero Salidas solo `M`, dijo **«quiero que sea igual»** y eligió **«Salidas también con ROLLO»**. Con **«si empieza»** se hizo primero solo en Nego.
 - En `ModalNuevaSalida.tsx` se usa **`conPresentaciones`** (la misma utilidad de Caja): el buscador y el escáner ofrecen el producto base y los clones `(ROLLO xN)`, con stock en rollos y foto del producto real (`productoId`). Ojo con el tipado: el clon tiene `id` tipo string (`"<id>::<i>"`), por eso `fotoProducto` necesita `Number(...)` y los campos del producto crudo (`image_path`, `cost_price`) requieren cast a `any`.

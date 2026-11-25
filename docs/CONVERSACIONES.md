@@ -1564,3 +1564,11 @@
 - `npm run build` OK, bundle **`index-DdYWVHW4.js`**, deploy primero en Nego (22 archivos) y regresión **23/23** con teclado, sin internet y 390/768/1366/1920, 0 errores JS. Sin bases tocadas.
 - **Dueño:** **«perfecto subelo»**. Con ese OK se publicó también en **ecosistema** (22 archivos + iconos `c159d216…`), **Evicamp** (22) y **panel de clientes** (22), con destino explícito. Nego ya tenía el cambio.
 - **Pruebas:** Nego **23/23** y ecosistema **26/26**. En vivo: `MANGUERA CIEGA DE 20MM (100MT) (ROLLO x100 MT)` con `3 ROLLO`, elección con flechas y fila de `100 M`. Push autorizado y hecho a `origin/fase-11-sunat`. Falta su revisión con **Ctrl+F5**.
+
+## 24/11/2026 (el dueño pide arreglar de urgencia el 409 al devolver en ecosistema)
+- **Dueño:** *"quise hacer una devolución en ecosistema y me sale esto… 409 (Conflict)… te dije que hagas pruebas generales en nego siumax para evitar eso arreglalo urgente que mi cliente lo necesita !!!!"*.
+- Diagnóstico sin escribir: la nueva prueba general en Nego salió **TODO OK**; en ecosistema detectó `inventory_movements=2` y reproduciendo la llamada en una transacción revertida apareció `SQLSTATE 23503`, FK `inventory_movements_store_id_fkey`. En ecosistema solo existe la tienda 1; el default de `store_id` era 2. En Nego ya era 1, por eso las pruebas de Nego no veían el fallo. Los 404 y el aviso de PWA que pegó el dueño son ruido.
+- Había un segundo fallo: 614 lotes, 4.658 movimientos y 62 ventas con `store_id=2` huérfano; la segunda devolución del mismo lote fallaba en `batches_store_id_fkey`.
+- **Corrección aplicada solo en ecosistema** con respaldo previo y `lock_timeout`: `corregir-default-store-inventario.sql` dejó el default en la tienda 1 y reparó los huérfanos. Quedaron **0 huérfanos**. No se reinició la API.
+- **Verificación:** prueba general **TODO OK** en Nego y ecosistema; regresiones Nego **23/23** y ecosistema **26/26**, teclado, sin internet, 390/768/1366/1920, 0 errores JS. No cambió el bundle, así que no hubo deploy.
+- Falta que el dueño pruebe su devolución con **Ctrl+F5**. Commit local; **sin push** hasta su OK.
