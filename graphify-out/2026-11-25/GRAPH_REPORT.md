@@ -1,7 +1,7 @@
 # Graph Report - pase-todos  (2026-11-25)
 
 ## Corpus Check
-- 623 files · ~1,399,932 words
+- 623 files · ~1,401,355 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 5 file(s) not represented in the graph (top: (none) 3, .css 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ad84f427`
+- Built from commit: `8a901c0c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1506,16 +1506,16 @@ Nodes (3): { conexionVps }, { NodeSSH }, path
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `node-ssh` connect `avisar` to `estilo-ventanas.cjs`, `build-escritorio.cjs`, `restore-aesthetics.cjs`, `prueba-historial-cpe-ui.mjs`, `patch-stock-metros-ecosistema.cjs`, `prueba-historial-cpe-ui.mjs`, `buscarImagenes.ts`, `limpiar-siumax-total.cjs`, `fix-contrast.cjs`, `fix-font-size.cjs`, `cargar-datos-ecosistema.cjs`, `aplicar-detalle-salida-nego.cjs`, `cargar-datos-nego.cjs`, `descargar-backups.cjs`, `probar-restauracion.cjs`, `aplicar-fase9-10-siumax.cjs`, `prueba-escala-off.mjs`, `prueba-contratos-nego.mjs`, `prueba-botones-grupos-clientes.mjs`, `aplicar-salidas-228-ecosistema.cjs`, `imagenes-servidor.cjs`, `public.inventory_movements`, `prueba-fase11-3-ui.mjs`, `fix-phantom.cjs`, `patch-mangueras-ecosistema.cjs`, `fix-right-panel2.cjs`, `main.tsx`, `restore-lotes.cjs`, `update-modal-clientes.cjs`, `finanzas.jpg (Finance Carousel Image)`?**
-  _High betweenness centrality (0.186) - this node is a cross-community bridge._
+  _High betweenness centrality (0.190) - this node is a cross-community bridge._
 - **Are the 8 inferred relationships involving `useCerrarConEscape()` (e.g. with `17/11/2026 (174) · OpenCode (Big Pickle) — Clic en cualquier fila abre el detalle, como Inventario > Productos` and `24/11/2026 (227) · OpenCode (Big Pickle) — Quitar materiales con devolución de stock, Devolver en ventana flotante y detalle con estilo de Nueva salida (solo Nego)`) actually correct?**
   _`useCerrarConEscape()` has 8 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `electron-builder`, `@tailwindcss/postcss`, `@types/node` to the rest of the system?**
   _96 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `TableroGanancias.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.01020408163265306 - nodes in this community are weakly interconnected._
-- **Why does `Bitácora compartida (Claude ↔ Antigravity ↔ cualquier IA)` connect `TableroGanancias.tsx` to `Cliente`, `escritorio/package.json`, `Inventario/index.tsx`, `coincideBusqueda`, `Utilidades/index.tsx`, `Product`, `TiendaWeb/index.tsx`, `ModalNuevaCotizacion.tsx`, `ventanas.ts`, `PaginacionSobrio`, `Agenda/index.tsx`, `listar-clientes.sh`, `tiposNegocio.ts`, `PanelCompras.tsx`, `Clientes/index.tsx`, `Punto-de-venta/index.tsx`, `useTiposNegocio`, `facturador.mjs`, `SideBar.tsx`, `ModalProducto.tsx`, `autorizacion.tsx`, `ModalNuevaSalida.tsx`, `formatearMonto`, `comprobante.ts`, `ModalHistorialLotes.tsx`, `encolar`, `Clientes/types.ts`, `ModalDetalleCliente.tsx`, `cambiar-link.sh`, `ModalUsuario.tsx`, `prueba-adaptiva-salida-caja-agenda.mjs`?**
-  _High betweenness centrality (0.099) - this node is a cross-community bridge._
+- **Why does `react` connect `react` to `Cliente`, `Inventario/index.tsx`, `ModalGestionProveedores.tsx`, `coincideBusqueda`, `Utilidades/index.tsx`, `Product`, `TiendaWeb/index.tsx`, `ModalNuevaCotizacion.tsx`, `ModalProduccion.tsx`, `PaginacionSobrio`, `ModalEtiqueta.tsx`, `useCerrarConEscape`, `avisar`, `Agenda/index.tsx`, `ModalImprimirProductos.tsx`, `ModalFichaCliente.tsx`, `tiposNegocio.ts`, `ModalAjuste.tsx`, `PanelCompras.tsx`, `Clientes/index.tsx`, `Punto-de-venta/index.tsx`, `fix-font-size.cjs`, `useTiposNegocio`, `SideBar.tsx`, `ModalProducto.tsx`, `autorizacion.tsx`, `ModalNuevaSalida.tsx`, `main.tsx`, `ModalDetalleOrden.tsx`, `sesion.ts`, `formatearMonto`, `BarraConexion.tsx`, `comprobante.ts`, `ModalHistorialLotes.tsx`, `Clientes/types.ts`, `ModalDetalleCliente.tsx`, `cambiar-link.sh`, `ModalUsuario.tsx`, `test-vps-insert.ts`?**
+  _High betweenness centrality (0.097) - this node is a cross-community bridge._
 - **Should `escritorio/package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.05937353903693315 - nodes in this community are weakly interconnected._
-- **Why does `react` connect `react` to `Cliente`, `Inventario/index.tsx`, `ModalGestionProveedores.tsx`, `coincideBusqueda`, `Utilidades/index.tsx`, `Product`, `TiendaWeb/index.tsx`, `ModalNuevaCotizacion.tsx`, `ModalProduccion.tsx`, `PaginacionSobrio`, `ModalEtiqueta.tsx`, `useCerrarConEscape`, `avisar`, `Agenda/index.tsx`, `ModalImprimirProductos.tsx`, `ModalFichaCliente.tsx`, `tiposNegocio.ts`, `ModalAjuste.tsx`, `PanelCompras.tsx`, `Clientes/index.tsx`, `Punto-de-venta/index.tsx`, `fix-font-size.cjs`, `useTiposNegocio`, `SideBar.tsx`, `ModalProducto.tsx`, `autorizacion.tsx`, `ModalNuevaSalida.tsx`, `main.tsx`, `ModalDetalleOrden.tsx`, `sesion.ts`, `formatearMonto`, `BarraConexion.tsx`, `comprobante.ts`, `ModalHistorialLotes.tsx`, `Clientes/types.ts`, `ModalDetalleCliente.tsx`, `cambiar-link.sh`, `ModalUsuario.tsx`, `test-vps-insert.ts`?**
-  _High betweenness centrality (0.095) - this node is a cross-community bridge._
+- **Why does `Bitácora compartida (Claude ↔ Antigravity ↔ cualquier IA)` connect `TableroGanancias.tsx` to `Cliente`, `escritorio/package.json`, `Inventario/index.tsx`, `coincideBusqueda`, `Utilidades/index.tsx`, `Product`, `TiendaWeb/index.tsx`, `ModalNuevaCotizacion.tsx`, `ventanas.ts`, `PaginacionSobrio`, `Agenda/index.tsx`, `listar-clientes.sh`, `tiposNegocio.ts`, `PanelCompras.tsx`, `Clientes/index.tsx`, `Punto-de-venta/index.tsx`, `useTiposNegocio`, `facturador.mjs`, `SideBar.tsx`, `ModalProducto.tsx`, `autorizacion.tsx`, `ModalNuevaSalida.tsx`, `formatearMonto`, `comprobante.ts`, `ModalHistorialLotes.tsx`, `encolar`, `Clientes/types.ts`, `ModalDetalleCliente.tsx`, `cambiar-link.sh`, `ModalUsuario.tsx`, `prueba-adaptiva-salida-caja-agenda.mjs`?**
+  _High betweenness centrality (0.096) - this node is a cross-community bridge._

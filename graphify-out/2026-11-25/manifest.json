@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795640547.5207415,
-    "seen": 1795640589.4206154,
-    "ast_hash": "fc2cdd8cefa7ed374cca4d872a153c2b",
+    "mtime": 1795641159.22163,
+    "seen": 1795641199.0152326,
+    "ast_hash": "d61940e31edd282062df5987542f75ac",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795640559.563459,
-    "seen": 1795640589.4206178,
-    "ast_hash": "a195db2f7ffb073ecbfc8a906f8a43ce",
+    "mtime": 1795641176.65954,
+    "seen": 1795641199.0152338,
+    "ast_hash": "68806dd7ae3e54fd842456a76cbc1c1c",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795640266.663634,
-    "seen": 1795640589.4206197,
-    "ast_hash": "6898cb8e875ff4c8351569762c0112b1",
+    "mtime": 1795640878.5764873,
+    "seen": 1795641199.0152354,
+    "ast_hash": "f17e9b466f4cd4c78cdfda8f746023c0",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795640552.5376716,
-    "seen": 1795640589.4206235,
-    "ast_hash": "98fbb423d81c7258dd59b250c1241087",
+    "mtime": 1795641163.984104,
+    "seen": 1795641199.0152373,
+    "ast_hash": "cf0b466fcd9530e2bdbc97160b480495",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3930,9 +3930,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-fusionar-salidas.mjs": {
-    "mtime": 1795636894.8937788,
-    "seen": 1795637205.0231597,
-    "ast_hash": "102d34f6251749acd9e6be4010dee790",
+    "mtime": 1795640844.8804185,
+    "seen": 1795641199.0147192,
+    "ast_hash": "ebdd2f1c72440335cde9b768157419f8",
     "semantic_hash": ""
   },
   "ai-scripts/verificar-bundle-clientes.cjs": {
@@ -3942,9 +3942,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalFusionarSalidas.tsx": {
-    "mtime": 1795640216.6631384,
-    "seen": 1795640589.4203727,
-    "ast_hash": "205aedb6f2132a831a412e00fde0367a",
+    "mtime": 1795640844.8890433,
+    "seen": 1795641199.015026,
+    "ast_hash": "5cc683c785f90acbed8d71cedac3e1b1",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-cantidad-salida.mjs": {
