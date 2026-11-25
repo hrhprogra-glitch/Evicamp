@@ -7,6 +7,14 @@
 
 ---
 
+## 24/11/2026 (el rollo ahora dice la unidad: «ROLLO x100 MT») · OpenCode (Big Pickle) — SOLO NEGO, ESPERANDO OK
+
+- El dueño pidió que el `100` no se leyera como unidades: *"dice rollo x100 ejemplo no dice 100 que 100mt osea la unidad que esta entiendes ?"*. Confirmó el texto **`ROLLO x100 MT`** y eligió **«Primero solo Nego»**.
+- **Código:** `src/utils/presentaciones.ts` tiene un ayudante `nombreRolloConUnidad`: solo a los clones `ROLLO` les agrega la unidad base del producto (M/MTR/METRO → **MT**). Así queda `MANGUERA CIEGA DE 20MM (100MT) (ROLLO x100 MT)` en **Caja y Salidas**, que comparten la utilidad. El texto de cajas/paquetes que usa Compras (`nombrePresentacion`) **no se tocó**. El factor y la conversión a metros siguen iguales.
+- Prueba en vivo actualizada: `verificar-cambios-ecosistema.mjs` ahora exige `(ROLLO x100 MT)`, la elección con flechas y que la fila diga `ROLLO X100 MT` con `100 M` (aún no corrida contra ecosistema).
+- `npm run build` OK, bundle **`index-DdYWVHW4.js`**; deploy **solo Nego** (`deploy.cjs siumax`, 22 archivos) y regresión **23/23** con teclado, sin internet y 390/768/1366/1920, 0 errores JS. Sin bases tocadas, sin push.
+- **Siguiente paso:** con el OK del dueño, desplegar ecosistema (+ iconos), Evicamp y clientes, correr la prueba ampliada (26/26) y hacer push. Recordar Ctrl+F5.
+
 ## 24/11/2026 (Salidas con ROLLO como Caja, en los cuatro destinos y GitHub) · OpenCode (Big Pickle) — HECHO, PROBADO Y SUBIDO
 
 - El dueño preguntó si Caja y Salidas eran iguales; se le explicó que Caja mostraba `M` y `ROLLO` y Salidas solo `M`. Dijo **«quiero que sea igual»** y eligió **«Salidas también con ROLLO (Recommended)»**. Autorizó **«si empieza»** para implementar primero solo en Nego.

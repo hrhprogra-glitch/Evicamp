@@ -1556,3 +1556,10 @@
 - **Dueño:** *"perfecto si sale ahora si subelo a ecosistema evicamp gituh en el panel para que todo se actualice"*. Con ese OK se publicó en este orden: **ecosistema** (22 archivos + iconos `c159d216…`), **Evicamp** (22) y **panel de clientes** (22), todos con destino explícito; Nego ya estaba actualizado. En vivo los tres sirven el mismo bundle.
 - **Pruebas:** Nego **23/23** y ecosistema **26/26** con teclado, sin internet y 390/768/1366/1920, 0 errores JS. En ecosistema se vio `(ROLLO x100)`, `3 ROLLO`, la elección con flechas y la fila con `100 M`.
 - **Push autorizado y hecho** a `origin/fase-11-sunat`. Falta solo su revisión visual con **Ctrl+F5**.
+
+## 24/11/2026 (el rollo debe decir que el 100 son metros)
+- **Dueño:** *"perfecto puedes hacer esto que especifique osea dice rollo x100 ejemplo no dice 100 que 100mt osea la unidad que esta entiendes ?"*.
+- Se le respondió que sí: el `100` se lee como unidades y quería que se viera que son metros. Eligió el texto **`ROLLO x100 MT`** y el orden **«Primero solo Nego»**.
+- **Hecho:** en `src/utils/presentaciones.ts` se agregó un ayudante que solo añade la unidad a los clones `ROLLO` (M/MTR/METRO → MT). Como Caja y Salidas usan la misma utilidad, los dos muestran `MANGUERA… (100MT) (ROLLO x100 MT)`. El texto de cajas/paquetes de Compras y la conversión a metros quedaron iguales.
+- `npm run build` OK, bundle **`index-DdYWVHW4.js`**, deploy **solo Nego** (22 archivos) y regresión **23/23** con teclado, sin internet y 390/768/1366/1920, 0 errores JS. Sin bases tocadas ni push.
+- Falta el OK del dueño para ecosistema (+ iconos), Evicamp, clientes, prueba ampliada y push. Recordar Ctrl+F5.
