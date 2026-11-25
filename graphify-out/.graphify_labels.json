@@ -9,7 +9,6 @@
   "34": "fix-filters.cjs",
   "36": "fix-font-size.cjs",
   "38": "fix-jump-historial.cjs",
-  "40": "fix-movs.cjs",
   "43": "fix-transicion.cjs",
   "44": "force-matrix.cjs",
   "45": "replace-map.cjs",

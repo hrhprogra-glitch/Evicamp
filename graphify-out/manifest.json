@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795633421.9631896,
-    "seen": 1795633460.111491,
-    "ast_hash": "3c93d23df99f957510ffb02404703ed6",
+    "mtime": 1795634435.0780008,
+    "seen": 1795634472.2104356,
+    "ast_hash": "d5098776578ef1a0d448d16ae0cd6dbc",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795633432.163829,
-    "seen": 1795633460.1114922,
-    "ast_hash": "6b33e95965bb149485d3b492c9d22b51",
+    "mtime": 1795634447.3388505,
+    "seen": 1795634472.2104366,
+    "ast_hash": "152d8d0ef079c2181fd81ed88024c16b",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795627053.8970973,
-    "seen": 1795627082.374934,
-    "ast_hash": "5899f9a2c700629d86eccb46138d66d8",
+    "mtime": 1795634453.8783898,
+    "seen": 1795634472.2104375,
+    "ast_hash": "b3954a14ba96de52de3965bc69085cb0",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795633427.2954443,
-    "seen": 1795633460.111495,
-    "ast_hash": "0f406094b980febcf82cf5e5290923c3",
+    "mtime": 1795634441.137841,
+    "seen": 1795634472.2104394,
+    "ast_hash": "3cf317ea58d424a404f0b64ed69186b1",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2946,9 +2946,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalNuevaSalida.tsx": {
-    "mtime": 1795624981.6298916,
-    "seen": 1795625367.1156864,
-    "ast_hash": "ae6977b116325558af0fac3749799e80",
+    "mtime": 1795634146.8096476,
+    "seen": 1795634472.2103481,
+    "ast_hash": "be2da0e87dd7e7420ff29c517597e21e",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/TablaSalidas.tsx": {
@@ -2958,9 +2958,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/index.tsx": {
-    "mtime": 1795624981.6310253,
-    "seen": 1795625367.1156912,
-    "ast_hash": "ce7e499ac775cf5cfaa16523ea9b378f",
+    "mtime": 1795634158.2831602,
+    "seen": 1795634472.2103524,
+    "ast_hash": "0e0188dafcf9db5c76b25ba72558e6b5",
     "semantic_hash": ""
   },
   "src/sections/Salidas/types.ts": {
@@ -3921,6 +3921,30 @@
     "mtime": 1795624981.6298916,
     "seen": 1795625367.1156805,
     "ast_hash": "b2d7822570cfcc7190c32960185f4557",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/verificar-bundles-salidas.mjs": {
+    "mtime": 1795634129.955157,
+    "seen": 1795634472.2101138,
+    "ast_hash": "6e4805b7dd75d72bd166e5d7a7565cb8",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/verificar-fusionar-salidas.mjs": {
+    "mtime": 1795634129.955157,
+    "seen": 1795634472.2101216,
+    "ast_hash": "682f3c38bbd90162fe3f05be71f81c76",
+    "semantic_hash": ""
+  },
+  "ai-scripts/verificar-bundle-clientes.cjs": {
+    "mtime": 1795634129.955157,
+    "seen": 1795634472.2101514,
+    "ast_hash": "90a76bde4b0e08e04db2e5acfb49c736",
+    "semantic_hash": ""
+  },
+  "src/sections/Salidas/components/ModalFusionarSalidas.tsx": {
+    "mtime": 1795634130.012669,
+    "seen": 1795634472.210347,
+    "ast_hash": "90fc6c1048390d2aa0a749e9aa69f6a1",
     "semantic_hash": ""
   }
 }

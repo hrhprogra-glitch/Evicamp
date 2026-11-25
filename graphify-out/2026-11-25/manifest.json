@@ -2004,15 +2004,15 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795627029.3229396,
-    "seen": 1795627082.3749306,
-    "ast_hash": "d0ceaf1a50b0fa0edc581cda49ac016a",
+    "mtime": 1795633421.9631896,
+    "seen": 1795633460.111491,
+    "ast_hash": "3c93d23df99f957510ffb02404703ed6",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795627044.5502477,
-    "seen": 1795627082.3749323,
-    "ast_hash": "a62df8b8ff24cf85513020c7e61d4151",
+    "mtime": 1795633432.163829,
+    "seen": 1795633460.1114922,
+    "ast_hash": "6b33e95965bb149485d3b492c9d22b51",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
@@ -2022,9 +2022,9 @@
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795627036.12281,
-    "seen": 1795627082.374937,
-    "ast_hash": "eeb964c0ca3cc0ae3e892d01ba653137",
+    "mtime": 1795633427.2954443,
+    "seen": 1795633460.111495,
+    "ast_hash": "0f406094b980febcf82cf5e5290923c3",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3894,15 +3894,15 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-imprimir-productos-utilidades.mjs": {
-    "mtime": 1795626937.0493848,
-    "seen": 1795627082.3743875,
-    "ast_hash": "be535af7465ceb226a0ab083f1f619f2",
+    "mtime": 1795633349.4668987,
+    "seen": 1795633460.1111958,
+    "ast_hash": "ed89a1bba92e28f8c87e0972c8965a94",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/ModalImprimirProductos.tsx": {
-    "mtime": 1795626896.4924994,
-    "seen": 1795627082.3748121,
-    "ast_hash": "7b33413be1db5193cd611c731828a978",
+    "mtime": 1795633344.0064886,
+    "seen": 1795633460.1114316,
+    "ast_hash": "82b6fd2276310875c30f7f24ceb57966",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-salidas-pantalla-pc.mjs": {
