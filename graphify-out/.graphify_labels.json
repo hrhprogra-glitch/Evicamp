@@ -8,7 +8,6 @@
   "24": "fix-search.cjs",
   "25": "fix-tabs.cjs",
   "26": "fix-themes.cjs",
-  "31": "apply-matrix.cjs",
   "32": "fix-contrast.cjs",
   "34": "fix-filters.cjs",
   "36": "fix-font-size.cjs",
