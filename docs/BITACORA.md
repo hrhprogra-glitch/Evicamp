@@ -7,6 +7,17 @@
 
 ---
 
+## 25/11/2026 (X para borrar una devolución escrita por error, solo Nego) · OpenCode (Big Pickle) — HECHO Y PROBADO, SIN SUBIR A OTROS SITIOS
+
+- **Dueño:** *"perfecto pero me di cuenta que no puedo cancelar devoluciones"*. Al preguntarle qué quería decir, aclaró: *"osea que pasa si me equivoco en una devolución necesito eliminar esa devolución para hacerlo denuevo"*. Después pidió: *"que no diga anular que solo sea una x mas sencillo"*. Eligió **«Empieza solo en Nego (Recomendado)»**.
+- **Pantalla:** en `src/sections/Salidas/components/ModalDetalleSalida.tsx`, cada fila de «Devoluciones registradas» tiene una **X** con id `btn-eliminar-devolucion-${d.id}`, título y `aria-label` «Eliminar devolución». El mensaje de confirmación dice **«eliminar devolución»**, nunca «anular». Al terminar recarga los materiales y la salida. La X del registro funciona con teclado (Enter) y no cambió ningún otro botón ni id.
+- **Base:** `servidor/sql/eliminar-devolucion-salida.sql` crea `fn_eliminar_devolucion(p_devolucion_id bigint, p_usuario text DEFAULT 'Sistema')`: baja `cantidad_devuelta` del material, descuenta el stock del producto y del lote, borra la fila de `salida_devoluciones` y deja un movimiento `ANULACION` con cantidad negativa como constancia. Si la devolución ya no existe o el material tiene menos devuelto, da error claro. La ruta `/rpc/fn_eliminar_devolucion` pide `salidas_crear`, con `GRANT ... TO anon` y `NOTIFY pgrst, 'reload schema'` (sin reiniciar la API).
+- **Aplicado solo en Nego** con respaldo previo `/var/lib/postgresql/respaldo-siumax-antes-eliminar-devolucion-2026-11-25T05-33-45-365Z.dump` y `lock_timeout=5s`. Salida del SQL: `FUNCION LISTA: 1` y `PERMISO LISTO: salidas_crear`.
+- **Build y deploy:** `npm run build` OK, bundle **`index-DbHORBcM.js`**. Desplegado **solo en Nego** con `node ai-scripts/deploy.cjs siumax` (22 archivos). Sin tocar ecosistema, Evicamp, clientes ni GitHub.
+- **Pruebas:** base `verificar-eliminar-devolucion.cjs` **TODO OK** en una transacción que se revierte (registrar 100 → 101, X vuelve a 100, la fila desaparece, queda movimiento `ANULACION -1`, eliminar dos veces da error y se puede volver a registrar). Pantalla `verificar-x-devolucion-nego.mjs` **13/13** con teclado, sin internet y 390/768/1366/1920, 0 errores JS; comprueba que la pantalla no dice «anular». Regresión `verificar-flechas-y-buscador-nego.mjs` **23/23**.
+- **Aviso sobre una prueba vieja:** `prueba-detalle-salida-228.mjs` (quedó en `1cae9a4`, antes del buscador `#buscador-materiales-detalle`) da 4 `MAL` que **ya estaban antes de la X**: cuenta ese buscador como «campo editable» y mide desbordes del footer (`overflow-x-auto`, intencional en 390 px, ya anotado en la 228). No se cambió ese archivo: no es una regresión de esta tanda.
+- **Estado:** cambios aún **sin commit local ni push**; hace falta el OK del dueño para ecosistema, Evicamp, panel de clientes y GitHub. Siguiente paso: actualizar docs + `graphify update .` + `git commit` local, y esperar ese OK.
+
 ## 24/11/2026 (409 al devolver en ecosistema: tienda inexistente) · OpenCode (Big Pickle) — CORREGIDO Y SUBIDO A GITHUB
 
 - **Dueño:** *"quise hacer una devolución en ecosistema y me sale… 409 Conflict… te dije que hagas pruebas generales en nego siumax para evitar eso arreglalo urgente que mi cliente lo necesita !!!!"*.

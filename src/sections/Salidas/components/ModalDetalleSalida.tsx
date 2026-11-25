@@ -8,7 +8,7 @@ import { VistaPreviaSalida } from './VistaPreviaSalida';
 import { ModalDevolucionesSalida } from './ModalDevolucionesSalida';
 import { UnidadMaterial } from './UnidadMaterial';
 import { useEmpresaComprobante } from '../empresa';
-import type { Salida, SalidaItem } from '../types';
+import type { Salida, SalidaDevolucion, SalidaItem } from '../types';
 
 interface ModalDetalleSalidaProps {
   salida: Salida;
@@ -54,6 +54,8 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
   const [procesando, setProcesando] = useState(false);
   const [vistaPreviaOpen, setVistaPreviaOpen] = useState(false);
   const [devolucionesOpen, setDevolucionesOpen] = useState(false);
+  // 25/11/2026: la X del historial borra una devolución escrita por equivocación.
+  const [eliminandoId, setEliminandoId] = useState<number | null>(null);
   const empresa = useEmpresaComprobante();
 
   const materialesRef = useRef(materiales);
@@ -147,6 +149,31 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
       avisar(err.message || 'No se pudo registrar la devolución');
     } finally {
       setProcesando(false);
+    }
+  };
+
+  // La X de cada fila del historial: deshace la devolución y permite volver a registrarla.
+  const eliminarDevolucion = async (d: SalidaDevolucion) => {
+    if (eliminandoId !== null) return;
+    const seguro = await confirmar(
+      `¿Eliminar esta devolución de ${d.cantidad}? El stock y el "Devuelto" volverán a como estaban y podrás registrarla de nuevo.`
+    );
+    if (!seguro) return;
+    setEliminandoId(d.id);
+    try {
+      const { error } = await supabase.rpc('fn_eliminar_devolucion', {
+        p_devolucion_id: d.id,
+        p_usuario: salida.usuario || 'Sistema',
+      });
+      if (error) throw error;
+      avisar('Devolución eliminada. Ya puedes registrarla de nuevo.');
+      await sincronizarMateriales(salida.id);
+      await onReload();
+    } catch (err: any) {
+      console.error('Error eliminando devolución:', err);
+      avisar(err.message || 'No se pudo eliminar la devolución');
+    } finally {
+      setEliminandoId(null);
     }
   };
 
@@ -414,6 +441,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
                           <th className="p-1">Trabajador</th>
                           <th className="p-1">Motivo</th>
                           <th className="p-1">Usuario</th>
+                          <th className="p-1 text-center" title="Eliminar devolución">X</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[var(--color-border)]">
@@ -432,6 +460,17 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
                                 <td className="p-1 uppercase">{nomTrab || '—'}</td>
                                 <td className="p-1 uppercase">{d.motivo || '-'}</td>
                                 <td className="p-1 uppercase">{d.usuario || '-'}</td>
+                                <td className="p-1 text-center">
+                                  <button
+                                    id={`btn-eliminar-devolucion-${d.id}`}
+                                    type="button"
+                                    title="Eliminar devolución"
+                                    aria-label="Eliminar devolución"
+                                    disabled={eliminandoId === d.id}
+                                    onClick={() => void eliminarDevolucion(d)}
+                                    className="p-0.5 border-0 bg-transparent text-[var(--color-muted)] hover:text-red-700 cursor-pointer disabled:opacity-50"
+                                  ><X size={13} /></button>
+                                </td>
                               </tr>
                             );
                           })}
