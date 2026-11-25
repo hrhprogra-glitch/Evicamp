@@ -6520,7 +6520,7 @@
     {
       "type": "bridge_node",
       "question": "Why does `node-ssh` connect `escritorio/package.json` to `revisar-selector.mjs`, `Vite Logo (favicon)`, `prueba-cambio-cpe-ui.mjs`, `prueba-fase11-1-ui.mjs`, `prueba-fase11-2-ui.mjs`, `check.ts`, `revisar-ventanas-caja.mjs`, `patch-stock-metros-ecosistema.cjs`, `ver-ventanas.mjs`, `package.json`, `patch-mangueras-ecosistema.cjs`, `migrar-eco.cjs`, `limpiar-bases-fase1.cjs`, `prueba-fase11-6-ui.mjs`, `prueba-fase11-3-ui.mjs`, `prueba-historial-cpe-ui.mjs`, `cargar-datos-nego.cjs`, `descargar-backups.cjs`, `probar-restauracion.cjs`, `aplicar-fase9-10-siumax.cjs`, `fix-phantom.cjs`, `facturador-servidor.cjs`, `imagenes-servidor.cjs`, `aplicar-salidas-228-ecosistema.cjs`, `prueba-fase11-8-ui.mjs`, `limpiar-siumax-total.cjs`, `test-vps-insert.ts`, `prueba-fase11-4-ui.mjs`?",
-      "why": "High betweenness centrality (0.199) - this node is a cross-community bridge."
+      "why": "High betweenness centrality (0.197) - this node is a cross-community bridge."
     },
     {
       "type": "verify_inferred",
@@ -6540,7 +6540,7 @@
     {
       "type": "bridge_node",
       "question": "Why does `react` connect `react` to `Clientes/index.tsx`, `formatearMonto`, `ModalNuevaSalida.tsx`, `package.json`, `compilerOptions`, `coincideBusqueda`, `TiendaWeb/index.tsx`, `fix-desc.cjs`, `PaginacionSobrio`, `permisos.ts`, `avisar`, `comprobante.ts`, `ModalDetalleOrden.tsx`, `fix-themes.cjs`, `Agenda/index.tsx`, `Product`, `ModalNuevaCotizacion.tsx`, `PanelCompras.tsx`, `fix-filters.cjs`, `fix-font-size.cjs`, `SideBar.tsx`, `impresion.ts`, `package.json`, `Encargos/index.tsx`, `BarraConexion.tsx`, `sesion.ts`, `ModalDetalleRegistroCliente.tsx`, `AnalisisSalidasProductos.tsx`, `TablaMovimientos.tsx`, `28/10/2026: Fase 4.2 (Cliente opcional en la Caja)`, `cambiar-link.sh`, `fix-delete.cjs`, `restore-lotes.cjs`, `ThemeSwitcher.tsx`, `tsconfig.json`, `PestanaFacturacion.tsx`?",
-      "why": "High betweenness centrality (0.104) - this node is a cross-community bridge."
+      "why": "High betweenness centrality (0.098) - this node is a cross-community bridge."
     },
     {
       "type": "low_cohesion",
@@ -6550,7 +6550,7 @@
     {
       "type": "bridge_node",
       "question": "Why does `Bitácora compartida (Claude ↔ Antigravity ↔ cualquier IA)` connect `Bitácora compartida (Claude ↔ Antigravity ↔ cualquier IA)` to `Clientes/index.tsx`, `panel.py`, `formatearMonto`, `05/11/2026 (102) · Antigravity — ENTREGA A CLAUDE: resumen de sesión, estado y pendientes`, `ModalNuevaSalida.tsx`, `package.json`, `compilerOptions`, `coincideBusqueda`, `TiendaWeb/index.tsx`, `fix-desc.cjs`, `PaginacionSobrio`, `comprobante.ts`, `fix-themes.cjs`, `Agenda/index.tsx`, `Product`, `facturador.mjs`, `fix-font-size.cjs`, `SideBar.tsx`, `impresion.ts`, `Encargos/index.tsx`, `ModalDetalleRegistroCliente.tsx`, `.showPicker`, `fix-tot.cjs`, `cambiar-link.sh`, `flechasEspaciales.ts`?",
-      "why": "High betweenness centrality (0.091) - this node is a cross-community bridge."
+      "why": "High betweenness centrality (0.095) - this node is a cross-community bridge."
     }
   ]
 }

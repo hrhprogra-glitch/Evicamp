@@ -2,7 +2,7 @@
 // Cabecera de Salidas en estilo SiuMax Sobrio
 
 import React from 'react';
-import { Truck, Plus, Search, X, ArrowLeft, FilterX } from 'lucide-react';
+import { Truck, Plus, Search, X, ArrowLeft, FilterX, Layers } from 'lucide-react';
 import type { TipoSalida, EstadoSalida } from '../types';
 
 interface HeaderSalidasProps {
@@ -15,6 +15,8 @@ interface HeaderSalidasProps {
   filtroFecha: string;
   onFiltroFechaChange: (fecha: string) => void;
   onNuevaSalida: () => void;
+  // 230: el botón de fusión va al costado, a la izquierda de «Nueva salida».
+  onFusionar: () => void;
   metricas: {
     total: number;
     enProceso: number;
@@ -64,6 +66,7 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
   filtroFecha,
   onFiltroFechaChange,
   onNuevaSalida,
+  onFusionar,
   metricas,
   onVolver,
 }) => {
@@ -112,11 +115,26 @@ export const HeaderSalidas: React.FC<HeaderSalidasProps> = ({
               <ArrowLeft size={16} /> Volver a Utilidades
             </button>
           )}
+          {/* 230: al costado de «Nueva salida», a su izquierda. No vive dentro del formulario. */}
+          <button
+            id="btn-fusionar-salidas"
+            type="button"
+            onClick={onFusionar}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-nueva-salida')?.focus(); }
+              if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('buscador-salidas')?.focus(); }
+            }}
+            title="Fusionar salidas en un general (solo vista)"
+            className="boton-cabecera px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer rounded-none whitespace-nowrap"
+          >
+            <Layers size={16} /> <span className="sm:hidden">Fusionar</span><span className="hidden sm:inline">Fusionar salidas</span>
+          </button>
           <button
             id="btn-nueva-salida"
             type="button"
             onClick={onNuevaSalida}
             onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') { e.preventDefault(); document.getElementById('btn-fusionar-salidas')?.focus(); }
               if (e.key === 'ArrowDown') { e.preventDefault(); document.getElementById('buscador-salidas')?.focus(); }
             }}
             style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}

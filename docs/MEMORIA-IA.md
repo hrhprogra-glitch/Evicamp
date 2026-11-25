@@ -10,7 +10,9 @@
 
 ## 25/11/2026 — Regla de turnos: integrar antes de desplegar Nego
 - Si otra IA está desplegando Nego en paralelo, **no entrar en guerra de bundles**: integrar sus commits publicados (`git merge` / `fetch`) y desplegar una sola versión con todos los cambios. El dueño eligió **«Subir a GitHub y avisar»**: los arreglos deben quedar en `origin/fase-11-sunat` para que cualquiera que despliegue los arrastre.
-- Antes de dar por terminado, comparar el bundle de `index.html` en vivo con `dist/index.html`; en esta tanda el sitio fue sobrescrito tres veces (`CrDD9EXm` → `DyfpQR9q` → `CyFtSW6H` → `Cy7XoMwt` → `BjFb7fvN` → `Cg6JyrwK`).
+- Antes de dar por terminado, comparar el bundle de `index.html` en vivo con `dist/index.html`; en esta tanda el sitio fue sobrescrito varias veces (`CrDD9EXm` → `DyfpQR9q` → `CyFtSW6H` → `Cy7XoMwt` → `BjFb7fvN` → `Cg6JyrwK` → `CdbIQmqK` → `CftHzyu0`). El parte final debe nombrar el bundle **verificado en vivo**, no el del primer deploy.
+- Si otra IA tiene un commit local que yo no tengo (`git log HEAD..<hash>`), integrarlo antes de republicar; en el cierre se integró `8d7b960` (fusión al costado + X) con `c636b12` y se conservaron sus 142 pruebas. No publicar su trabajo en los otros tres sitios: su OK era «solo Nego».
+- `verificar-cantidad-salida.mjs` usa el login de Nego/Evicamp y credenciales distintas para ecosistema; en Evicamp el selector de login es otro y esa prueba puntual no corre. Si Evicamp sirve el mismo JS que ecosistema (comprobarlo), basta la verificación de bundles; no culpar al arreglo por un timeout de login.
 
 ## 25/11/2026 — Cantidad de Salidas: no guardar el borrado intermedio, y cuidado con el WIP ajeno al desplegar
 - El campo de cantidad **de la fila** (no el de arriba) guardaba cada pulsación: borrar `25` dejaba `2` y guardaba ese `2`; borrar el resto se ignoraba porque la cantidad no puede ser `<= 0`. Al perder el foco se reponía el valor guardado (`2`). Arreglo: conservar el texto, incluso vacío, mientras se edita; guardar solo números válidos y reponer el valor de entrada al salir. Regla útil: **no guardes un estado intermedio del usuariocomo si fuera definitivo**.
@@ -25,6 +27,10 @@
 ## 25/11/2026 — La sobrescritura puede repetirse: verificar el DOM, no solo el JS
 - Publicar no basta: otra sesión (`e22050d`, nombre de nota en Salidas) desplegó de nuevo desde una rama sin mi botón y Nego sirvió `index-4DjJ7A18.js`. El dueño volvió a decir que no veía «Imprimir productos». **Comprobar en vivo con navegador los ids reales de los botones**, además de mirar el bundle en el JS.
 - Cada vez que aparezca un bundle nuevo, fusionar esa rama también (`git merge --no-ff`), conservar las tres entradas en docs y volver a compilar/probar. El bundle final con todo junto es `index-D4ichCYo.js` / `index-BvV_knbV.css`.
+
+## 25/11/2026 — Cabecera del listado: dar espacio, no dejar nada pegado al borde
+- El dueño notó que logo, título, categorías y fecha estaban «literalmente pegados a los costados». La cabecera del `srcDoc` necesita `padding` horizontal propio (14 px), no solo el `@page` de la hoja: el `srcDoc` en pantalla no respeta el margen de impresión.
+- Sepidar también `gap` entre marca y título (20 px) y entre logo y empresa (12 px); la prueba debe medir `paddingLeft/Right` y la distancia real entre `getBoundingClientRect()` de ambos bloques, no solo mirar que existan.
 
 ## 25/11/2026 — Logo en PDF: usar el logo de la empresa con respaldo local
 - En la hoja A4 el logo debe salir del mismo `useEmpresaComprobante()` que los comprobantes; si no hay logo configurado, caer al import local `logo.png`. Escapar siempre la URL antes de ponerla en `src`.
@@ -1240,6 +1246,14 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - Para actualizar el panel usar **`cliente.cjs nego`** (respalda panel y Nginx, reinicia y valida los links). **Nunca `cliente.cjs panel` solo para eso**: también reconfigura Mercado Pago y puede pasar cobrando a modo prueba.
 - Push con rama limpia sobre `origin/fase-11-sunat`: aplicar **solo las líneas propias**, porque los dos archivos ya tenían cambios nuevos en GitHub y un parche directo no aplicaba. La documentación se agrega sobre la rama publicada, **sin copiar los documentos locales** (son de la rama anterior y sobrescribirían entradas de otros agentes). Después `git fetch origin` + `git reset --mixed origin/fase-11-sunat` en el repo principal deja el WIP ajeno intacto.
 - La regresión adaptiva quedó en **188 comprobaciones, 4 fallos** (`Salida ... al elegir nota el foco baja a Dirección — select-bien-salida`). Es del camino de Nueva salida, no de la corrección de la nota ya registrada; no modificarlo sin pedirlo. La prueba genérica `verificar-deploy-nego.mjs` espera `#tabla-analisis-salidas`, que ya no está en el recorrido actual: no sirve de regresión aquí.
+
+## 72. Fusionar salidas: ubicación literal, X de desvinculación y botón duplicado (25/11/2026)
+- **Si el dueño dice «al costado a la izquierda del botón Nueva salida», va ahí, no dentro del modal.** Corregir de verdad: mover el control a `HeaderSalidas.tsx`, dejar `ModalNuevaSalida.tsx` como estaba antes y abrir el GENERAL desde `Salidas/index.tsx`. Dejar el botón viejo dentro del formulario produce **dos ids `btn-fusionar-salidas`** y un modal dentro de otro; la prueba no lo ve si `getElementById` devuelve el primero del DOM. Añadir siempre `document.querySelectorAll('#btn-fusionar-salidas').length === 1`.
+- La posición se comprueba con `closest('#modal-nueva-salida-container')`, `parentElement === btn-nueva-salida.parentElement` y `getBoundingClientRect()` (`rb.right <= rn.left + 2`); no basta con que el botón exista ni con mirar el lado derecho de la pantalla.
+- «Desvincular salidas» significó, por decisión del dueño, **quitar una salida del GENERAL** (X por salida), no quitar todas ni desmarcar en la lista. Es solo memoria: sacar de `elegidas`, borrar del mapa `devolver` los ítems de esa salida, recalcular resumen y volver a la lista si no queda ninguna; la salida real sigue en la tabla. Sin SQL.
+- El CSS pone los textos en mayúsculas: comparar el subtítulo con `.toLowerCase().includes('1 salida(s)')`, no con el texto en minúsculas.
+- Escape del GENERAL vuelve a la lista de Salidas (ya no hay formulario debajo). ← de «Nueva salida» y → de «Fusionar salidas» se devuelven el foco entre los dos botones de la cabecera.
+- Otra vez el sitio fue sobrescrito durante la tanda (`index-CyFtSW6H.js` sin marcadores, `index-Cy7XoMwt.js` con botón pero sin X); la regresión falló antes en `#input-login-usuario` por ese bundle ajeno. **Verificar marcadores dentro del JS servido inmediatamente antes de dar el parte**, no solo el nombre del bundle. Bundle final **`index-CdbIQmqK.js`**; pruebas **142/142** y **66/66**.
 
 
   
