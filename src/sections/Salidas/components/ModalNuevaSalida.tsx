@@ -10,6 +10,7 @@ import { useEmpleado } from '../../../utils/permisos';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import { coincideBusqueda } from '../../../utils/busqueda';
+import { conPresentaciones } from '../../../utils/presentaciones';
 import { VistaPreviaSalida } from './VistaPreviaSalida';
 import { UnidadMaterial } from './UnidadMaterial';
 import { useEmpresaComprobante } from '../empresa';
@@ -113,6 +114,11 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const [trabajadores, setTrabajadores] = useState<any[]>(_cacheCatalogosServic.trabajadores || []);
   const [productos, setProductos] = useState<any[]>(_cacheCatalogosServic.productos || []);
 
+  // 24/11/2026 (dueño: «quiero que sea igual»): Salidas busca también las presentaciones, igual que Caja.
+  // Cada clon trae el factor del rollo; al agregarlo se convierte a metros para no mezclar unidades
+  // en el stock ni en el historial (que ya quedó todo en M).
+  const productosBuscables = useMemo(() => conPresentaciones(productos as any[]), [productos]);
+
   // Items agregados
   const [items, setItems] = useState<{
     product_id: number | null;
@@ -130,8 +136,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const claveItem = (it: { product_id?: number | null; descripcion?: string }, idx: number) =>
     it.product_id != null ? `p${it.product_id}` : `d${it.descripcion || idx}`;
 
-  // 24/11/2026: se quitó «1 UND = N M». La unidad del producto ya es la real (manguera = M)
-  // y el rollo se elige como presentación en Opciones avanzadas.
+  // 24/11/2026: se quitó «1 UND = N M». La unidad del producto ya es la real (manguera = M).
+  // El rollo se elige en el buscador como en Caja; al agregarlo se convierte a metros (1 ROLLO x500 = 500 M).
 
   // Inputs para agregar item (modo SUNAT)
   const [busquedaProd, setBusquedaProd] = useState('');
@@ -411,7 +417,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         supabase.from('empleados_publico').select('id, nombre, email, rol, estado').eq('estado', 'ACTIVO').order('nombre'),
         // Sin la foto (image_url pesa mucho: MEMORIA-IA 63) y en bloques, para no cortarse en 1.000 productos.
         // Solo activos: los borrados en Inventario quedan con is_active = 0 y no deben salir aquí (17/11/2026).
-        traerTodo(() => supabase.from('products').select('id, name, code, unit, quantity, cost_price, image_path').eq('is_active', 1).order('name').order('id')),
+        traerTodo(() => supabase.from('products').select('id, name, code, unit, quantity, cost_price, image_path, presentaciones').eq('is_active', 1).order('name').order('id')),
       ]);
 
       if (resCli.data) {
@@ -475,7 +481,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   // hacía que no apareciera un producto con el nombre casi igual.
   const termino = busquedaProd.trim();
   const prodsFiltrados = termino
-    ? productos
+    ? productosBuscables
         .filter((p) => coincideBusqueda([p.name, p.code], termino))
         .slice(0, 8)
     : [];
@@ -546,25 +552,39 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         return;
       }
 
+      // Igual que en Caja: si eligió una presentación (ROLLO x100/400/500), lo escrito son rollos.
+      // Se guarda y descuenta en METROS para no mezclar unidades en el stock ni en el historial.
+      const factor = Math.max(1, Number(prodAAgregar.presentacion?.factor) || 1);
+      const idReal = prodAAgregar.productoId != null ? Number(prodAAgregar.productoId) : Number(prodAAgregar.id);
+      const prodBase = productos.find((p) => Number(p.id) === idReal);
+      const metros = Number((c * factor).toFixed(4));
+      if (factor > 1) {
+        const stockMetros = Number(prodBase?.quantity ?? prodAAgregar.quantity) || 0;
+        if (metros > stockMetros) {
+          avisar(`Stock insuficiente: solo hay ${stockMetros} M para este rollo.`);
+          return;
+        }
+      }
+
       setItems((prev) => {
-        // Si ya existe el producto, sumar cantidad y SUBIRLO a la primera fila; si es nuevo, entra arriba.
+        // Si ya existe el producto, sumar metros y SUBIRLO a la primera fila; si es nuevo, entra arriba.
         // (pedido del dueño 18/11/2026: "cuando agrego un producto se agrega desde abajo debe ingresarse desde arriba")
-        const idxExistente = prev.findIndex((it) => it.product_id === prodAAgregar.id);
+        const idxExistente = prev.findIndex((it) => Number(it.product_id) === idReal);
         if (idxExistente !== -1) {
           const actual = prev[idxExistente];
           const actualizado = {
             ...actual,
-            cantidad: Number((actual.cantidad + c).toFixed(4)),
+            cantidad: Number((actual.cantidad + metros).toFixed(4)),
           };
           return [actualizado, ...prev.filter((_, i) => i !== idxExistente)];
         } else {
           return [
             {
-              product_id: prodAAgregar.id,
+              product_id: idReal,
               descripcion: prodAAgregar.name,
-              unidad: prodAAgregar.unit || 'UNID',
-              cantidad: c,
-              costo_unitario: Number(prodAAgregar.cost_price || 0),
+              unidad: prodBase?.unit || 'M',
+              cantidad: metros,
+              costo_unitario: Number(prodBase?.cost_price ?? prodAAgregar.cost_price ?? 0),
               es_externo: false,
             },
             ...prev,
@@ -614,7 +634,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
 
   // Cámara del celular: same código que la Caja, 100 % sin internet.
   const handleScanCamara = (codigo: string) => {
-    const p = buscarProductoPorCodigo(productos as any[], codigo);
+    const p = buscarProductoPorCodigo(productosBuscables as any[], codigo);
     if (p) {
       seleccionarProducto(p);
     } else {
@@ -1342,7 +1362,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                           }`}
                         >
                           {/* Foto referencial como en la Caja */}
-                          <FotoMiniatura src={fotoProducto(p.id, p.image_path)} tamano="w-14 h-14" nombre={p.name} />
+                          <FotoMiniatura src={fotoProducto(Number(p.productoId ?? p.id), (p as any).image_path)} tamano="w-14 h-14" nombre={p.name} />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-black uppercase leading-tight text-[var(--color-ink)] break-words">
                               {p.name}
@@ -1351,7 +1371,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                               {p.code && (
                                 <span className="px-1 py-0.5 bg-black/10 border border-black/20 text-[var(--color-ink)]">{p.code}</span>
                               )}
-                              <span>Unidad: {p.unit || 'UNID'} · Costo: S/ {Number(p.cost_price || 0).toFixed(2)}</span>
+                              <span>Unidad: {p.unit || 'UNID'} · Costo: S/ {Number((p as any).cost_price || 0).toFixed(2)}</span>
                             </p>
                           </div>
                           <span
@@ -1372,7 +1392,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                 {prodSeleccionado && (
                   <div className="p-1.5 bg-[var(--color-accent-bg)] border border-[var(--color-accent)] flex justify-between items-center gap-2 text-xs font-bold">
                     <span className="text-[var(--color-ink)] flex items-center gap-2 min-w-0">
-                      <FotoMiniatura src={fotoProducto(prodSeleccionado.id, prodSeleccionado.image_path)} tamano="w-10 h-10" nombre={prodSeleccionado.name} />
+                      <FotoMiniatura src={fotoProducto(prodSeleccionado.productoId ?? prodSeleccionado.id, prodSeleccionado.image_path)} tamano="w-10 h-10" nombre={prodSeleccionado.name} />
                       <span>✓ Seleccionado: <strong className="uppercase">{prodSeleccionado.name}</strong> (Stock: {prodSeleccionado.quantity} {prodSeleccionado.unit})</span>
                     </span>
                     <button

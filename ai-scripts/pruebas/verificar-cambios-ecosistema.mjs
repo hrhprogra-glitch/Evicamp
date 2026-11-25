@@ -2,6 +2,7 @@
 //  · manguera en unidad M con SUNAT MTR y rollo en Opciones avanzadas (precio 0.00 permitido),
 //  · STOCK EN METROS: sugerido 100322 = 1430 M y lista 100282 = 327 M,
 //  · sin texto «1 UND = 500 M», Devoluciones en columna propia, una flecha = una fila,
+//  · Salidas ofrece el ROLLO igual que Caja y 1 ROLLO se agrega como 100 M,
 //  · buscadores con tildes/espacios, sin internet y en 390/768/1366/1920.
 // Uso: node ai-scripts/pruebas/verificar-cambios-ecosistema.mjs <carpeta tools con puppeteer-core>
 import { createRequire } from 'node:module';
@@ -83,6 +84,38 @@ try {
   await tecla('Enter'); await pausa(300);
   const textoSalida = await page.evaluate(() => document.body.innerText);
   ok('NO aparece «1 UND = 500 M»', !/1\s*UND\s*=\s*\d+\s*M/i.test(textoSalida));
+  for (let i = 0; i < 3; i++) { await tecla('Escape'); await pausa(220); }
+
+  // 1b) Igual que en Caja: el buscador de Salidas ofrece el rollo y, al elegirlo,
+  //     se convierte a metros (1 ROLLO x100 = 100 M) para guardar y descontar en M.
+  await page.focus('#btn-nueva-salida'); await tecla('Enter'); await pausa(600);
+  await page.waitForSelector('#input-buscar-producto-salida', { timeout: 15000 });
+  await escribirEn('#input-buscar-producto-salida', 'manguera  ciega');
+  const conRollo = await sugerencias();
+  ok('Salidas ofrece el ROLLO como Caja ((ROLLO x100))', /ROLLO\s*x\s*100/i.test(conRollo.texto), JSON.stringify(conRollo));
+  ok('El ROLLO muestra su stock en rollos (3 ROLLO)', /3\s*ROLLO\b/.test(conRollo.texto), JSON.stringify(conRollo));
+  let rolloEncontrado = false;
+  for (let i = 0; i < 8; i++) {
+    await tecla('ArrowDown');
+    const activo = await page.evaluate(() => {
+      const e = [...document.querySelectorAll('[id^="sugerencia-salida-"]')].find((x) => x.className.includes('color-accent'));
+      return e?.textContent || '';
+    });
+    if (/ROLLO\s*x\s*100/i.test(activo)) { rolloEncontrado = true; break; }
+  }
+  ok('Con teclado se puede elegir el ROLLO en Salidas', rolloEncontrado);
+  await tecla('Enter'); await pausa(350);
+  await escribirEn('#input-cant-item-salida', '1');
+  await tecla('Enter'); await pausa(350);
+  const itemRollo = await page.evaluate(() => {
+    const inp = document.querySelector('input[id^="input-cantidad-item-"]');
+    if (!inp) return null;
+    return {
+      cantidad: inp.value,
+      texto: (inp.closest('tr')?.innerText || '').replace(/\s+/g, ' ').slice(0, 160),
+    };
+  });
+  ok('1 ROLLO se agrega como 100 M (se guarda en metros)', !!itemRollo && Number(itemRollo.cantidad) === 100 && /\bM\b/.test(itemRollo.texto), JSON.stringify(itemRollo));
   for (let i = 0; i < 3; i++) { await tecla('Escape'); await pausa(220); }
 
   // 2) Inventario: la manguera está en M / MTR y el rollo en Opciones avanzadas con precio 0.00.

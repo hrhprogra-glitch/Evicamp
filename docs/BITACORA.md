@@ -7,6 +7,16 @@
 
 ---
 
+## 24/11/2026 (Salidas con ROLLO como Caja: código y deploy solo en Nego) · OpenCode (Big Pickle) — HECHO, FALTA OK PARA EL RESTO
+
+- El dueño preguntó si Caja y Salidas eran iguales; se le explicó que Caja mostraba `M` y `ROLLO` y Salidas solo `M`. Dijo **«quiero que sea igual»** y eligió **«Salidas también con ROLLO (Recommended)»**. Autorizó **«si empieza»** para implementar primero solo en Nego.
+- **Código:** `src/sections/Salidas/components/ModalNuevaSalida.tsx` ahora usa `conPresentaciones` (igual que Caja), pide `presentaciones` en el select, filtra y escanea sobre los clones, muestra su foto por `productoId` y su stock en rollos. Al agregar, `1 ROLLO x100/400/500` se convierte a **100/400/500 M** y se guarda con `unidad='M'` y el `product_id` real; si no hay metros suficientes avisa. No se cambió ningún SQL: `fn_registrar_salida` sigue descontando la cantidad ya convertida.
+- Tipado corregido (`Number(...)` y cast `as any` para `image_path`/`cost_price`). `npm run build` OK, bundle nuevo **`index-CrlGja93.js`**.
+- **Deploy solo a Nego** (`node ai-scripts/deploy.cjs siumax`, destino explícito, 22 archivos). Ecosistema, Evicamp, clientes y GitHub **sin tocar**. No se escribió en ninguna base.
+- **Prueba:** Nego **23/23** (`verificar-flechas-y-buscador-nego.mjs`), teclado, sin internet, 390/768/1366/1920, 0 errores JS. Los 6 productos de manguera solo existen en ecosistema, por eso la prueba de ROLLO no se puede correr en Nego.
+- `verificar-cambios-ecosistema.mjs` **ampliado** (sintaxis OK, aún no ejecutado contra el sitio): comprueba que Salidas ofrece `(ROLLO x100)`, que muestra `3 ROLLO`, que se elige con flechas y que `1` se agrega como `100 M`, sin perder las aserciones de `327 M` / `1430 M`.
+- **Siguiente paso:** esperar el OK explícito del dueño; entonces desplegar ecosistema (+ iconos `c159d216…`), Evicamp y clientes, correr la prueba ampliada (~27/27) y recién entonces commit/push a `origin/fase-11-sunat`. Recordar Ctrl+F5.
+
 ## 24/11/2026 (stock e historial a metros en ecosistema) · OpenCode (Big Pickle) — HECHO, PROBADO Y SUBIDO
 
 - El dueño vio el sugerido con `Stock: 3 M` y dijo: *"pero como que 3 metros carajo si estaba en unidad y dice 1 pero dice en el nombre 500 metros osea 3 son 1500 metros !!!!!"*, y después **«arregla todo eso»**.
