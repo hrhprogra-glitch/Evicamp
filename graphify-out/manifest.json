@@ -276,9 +276,9 @@
     "semantic_hash": "1863b0f27535c59d25fea375c4803886"
   },
   "src/sections/Utilidades/components/FiltrosUtilidades.tsx": {
-    "mtime": 1795571317.0791914,
-    "seen": 1795571958.8985827,
-    "ast_hash": "fc325ef05693e17765af2f6440ff751b",
+    "mtime": 1795619707.658618,
+    "seen": 1795620229.4835198,
+    "ast_hash": "ef9e5eb27f49f017a1c8b04142d71d1c",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/ModalDetalleProducto.tsx": {
@@ -312,10 +312,10 @@
     "semantic_hash": "12bc5e6d35cb1c5f985168ff0695c153"
   },
   "src/sections/Utilidades/index.tsx": {
-    "mtime": 1795571317.0821984,
-    "seen": 1795571958.8985891,
-    "ast_hash": "68b99863ee54725cb84bd545f278174c",
-    "semantic_hash": "68b99863ee54725cb84bd545f278174c"
+    "mtime": 1795619750.667382,
+    "seen": 1795620229.4835315,
+    "ast_hash": "6ee860dad800172dd0bd26c3eb57ce41",
+    "semantic_hash": ""
   },
   "src/sections/Utilidades/types.ts": {
     "mtime": 1795571317.0847225,
@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795587098.7288258,
-    "seen": 1795587149.5329065,
-    "ast_hash": "edd9e2eb160e248c9ade33aefb76f2d4",
+    "mtime": 1795620154.1727948,
+    "seen": 1795620229.4836202,
+    "ast_hash": "4097667caa1cec49553fd4d416693b35",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795587114.534777,
-    "seen": 1795587149.532908,
-    "ast_hash": "afbb317cf0dcb7c855ed0518740e98cc",
+    "mtime": 1795620182.0019507,
+    "seen": 1795620229.4836214,
+    "ast_hash": "a5e809dac8e1c20e2ac1651a546ecc9a",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795587125.546405,
-    "seen": 1795587149.5329094,
-    "ast_hash": "a7f249a51df807c73a4198ae895e1ecf",
+    "mtime": 1795620173.2759013,
+    "seen": 1795620229.483623,
+    "ast_hash": "824dcbc1fb260347077db21b63923b15",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795587105.853262,
-    "seen": 1795587149.5329125,
-    "ast_hash": "e17cd7d40d5610ca1b48f20fd46241de",
+    "mtime": 1795620200.3508286,
+    "seen": 1795620229.4836257,
+    "ast_hash": "e1dd2db744a7be20e410a313c75118a1",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3891,6 +3891,18 @@
     "mtime": 1795586875.8516266,
     "seen": 1795587149.532516,
     "ast_hash": "e7a3ab5bf82ca87d3a68e66b0c8740af",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/verificar-imprimir-productos-utilidades.mjs": {
+    "mtime": 1795620032.5486171,
+    "seen": 1795620229.4831414,
+    "ast_hash": "3c2b7e268f74d620482f28a17f4c22f6",
+    "semantic_hash": ""
+  },
+  "src/sections/Utilidades/components/ModalImprimirProductos.tsx": {
+    "mtime": 1795620019.222978,
+    "seen": 1795620229.483523,
+    "ast_hash": "965f679447284761c973af3cf4175111",
     "semantic_hash": ""
   }
 }

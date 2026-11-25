@@ -7,6 +7,18 @@
 
 ---
 
+## 25/11/2026 (Imprimir productos en Utilidades: botón al lado de «Gráficos y detalles», solo Nego) · OpenCode (Big Pickle) — HECHO Y PROBADO, SIN PUSH
+
+- **Dueño:** *"hay muchos errores pero antes de solucionarlo vamos a agregar en utilidades una opción para imprimir todos los producto y filtro de categorias ese boton que este al costado del graficos y detalles"*. Los errores que menciona **quedan para después**; aún no mandó la lista ni capturas.
+- **Decisiones que eligió:** columnas **Código, Nombre, Categoría, Stock y Precio**, con casillas para **quitar cualquiera** (ejemplo: que no aparezca Precio); impresión en **hoja A4 / PDF del navegador**; **solo productos activos**, como Inventario. OK textual: **«Sí, empieza (Recommended)»**, solo en Nego.
+- **Pantalla:** botón **`btn-imprimir-productos-utilidades`** con icono de impresora, justo a la derecha de `btn-tops-utilidades` («Gráficos y detalles»), mismo estilo sobrio y sin esquinas redondeadas. Flechas conectadas con la cabecera y las pestañas; `↓` baja al buscador; `←` vuelve a Gráficos.
+- **Ventana nueva `ModalImprimirProductos.tsx`:** selector **Categoría: TODAS** + las categorías reales de los productos activos, 5 casillas de columnas (todas marcadas, siempre queda al menos una), vista previa A4 en `iframe srcDoc` y botones **Imprimir / PDF** y **Cancelar**. La hoja lleva nombre/RUC/teléfono de la empresa (de la copia local de Ajustes), fecha, categoría y total de filas. La impresión llama a `contentWindow.print()` del iframe, **no** a `window.print()` de toda la app.
+- **Datos:** consulta `products` con `is_active=1` vía `traerTodo` (respeta la copia sin internet), lotes y variantes activas para calcular el stock igual que Inventario. No se escribió en ninguna base.
+- **Build y deploy:** `npm run build` OK, bundle final **`index-C9Qd50Qv.js` / `index-8QJ-XgrO.css`**; desplegado **solo en Nego** con `node ai-scripts/deploy.cjs siumax` (22 archivos). Sin ecosistema, Evicamp, clientes ni GitHub.
+- **Prueba nueva `verificar-imprimir-productos-utilidades.mjs`: 27/27** con teclado, sin internet y 390/768/1366/1920, 0 errores JS: botón al costado, flechas, 513 productos activos, 5 columnas por defecto, quitar/poner Precio, no dejar sin columnas, filtro por categoría real (35 opciones), impresión solo de la hoja, Escape cierra y devuelve el foco.
+- **Dos fallos de la primera corrida, corregidos:** (1) la aserción de «sin Precio» buscaba `S/` en todo el texto y hay productos con **`S/P` en el nombre** (BUJEs, CODOs); ahora mira solo la última columna. (2) después de imprimir, el foco se quedaba dentro del iframe y Escape no cerraba: se reenvía Escape desde el documento del iframe al `window` padre y se devuelve el foco al botón al terminar `print()`.
+- **Estado:** docs y grafo actualizados, commit local. **Sin push** (no hay OK para GitHub ni para los otros sitios). Falta que el dueño revise en Nego con **Ctrl+F5**, que autorice el pase a ecosistema/Evicamp/clientes si lo quiere, y que mande la lista de «muchos errores».
+
 ## 25/11/2026 (Gestión de Usuarios no mostraba nadie en ecosistema) · OpenCode (Big Pickle) — CORREGIDO EN LA BASE, SIN PUSH
 
 - **Dueño:** *"me di cuenta de algo preocupante en gestion de usuario no sale ningun usuario como podre controlar al resto siendo el admin soluciona eso urgente"*. Su pedido urgente se tomó como OK para corregir la base de ecosistema; **no** autorizó push ni despliegue.

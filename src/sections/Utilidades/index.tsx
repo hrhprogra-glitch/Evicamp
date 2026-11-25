@@ -5,6 +5,7 @@ import { FiltrosUtilidades } from './components/FiltrosUtilidades';
 import { TarjetasResumen } from './components/TarjetasResumen';
 import { TablaAnalisisProductos } from './components/TablaAnalisisProductos';
 import { TableroGanancias } from './components/TableroGanancias';
+import { ModalImprimirProductos } from './components/ModalImprimirProductos';
 import { AnalisisSalidasProductos } from './components/AnalisisSalidasProductos';
 import { calcularAnalisis } from './calcularAnalisis';
 
@@ -60,6 +61,7 @@ export const Utilidades = ({ onNavigate, vistaInicial }: UtilidadesProps) => {
   const [ingresosTotalesExactos, setIngresosTotalesExactos] = useState<number>(() => tieneCacheInicial ? cacheUtilidadesMemoria!.ingresoTotal : 0);
   const [isLoading, setIsLoading] = useState(false);
   const [mostrarTablero, setMostrarTablero] = useState(false);
+  const [mostrarImprimirProductos, setMostrarImprimirProductos] = useState(false);
   const [vista, setVista] = useState<'productos' | 'salidas'>(vistaInicial === 'salidas' ? 'salidas' : 'productos');
   const [statsFiltro, setStatsFiltro] = useState<StatsFiltro>({ ingresos: 0, costos: 0, mermas: 0, hayFiltros: false });
 
@@ -149,7 +151,7 @@ export const Utilidades = ({ onNavigate, vistaInicial }: UtilidadesProps) => {
           type="button"
           onClick={() => setVista(id)}
           onKeyDown={(e) => {
-            if (e.key === 'ArrowRight') { e.preventDefault(); ir(i < tabsVista.length - 1 ? `btn-tab-util-${tabsVista[i + 1].id}` : 'btn-tops-utilidades'); }
+            if (e.key === 'ArrowRight') { e.preventDefault(); ir(i < tabsVista.length - 1 ? `btn-tab-util-${tabsVista[i + 1].id}` : 'btn-imprimir-productos-utilidades'); }
             else if (e.key === 'ArrowLeft') { e.preventDefault(); if (i > 0) ir(`btn-tab-util-${tabsVista[i - 1].id}`); }
             else if (e.key === 'ArrowDown') { e.preventDefault(); ir(buscador); }
             else if (e.key === 'ArrowUp') e.preventDefault();
@@ -167,6 +169,7 @@ export const Utilidades = ({ onNavigate, vistaInicial }: UtilidadesProps) => {
     <div className="flex flex-col gap-4 sm:gap-6 pb-10 text-[var(--color-ink)] font-mono h-full bg-[var(--color-bg)] relative">
       <FiltrosUtilidades
         onToggleTops={() => setMostrarTablero(true)}
+        onImprimirProductos={() => setMostrarImprimirProductos(true)}
         pestanas={pestanasVista}
       />
 
@@ -210,6 +213,11 @@ export const Utilidades = ({ onNavigate, vistaInicial }: UtilidadesProps) => {
         <TableroGanancias
           onClose={() => { setMostrarTablero(false); setTimeout(() => document.getElementById('btn-tops-utilidades')?.focus(), 50); }}
         />
+      )}
+
+      {/* 25/11/2026: listado A4/PDF de productos activos por categoría, con columnas opcionales */}
+      {mostrarImprimirProductos && (
+        <ModalImprimirProductos onClose={() => setMostrarImprimirProductos(false)} />
       )}
     </div>
   );

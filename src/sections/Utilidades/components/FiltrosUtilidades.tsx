@@ -1,15 +1,16 @@
 import React from 'react';
-import { BarChart3, PieChart } from 'lucide-react';
+import { BarChart3, PieChart, Printer } from 'lucide-react';
 
 interface Props {
   onToggleTops?: () => void;
+  onImprimirProductos?: () => void; // 25/11/2026: listado A4/PDF de productos activos por categoría
   filtrarHoy?: () => void;
   filtrarSemana?: () => void;
   filtrarMes?: () => void;
   pestanas?: React.ReactNode; // SiuMax Nego (3h): Productos + las de servicios, al lado del título
 }
 
-export const FiltrosUtilidades: React.FC<Props> = ({ onToggleTops, pestanas }) => {
+export const FiltrosUtilidades: React.FC<Props> = ({ onToggleTops, onImprimirProductos, pestanas }) => {
   return (
     <div className="bg-[var(--color-bg)] border-b-2 border-[var(--color-ink)] px-3 sm:px-4 lg:px-6 py-4 sm:py-6 flex flex-wrap justify-between items-center gap-x-6 gap-y-4 shrink-0">
       <div className="flex flex-col md:flex-row items-start md:items-center gap-4 lg:gap-8 min-w-0 max-w-full">
@@ -40,6 +41,10 @@ export const FiltrosUtilidades: React.FC<Props> = ({ onToggleTops, pestanas }) =
                 // ← a la última pestaña (Nego 3h, con servicios)
                 const tabs = document.querySelectorAll<HTMLElement>('[id^="btn-tab-util-"]');
                 if (tabs.length) { e.preventDefault(); tabs[tabs.length - 1].focus(); }
+              } else if (e.key === 'ArrowRight') {
+                // → al botón nuevo de impresión (está justo al lado)
+                e.preventDefault();
+                document.getElementById('btn-imprimir-productos-utilidades')?.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 document.getElementById('buscador-global-utilidades')?.focus();
@@ -50,6 +55,32 @@ export const FiltrosUtilidades: React.FC<Props> = ({ onToggleTops, pestanas }) =
             title="Gráficos y detalles de tus ganancias y pérdidas"
           >
             <PieChart size={16} /> Gráficos y detalles
+          </button>
+        )}
+        {onImprimirProductos && (
+          <button
+            id="btn-imprimir-productos-utilidades"
+            type="button"
+            onClick={onImprimirProductos}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                e.stopPropagation();
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('btn-tops-utilidades')?.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('buscador-global-utilidades')?.focus();
+              }
+            }}
+            style={{ '--icono': 'var(--color-accent-shadow)' } as React.CSSProperties}
+            className="boton-cabecera flex-1 sm:flex-none justify-center bg-[var(--color-bg)] text-[var(--color-ink)] px-4 sm:px-6 py-3 border-2 border-[var(--color-ink)] font-black text-xs uppercase tracking-widest sm:tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-[var(--color-ink)] transition-all cursor-pointer flex items-center gap-2"
+            title="Imprimir todos los productos activos, filtrando por categoría"
+          >
+            <Printer size={16} /> Imprimir productos
           </button>
         )}
       </div>

@@ -8,6 +8,14 @@
 
 ---
 
+## 25/11/2026 — Imprimir un listado A4 desde una ventana: el foco se queda en el iframe
+- Un `<iframe srcDoc>` es la forma más limpia de imprimir **solo la hoja** y dejar fuera la app entera (lo mismo que ya se usa en Compras). El botón debe llamar a `iframe.contentWindow.print()`, nunca a `window.print()`. La hoja se arma con HTML + `@page { size: A4 }` y estilos en línea, y el alto del iframe se ajusta en `onLoad` con `contentDocument.documentElement.scrollHeight`.
+- **Trampa real:** `iframe.contentWindow.focus()` antes de `print()` deja el teclado **dentro del iframe**. Los listeners de `window` (como `useCerrarConEscape`) no reciben ese `keydown`: Escape deja de cerrar la ventana. Arreglo: en el `keydown` del `contentDocument`, reenviar un `KeyboardEvent('keydown', {key:'Escape'})` al `window` padre, y además devolver el foco al botón justo después de `print()`.
+- **Trampa de prueba:** buscar `S/` en todo el texto para comprobar que se quitó la columna Precio da falso positivo en Nego: hay productos con **`S/P` en el NOMBRE** (`BUJE DE 1 1/2" X 1" S/P`, `CODO … S/P ERA`). Verificar la columna específica (`última celda`) o la cabecera, nunca el texto completo.
+- Las categorías del filtro salen de los propios productos activos (`new Set(...).sort(localeCompare)`), sin consultar otra tabla: así el desplegable no ofrece categorías vacías. El stock se calcula igual que Inventario: **lotes si existen, si no `products.quantity`; si hay variantes, se suman**; nunca copiar solo `quantity` para un listado de almacén.
+- Para columnas opcionales, guardar `Record<Columna, boolean>` y, al desmarcar, impedir que queden todas false (si no, la hoja sale sin ningún dato y parece rota). El HTML se escapa (`& < > "`) antes de meter nombre/categoría de la base en el `srcDoc`.
+- Estado: hecho, probado **27/27** y desplegado **solo en Nego** (`index-C9Qd50Qv.js` / `index-8QJ-XgrO.css`); sin push ni otros sitios. Los «muchos errores» que avisó el dueño siguen pendientes de su lista.
+
 ## 25/11/2026 — «No sale ningún usuario» puede ser una vista que falta, no usuarios que faltan
 - El dueño avisó de urgencia que en Gestión de Usuarios no aparecía nadie. **Antes de crear usuarios**, mirar la API: en ecosistema daba `HTTP 404 relation "public.empleados_publico" does not exist`; la tabla `empleados` tenía 3 filas. La pantalla (`TablaUsuarios.tsx`) lee la **vista** `empleados_publico`, no la tabla. Crear usuarios «para que salga algo» habría sido inventar datos y ocultar la causa real.
 - Esa vista existe en `siumax`, `postgres`, `servic` y `siudemo`; en `evidiary` y `creditaltoque` no hay tabla `empleados`. Revisar **todas las bases (solo lectura)** antes de escribir: el arreglo fue **solo ecosistema**.
