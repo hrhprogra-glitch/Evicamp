@@ -29,6 +29,23 @@
 - Publicar no basta: otra sesión (`e22050d`, nombre de nota en Salidas) desplegó de nuevo desde una rama sin mi botón y Nego sirvió `index-4DjJ7A18.js`. El dueño volvió a decir que no veía «Imprimir productos». **Comprobar en vivo con navegador los ids reales de los botones**, además de mirar el bundle en el JS.
 - Cada vez que aparezca un bundle nuevo, fusionar esa rama también (`git merge --no-ff`), conservar las tres entradas en docs y volver a compilar/probar. El bundle final con todo junto es `index-D4ichCYo.js` / `index-BvV_knbV.css`.
 
+## 25/11/2026 — Colores de stock en el listado impreso
+- El dueño quiere diferenciar rápido: **rojo** = sin stock o `stock <= min_stock`, **naranja** = a punto, **negro** = bien.
+- En Nego casi ningún producto tiene `min_stock` (solo 3 de 513): usar solo `2 × min_stock` deja **cero naranjas**. Por eso, cuando `min_stock = 0`, «a punto» se definió como **stock ≤ 5**. Registrar siempre el criterio en docs; si el dueño quiere otro número, cambiar solo `claseStock()`.
+- Colorear la fila completa excepto la columna en blanco «Cant. a pedir», para que se pueda escribir y no se confunda con una alerta. La prueba debe medir el `color` calculado de las tres clases, no solo que existan.
+
+## 25/11/2026 — Cabecera del listado: dar espacio, no dejar nada pegado al borde
+- El dueño notó que logo, título, categorías y fecha estaban «literalmente pegados a los costados». La cabecera del `srcDoc` necesita `padding` horizontal propio (14 px), no solo el `@page` de la hoja: el `srcDoc` en pantalla no respeta el margen de impresión.
+- Sepidar también `gap` entre marca y título (20 px) y entre logo y empresa (12 px); la prueba debe medir `paddingLeft/Right` y la distancia real entre `getBoundingClientRect()` de ambos bloques, no solo mirar que existan.
+
+## 25/11/2026 — Logo en PDF: usar el logo de la empresa con respaldo local
+- En la hoja A4 el logo debe salir del mismo `useEmpresaComprobante()` que los comprobantes; si no hay logo configurado, caer al import local `logo.png`. Escapar siempre la URL antes de ponerla en `src`.
+- La prueba debe comprobar `img.complete && img.naturalWidth > 0` dentro del iframe, no solo que exista la etiqueta: así se detecta que la imagen realmente cargó sin internet.
+
+## 25/11/2026 — Cuarta sobrescritura y desborde en cabecera de Nueva salida
+- Otra sesión publicó `index-BCWl9GII.js` desde `salidas-pantalla-pc` sin el botón de impresión, aunque luego fusionó `189b7ff`. Regla: **después de cada deploy ajeno, volver a mirar bundle en vivo y botones en el DOM**, no suponer que la fusión ajena ya incluye los cambios propios.
+- Al fusionar ese cambio («borrar cantidad») la cabecera de Nueva salida empujaba «Fusionar salidas» fuera del modal en 390/1366/1920. Arreglo: `min-w-0` en el bloque del título y `shrink-0` en el grupo de botones. La prueba de fusión volvió a **114/114**.
+
 ## 25/11/2026 — Tercera sobrescritura: cada cambio nuevo debe fusionarse antes de publicar
 - Apareció `index-KIvGnE8B.js` desde `fusionar-salidas` (`14f1372`) y el botón desapareció otra vez. Procedimiento que ya se repitió tres veces: ver bundle en vivo → ver botones en el DOM → `git merge --no-ff` de la rama nueva → conservar **todas** las entradas de docs → `graphify update .` → build → deploy → correr **todas** las pruebas (impresión, Salidas PC, nota y fusión).
 - En conflictos de código de Salidas (`ModalNuevaSalida.tsx`, `index.tsx`) solo diferían comentarios: se conservó el texto propio y se eliminaron los marcadores. Los conflictos de `graphify-out` se resuelven con `git checkout --ours -- graphify-out` y luego se regenera el grafo.
@@ -48,6 +65,20 @@
 - Las categorías del filtro salen de los propios productos activos (`new Set(...).sort(localeCompare)`), sin consultar otra tabla: así el desplegable no ofrece categorías vacías. El stock se calcula igual que Inventario: **lotes si existen, si no `products.quantity`; si hay variantes, se suman**; nunca copiar solo `quantity` para un listado de almacén.
 - Para columnas opcionales, guardar `Record<Columna, boolean>` y, al desmarcar, impedir que queden todas false (si no, la hoja sale sin ningún dato y parece rota). El HTML se escapa (`& < > "`) antes de meter nombre/categoría de la base en el `srcDoc`.
 - Estado: hecho, probado **27/27** y desplegado **solo en Nego** (`index-C9Qd50Qv.js` / `index-8QJ-XgrO.css`); sin push ni otros sitios. Los «muchos errores» que avisó el dueño siguen pendientes de su lista.
+## 25/11/2026 — Fusionar salidas: badge en la lista y clic en la fila sin romper el teclado
+- El badge de una salida ya fusionada se arma con el `fusion` que `fetchSalidas` adjunta a cada `Salida`; no hace falta una consulta nueva en la ventana. Ponerlo junto al código (`badge-fusion-lista-${id}` + `data-fusion-codigo-lista`) deja que la prueba lo encuentre sin depender del texto que el CSS pone en mayúsculas.
+- Si el `<tr>` recibe `onClick` para elegir, el `<button>` de la casilla debe llamar `e.stopPropagation()`: si no, un solo clic alterna dos veces y parece que el cuadrito no funciona.
+- **Trampas de la prueba ampliada:** el id interno de `SAL-1547` es **398** y el de `SAL-1548` es **399**; buscar `tr[data-fila-fusion="1547"]` no encuentra nada. Buscar la fila por su código y sacar de ella el `id` y el `id` del botón. Después de `page.click`, el foco queda en el cuadro, no en el buscador: volver a `page.focus('#buscador-fusionar-salidas')` antes de probar ↑/↓ o la prueba mide el movimiento desde el lugar equivocado y acusa un fallo que no existe.
+-Estado: `npx tsc -b` EXIT 0, build **`index-C2jeYVUH.js`**, deploy solo Nego, prueba **158/158** con teclado, sin internet externo y 390/768/1366/1920. Commit local sin push; Evicamp, ecosistema, panel y GitHub esperan un OK nuevo. El grupo de ejemplo `FUS-0001 (398, 399)` se dejó intacto.
+
+## 25/11/2026 — Persistencia del GENERAL: copiar la definición de permisos en vivo y no perder el grupo al recargar
+- Para tocar `fn_permisos_servicios` en Nego, **copiar primero `pg_get_functiondef()` desde la base en vivo** y añadir solo las rutas nuevas. Las copias en `servidor/sql/seguridad-sesion.sql` y en `eliminar-devolucion-salida.sql` están desactualizadas: sobrescribir con ellas borra permisos que hoy sí existen. En Nego **no hay rol `authenticated`**: los GRANT van solo a `anon`.
+- `setval(seq, 0, true)` falla porque el mínimo de la secuencia es 1: para un SQL repetible con tabla vacía usar `setval(seq, 1, false)`; si ya hay filas, `setval(seq, max, true)`.
+- El badge y el botón de la tabla necesitan el grupo **en el objeto `Salida`**, no solo en estado aparte: `fetchSalidas` consulta `salida_fusiones` con el join a `salida_fusion_items`, arma `salida_ids`/`salida_codigos` y lo adjunta a cada salida. Un `ref` (`fusionesRef`) evita que el `onReload` del detalle —que recarga **una sola** salida— le quite el grupo al objeto mostrado.
+- **Trampa de teclado encontrada por la prueba:** si el `<tr>` con `tabIndex` hace `preventDefault()` en `Enter`, el navegador **no genera el clic del `<button>` hijo**. En `alTeclearFila`, saltar cuando `(e.target as HTMLElement).closest('button')` para que «Ver» y «General» respondan a Enter.
+- `useCerrarConEscape` ya apila ventanas: abrir el GENERAL desde el detalle y dar Escape cierra solo la fusión. La prueba debe comprobar ambos contenedores.
+- Para probar persistencia sin internet externo: `setRequestInterception(true)` y dejar pasar solo el dominio del sitio; a diferencia del modo offline, esto **sí permite las RPC** de guardar/desvincular.
+- Estado: SQL aplicado solo en `siumax`, build `index-Pavf8IjW.js`, deploy solo Nego, pruebas **48/48 + 142/142 + 66/66**, commit local sin push. Grupo de ejemplo **FUS-0001 (SAL-1547, SAL-1548)** dejado en la base para la revisión visual.
 
 ## 25/11/2026 — Fusionar salidas: GENERAL de solo vista, y trampas de la prueba que lo valida
 - El dueño eligió **«Solo vista»** y **«En Nueva salida»** y aprobó con **«empieza»**. Eso significa: **no crear salida, no descontar stock dos veces**; el GENERAL es una `Salida` sintética de código `GENERAL` armada en memoria con la lista ya cargada. Reutilizar `VistaPreviaSalida` evita hacer otro comprobante.

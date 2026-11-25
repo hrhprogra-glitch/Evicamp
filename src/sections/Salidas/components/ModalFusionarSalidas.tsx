@@ -9,13 +9,15 @@ import { avisar, confirmar } from '../../../utils/dialogos';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { conNombreClienteNota, nombreClienteSalida } from '../clienteNota';
 import { useEmpresaComprobante } from '../empresa';
-import type { Salida, SalidaItem } from '../types';
+import type { Salida, SalidaFusion, SalidaItem } from '../types';
 import type { EmpresaComprobante } from '../empresa';
 import { VistaPreviaSalida } from './VistaPreviaSalida';
 
 interface Props {
   isOpen: boolean;
   salidas: Salida[];
+  fusiones: SalidaFusion[];
+  fusionInicial?: SalidaFusion | null;
   onClose: () => void;
   onReload: () => void;
 }
@@ -62,7 +64,7 @@ const moverSelector = (e: React.KeyboardEvent<HTMLDivElement>) => {
 const botonCls = 'h-10 px-3 border-2 border-[var(--color-ink)] font-black uppercase text-[11px] sm:text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 bg-[var(--color-surface)] hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)]';
 const campoCls = 'w-full min-h-[40px] p-2 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none';
 
-export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose, onReload }) => {
+export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, fusiones, fusionInicial, onClose, onReload }) => {
   const [buscar, setBuscar] = useState('');
   const [elegidas, setElegidas] = useState<number[]>([]);
   const [enGeneral, setEnGeneral] = useState(false);
@@ -74,6 +76,9 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose
   const [procesando, setProcesando] = useState(false);
   const [previaOpen, setPreviaOpen] = useState(false);
   const [general, setGeneral] = useState<Salida | null>(null);
+  // 230: el grupo guardado se recuerda para que la X también lo actualice en la base.
+  const [fusionGuardada, setFusionGuardada] = useState<SalidaFusion | null>(null);
+  const [guardando, setGuardando] = useState(false);
   const empresa: EmpresaComprobante = useEmpresaComprobante();
   const cajaGeneral = useRef<HTMLDivElement>(null);
 
@@ -82,8 +87,10 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose
   useEffect(() => {
     if (!isOpen) return;
     setBuscar('');
-    setElegidas([]);
-    setEnGeneral(false);
+    const inicialIds = (fusionInicial?.salida_ids || []).map(Number);
+    setElegidas(inicialIds);
+    setFusionGuardada(fusionInicial || null);
+    setEnGeneral(inicialIds.length > 0);
     setDevolver({});
     setFecha(hoy());
     setTrabajador('');
@@ -92,7 +99,7 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose
       .then(({ data }: { data: any[] | null }) => { if (vivo) setTrabajadores(data || []); });
     const t = window.setTimeout(() => document.getElementById('buscador-fusionar-salidas')?.focus(), 60);
     return () => { vivo = false; window.clearTimeout(t); };
-  }, [isOpen]);
+  }, [isOpen, fusionInicial]);
 
   const lista = useMemo(() => (salidas || []).map(conNombreClienteNota), [salidas]);
   const filtradas = useMemo(() => {
@@ -135,15 +142,70 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose
     setElegidas((prev) => prev.includes(Number(id)) ? prev.filter((x) => x !== Number(id)) : [...prev, Number(id)]);
   };
 
-  // 230: «desvincular» solo saca la salida del GENERAL en memoria: no borra ni edita la salida real,
-  // quita también las cantidades que se hubieran escrito para devolver y recalcula el resumen.
-  const desvincular = (id: number) => {
+  // 230: «desvincular» saca UNA salida del GENERAL. No borra ni edita la salida real ni su stock;
+  // si el grupo estaba guardado, la X también lo quita de la base y recalcula el resumen.
+  const desvincular = async (id: number) => {
+    const restantes = elegidas.filter((x) => x !== Number(id));
+    if (fusionGuardada) {
+      setProcesando(true);
+      try {
+        const { error } = await supabase.rpc('fn_desvincular_salida_fusion', {
+          p_fusion_id: fusionGuardada.id,
+          p_salida_id: Number(id),
+        });
+        if (error) throw error;
+      } catch (err: any) {
+        avisar(err.message || 'No se pudo desvincular la salida del general');
+        setProcesando(false);
+        return;
+      }
+      setProcesando(false);
+      setFusionGuardada(restantes.length
+        ? {
+            ...fusionGuardada,
+            salida_ids: restantes,
+            salida_codigos: fusionGuardada.salida_codigos.filter((_, idx) => fusionGuardada.salida_ids[idx] !== Number(id)),
+          }
+        : null);
+      onReload();
+    }
     const salida = lista.find((s) => Number(s.id) === Number(id));
     const ids = new Set((salida?.items || []).map((it) => Number(it.id)));
     setDevolver((prev) => Object.fromEntries(Object.entries(prev).filter(([clave]) => !ids.has(Number(clave)))));
-    const restantes = elegidas.filter((x) => x !== Number(id));
     setElegidas(restantes);
     if (!restantes.length) setEnGeneral(false);
+  };
+
+  // Guardar el GENERAL (solo el grupo; no crea salida nueva ni descuenta stock dos veces).
+  const guardarFusion = async () => {
+    if (guardando) return;
+    if (elegidas.length < 2) {
+      avisar('Elige al menos dos salidas para guardar el general.');
+      return;
+    }
+    setGuardando(true);
+    try {
+      const { data, error } = await supabase.rpc('fn_guardar_fusion_salidas', {
+        p_salida_ids: elegidas.map(Number),
+        p_usuario: 'Sistema',
+      });
+      if (error) throw error;
+      const res = data as any;
+      const codigo = String(res?.codigo || fusionGuardada?.codigo || '');
+      setFusionGuardada({
+        id: Number(res?.fusion_id || fusionGuardada?.id || 0),
+        codigo,
+        created_at: fusionGuardada?.created_at,
+        salida_ids: elegidas.map(Number),
+        salida_codigos: seleccionadas.map((s) => s.codigo),
+      });
+      avisar(`General guardado como ${codigo}. Ya aparece en la tabla y en el detalle de cada salida.`);
+      onReload();
+    } catch (err: any) {
+      avisar(err.message || 'No se pudo guardar el general');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   const devolverTodo = async () => {
@@ -204,7 +266,7 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose
       ubicacion: '',
       fecha: new Date().toISOString(),
       estado: 'EN_PROCESO',
-      observaciones: `GENERAL de ${seleccionadas.length} salida(s): ${codigos}. Pendiente por devolver: S/ ${money(totalPendiente)}`,
+      observaciones: `${fusionGuardada ? `GENERAL ${fusionGuardada.codigo}. ` : ''}GENERAL de ${seleccionadas.length} salida(s): ${codigos}. Pendiente por devolver: S/ ${money(totalPendiente)}`,
       usuario: '',
       created_at: new Date().toISOString(),
       items: filas.map((it) => ({
@@ -233,7 +295,7 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose
                 <h2 className="ventana-cabecera__titulo">{enGeneral ? 'General de salidas' : 'Fusionar salidas'}</h2>
                 <p className="ventana-cabecera__subtitulo">
                   {enGeneral
-                    ? `${seleccionadas.length} salida(s) · ${filas.length} material(es) · solo vista, sin crear salida`
+                    ? `${fusionGuardada ? `GENERAL ${fusionGuardada.codigo} · ` : ''}${seleccionadas.length} salida(s) · ${filas.length} material(es) · solo vista, sin crear salida`
                     : 'Elige las salidas que quieres ver juntas'}
                 </p>
               </div>
@@ -250,6 +312,25 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose
 
           {!enGeneral ? (
             <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 font-mono text-xs space-y-3">
+              {fusiones.length > 0 && (
+                <div id="lista-generales-guardados">
+                  <p className="font-black uppercase mb-1">Generales guardados · vuelve a abrir uno</p>
+                  <div className="flex flex-wrap gap-2">
+                    {fusiones.map((f) => (
+                      <button
+                        key={f.id}
+                        id={`btn-abrir-fusion-general-${f.id}`}
+                        type="button"
+                        onClick={() => { setElegidas(f.salida_ids); setFusionGuardada(f); setEnGeneral(true); setDevolver({}); }}
+                        data-nav-fusion={`2000,${f.id}`}
+                        className="px-2.5 py-1 border-2 border-indigo-700 text-indigo-800 font-black uppercase text-[10px] flex items-center gap-1.5 cursor-pointer hover:bg-indigo-700 hover:text-white"
+                      >
+                        <Layers size={13} /> {f.codigo} · {f.salida_ids.length} salida(s)
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Search size={16} />
                 <input
@@ -278,19 +359,35 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose
                     {filtradas.map((s, idx) => {
                       const marcada = elegidas.includes(Number(s.id));
                       return (
-                        <tr key={s.id} className={marcada ? 'bg-[var(--color-accent)]/20' : ''}>
+                        <tr
+                          key={s.id}
+                          data-fila-fusion={s.id}
+                          onClick={() => alternar(Number(s.id))}
+                          title="Haga clic en la fila para elegir o quitar esta salida"
+                          className={`${marcada ? 'bg-[var(--color-accent)]/20' : ''} cursor-pointer`}
+                        >
                           <td className="p-2">
                             <button
                               id={`btn-fusion-elegir-${s.id}`}
                               type="button"
-                              onClick={() => alternar(Number(s.id))}
+                              onClick={(e) => { e.stopPropagation(); alternar(Number(s.id)); }}
                               aria-pressed={marcada}
                               data-nav-fusion={`${idx + 1},0`}
                               className="w-8 h-8 border-2 border-[var(--color-ink)] flex items-center justify-center cursor-pointer"
                               title={marcada ? 'Quitar salida' : 'Agregar salida'}
                             >{marcada ? <Check size={16} /> : null}</button>
                           </td>
-                          <td className="p-2 font-black">{s.codigo}</td>
+                          <td className="p-2 font-black">
+                            {s.codigo}
+                            {s.fusion && (
+                              <span
+                                id={`badge-fusion-lista-${s.id}`}
+                                data-fusion-codigo-lista={s.fusion.codigo}
+                                title={`Ya está en el general ${s.fusion.codigo}`}
+                                className="bg-indigo-100 text-indigo-800 border border-indigo-300 px-1.5 py-0.5 text-[9px] font-black uppercase block mt-0.5 w-fit"
+                              >Fusionada · {s.fusion.codigo}</span>
+                            )}
+                          </td>
                           <td className="p-2 uppercase">{nombreClienteSalida(s, 'NO REGISTRADO')}</td>
                           <td className="p-2 uppercase">{s.bien?.nombre || 'General'}</td>
                           <td className="p-2">{s.fecha ? String(s.fecha).slice(0, 10) : '-'}</td>
@@ -315,7 +412,7 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose
                       <button
                         id={`btn-desvincular-salida-${s.id}`}
                         type="button"
-                        onClick={() => desvincular(Number(s.id))}
+                        onClick={() => void desvincular(Number(s.id))}
                         title={`Desvincular ${s.codigo} del general`}
                         aria-label={`Desvincular ${s.codigo} del general`}
                         data-nav-fusion={`0,${idx}`}
@@ -441,6 +538,14 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose
                     data-nav-fusion="1000,2"
                     className="h-10 px-3 bg-emerald-700 text-white font-black uppercase text-[11px] sm:text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                   ><RotateCcw size={16} className="hidden sm:block" /> Devolver todo</button>
+                  <button
+                    id="btn-fusion-guardar"
+                    type="button"
+                    disabled={guardando || elegidas.length < 2}
+                    onClick={() => void guardarFusion()}
+                    data-nav-fusion="1000,5"
+                    className="h-10 px-3 bg-indigo-800 text-white font-black uppercase text-[11px] sm:text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
+                  ><Check size={16} className="hidden sm:block" /> {fusionGuardada ? 'Actualizar fusión' : 'Guardar fusión'}</button>
                 </>
               )}
             </div>

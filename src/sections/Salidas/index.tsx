@@ -6,7 +6,7 @@ import { ModalNuevaSalida } from './components/ModalNuevaSalida';
 import { ModalFusionarSalidas } from './components/ModalFusionarSalidas';
 import { ModalDetalleSalida } from './components/ModalDetalleSalida';
 import { conNombreClienteNota } from './clienteNota';
-import type { Salida, TipoSalida, EstadoSalida } from './types';
+import type { Salida, SalidaFusion, TipoSalida, EstadoSalida } from './types';
 import { coincideBusqueda } from '../../utils/busqueda';
 
 interface SalidasProps {
@@ -29,6 +29,10 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
   const [modalNuevoOpen, setModalNuevoOpen] = useState(false);
   // 230: la fusión se abre desde la cabecera, no desde el formulario de Nueva salida.
   const [fusionOpen, setFusionOpen] = useState(false);
+  // 230: GENERALES guardados. El ref evita perder el grupo al recargar una sola salida del detalle.
+  const [fusiones, setFusiones] = useState<SalidaFusion[]>([]);
+  const fusionesRef = useRef<SalidaFusion[]>([]);
+  const [fusionInicial, setFusionInicial] = useState<SalidaFusion | null>(null);
   const [salidaParaContinuar, setSalidaParaContinuar] = useState<Salida | null>(null);
   const [salidaSeleccionada, setSalidaSeleccionada] = useState<Salida | null>(null);
 
@@ -64,7 +68,34 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
 
       if (error) throw error;
       // Las notas llevan el nombre escrito en observaciones; el cliente interno solo es una referencia.
-      setSalidas(((data as any[]) || []).map(conNombreClienteNota));
+      const listaSalidas = ((data as any[]) || []).map(conNombreClienteNota);
+
+      // 230: traer los GENERALES guardados. Si la tabla no existe en alguna BD, la pantalla sigue funcionando.
+      const codigosPorId = new Map<number, string>(
+        listaSalidas.map((s) => [Number(s.id), String(s.codigo || '')])
+      );
+      const { data: datosFusion, error: errorFusion } = await supabase
+        .from('salida_fusiones')
+        .select('id, codigo, created_at, items:salida_fusion_items(salida_id)')
+        .order('id', { ascending: false });
+      const grupos: SalidaFusion[] = errorFusion
+        ? []
+        : ((datosFusion as any[]) || []).map((f: any) => {
+            const ids = ((f.items as any[]) || []).map((i: any) => Number(i.salida_id));
+            return {
+              id: Number(f.id),
+              codigo: String(f.codigo || ''),
+              created_at: f.created_at,
+              salida_ids: ids,
+              salida_codigos: ids.map((id) => codigosPorId.get(id) || String(id)),
+            };
+          });
+      fusionesRef.current = grupos;
+      setFusiones(grupos);
+      setSalidas(listaSalidas.map((s) => ({
+        ...s,
+        fusion: grupos.find((g) => g.salida_ids.includes(Number(s.id))) || null,
+      })));
     } catch (err) {
       console.error('Error cargando salidas:', err);
     } finally {
@@ -161,6 +192,12 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
     setModalNuevoOpen(true);
   };
 
+  // 230: abrir el GENERAL guardado desde la tabla o desde el detalle de una salida.
+  const handleVerGeneral = (fusion: SalidaFusion) => {
+    setFusionInicial(fusion);
+    setFusionOpen(true);
+  };
+
   return (
     <div className="flex flex-col gap-4 sm:gap-6 p-0 w-full font-mono relative">
       <HeaderSalidas
@@ -185,7 +222,7 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
           setPaginaActual(1);
         }}
         onNuevaSalida={handleNuevaSalida}
-        onFusionar={() => setFusionOpen(true)}
+        onFusionar={() => { setFusionInicial(null); setFusionOpen(true); }}
         metricas={metricas}
         onVolver={onVolver}
       />
@@ -194,6 +231,7 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
         <TablaSalidas
           salidas={salidasPaginadas}
           onVerDetalle={(salida) => setSalidaSeleccionada(salida)}
+          onVerGeneral={handleVerGeneral}
           paginaActual={paginaActual}
           totalPaginas={totalPaginas}
           onCambiarPagina={(pag) => setPaginaActual(pag)}
@@ -215,12 +253,14 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
         />
       )}
 
-      {/* Modal Fusionar Salidas (botón al costado de Nueva salida, solo vista) */}
+      {/* Modal Fusionar Salidas (botón al costado de Nueva salida; el GENERAL es solo vista) */}
       {fusionOpen && (
         <ModalFusionarSalidas
           isOpen={fusionOpen}
           salidas={salidas}
-          onClose={() => setFusionOpen(false)}
+          fusiones={fusiones}
+          fusionInicial={fusionInicial}
+          onClose={() => { setFusionOpen(false); setFusionInicial(null); }}
           onReload={fetchSalidas}
         />
       )}
@@ -231,8 +271,9 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
           salida={salidaSeleccionada}
           isOpen={!!salidaSeleccionada}
           onClose={() => setSalidaSeleccionada(null)}
+          onVerGeneral={handleVerGeneral}
           onReload={async () => {
-            fetchSalidas();
+            await fetchSalidas();
             if (salidaSeleccionada) {
               const base = `
                   *,
@@ -254,7 +295,13 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
                 data = retry.data as any;
                 error = retry.error as any;
               }
-              if (data) setSalidaSeleccionada(conNombreClienteNota(data as any));
+              if (data) {
+                const actualizada = conNombreClienteNota(data as any);
+                setSalidaSeleccionada({
+                  ...actualizada,
+                  fusion: fusionesRef.current.find((g) => g.salida_ids.includes(Number(actualizada.id))) || null,
+                });
+              }
             }
           }}
           onContinuar={(salida) => {

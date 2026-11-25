@@ -944,7 +944,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
             <div className="ventana-cabecera__icono">
               <Truck size={20} />
             </div>
-            <div>
+            <div className="min-w-0">
               <h2 className="ventana-cabecera__titulo">
                 {salidaRaiz ? `Continuar Salida (${salidaRaiz.codigo})` : 'Punto de Salida a Obra / Servicio'}
               </h2>
@@ -953,7 +953,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {tieneBorrador && !salidaRaiz && (
               <span className="hidden sm:inline-block text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 px-2 py-1 font-bold uppercase tracking-wider">
                 ✓ Borrador auto-guardado

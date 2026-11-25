@@ -80,6 +80,29 @@ try {
   ok('Sin internet carga los productos activos', v0.filas.length > 0, `${v0.filas.length} filas`);
   ok('Por defecto trae Cant. a pedir y no Precio', v0.cabeceras.join('|') === 'CÓDIGO|NOMBRE|CATEGORÍA|STOCK|CANT. A PEDIR', v0.cabeceras.join('|'));
   ok('El encabezado dice LISTADO DE PRODUCTOS', /LISTADO DE PRODUCTOS/.test(v0.texto));
+  await page.waitForFunction(() => {
+    const img = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument?.querySelector('img.logo');
+    return !!img && img.complete && img.naturalWidth > 0;
+  }, { timeout: 10000 });
+  const logoEnCabecera = await page.evaluate(() => {
+    const d = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument;
+    const img = d?.querySelector('.cabecera img.logo');
+    return !!img && !!d?.querySelector('.cabecera .marca') && (img.src || '').length > 0 && img.naturalWidth > 0;
+  });
+  ok('La hoja lleva el logo de la empresa en la cabecera', logoEnCabecera);
+  const cabeceraConEspacio = await page.evaluate(() => {
+    const d = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument;
+    const c = d?.querySelector('.cabecera');
+    const marca = d?.querySelector('.marca');
+    const titulo = d?.querySelector('.titulo');
+    if (!c || !marca || !titulo) return false;
+    const e = getComputedStyle(c);
+    const izquierda = parseFloat(e.paddingLeft || '0');
+    const derecha = parseFloat(e.paddingRight || '0');
+    const hueco = titulo.getBoundingClientRect().left - marca.getBoundingClientRect().right;
+    return izquierda >= 10 && derecha >= 10 && hueco >= 12;
+  });
+  ok('Logo, título, categorías y fecha no están pegados a los bordes', cabeceraConEspacio);
   const hojaEstilizada = await page.evaluate(() => {
     const d = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument;
     return !!(d?.querySelector('.cabecera') && d?.querySelector('.pie') && /@page/.test(d?.styleSheets?.[0]?.cssRules ? [...d.styleSheets[0].cssRules].map((r) => r.cssText).join('') : ''));
@@ -96,6 +119,25 @@ try {
     return fondoTh !== 'rgba(0, 0, 0, 0)' && fondoTh !== 'rgb(255, 255, 255)' && fondoPar !== fondoImpar;
   });
   ok('La tabla tiene encabezado oscuro y filas alternas', tablaEstilizada);
+  const coloresStock = await page.evaluate(() => {
+    const d = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument;
+    const cuenta = { bajo: 0, punto: 0, bien: 0 };
+    const colores = {};
+    for (const fila of d?.querySelectorAll('tbody tr') || []) {
+      const clase = ['bajo', 'punto', 'bien'].find((c) => fila.classList.contains(c));
+      if (!clase) continue;
+      cuenta[clase]++;
+      if (!colores[clase]) colores[clase] = getComputedStyle(fila.querySelector('td:not(.pedido)')).color;
+    }
+    return { cuenta, colores, leyenda: d?.querySelector('.leyenda')?.textContent || '' };
+  });
+  ok('Hay productos clasificados por stock (rojo, naranja y negro)',
+    coloresStock.cuenta.bajo > 0 && coloresStock.cuenta.punto > 0 && coloresStock.cuenta.bien > 0,
+    JSON.stringify(coloresStock.cuenta));
+  ok('Stock bajo sale en rojo', coloresStock.colores.bajo === 'rgb(185, 28, 28)', coloresStock.colores.bajo);
+  ok('Stock a punto sale en naranja', coloresStock.colores.punto === 'rgb(180, 83, 9)', coloresStock.colores.punto);
+  ok('Stock bien sale en negro', coloresStock.colores.bien === 'rgb(17, 17, 17)', coloresStock.colores.bien);
+  ok('La hoja explica los colores en el pie', /Bajo/.test(coloresStock.leyenda) && /Por pedir/.test(coloresStock.leyenda) && /OK/.test(coloresStock.leyenda));
   const unaFila = await page.evaluate(() => {
     const fs = [...document.querySelectorAll('[role="dialog"] fieldset')];
     return fs.length >= 2 && Math.abs(fs[0].getBoundingClientRect().top - fs[1].getBoundingClientRect().top) < 8;
