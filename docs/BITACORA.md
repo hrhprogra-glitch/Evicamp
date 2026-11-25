@@ -7,7 +7,7 @@
 
 ---
 
-## 24/11/2026 (409 al devolver en ecosistema: tienda inexistente) · OpenCode (Big Pickle) — CORREGIDO EN ECOSISTEMA, SIN PUSH
+## 24/11/2026 (409 al devolver en ecosistema: tienda inexistente) · OpenCode (Big Pickle) — CORREGIDO Y SUBIDO A GITHUB
 
 - **Dueño:** *"quise hacer una devolución en ecosistema y me sale… 409 Conflict… te dije que hagas pruebas generales en nego siumax para evitar eso arreglalo urgente que mi cliente lo necesita !!!!"*.
 - **Causa raíz (encontrada, no adivinada):** en ecosistema `inventory_movements.store_id` tenía **DEFAULT 2**, pero la tabla `stores` solo tiene la **tienda 1**. `fn_registrar_devolucion` inserta un movimiento sin escribir `store_id`, así que PostgreSQL daba `23503` (FK `inventory_movements_store_id_fkey`) y PostgREST lo convertía en **409 Conflict**. En Nego el default ya era 1: por eso las pruebas de Nego pasaban y el fallo solo aparecía en el sitio del cliente. Los 404 de `suscripcion.json` y `empleados_publico` y el aviso de PWA son ruido, no causan el 409.
@@ -15,7 +15,8 @@
 - **Antes de tocar nada:** se corrió la nueva prueba general `ai-scripts/pruebas/verificar-generales-devoluciones.cjs` en **Nego (TODO OK)** y en ecosistema (detectó `inventory_movements=2` y el 409). Es solo lectura + una transacción que siempre se revierte: **no escribe**.
 - **Corrección aplicada solo en ecosistema** (con el pedido urgente del dueño): respaldo `pg_dump -Fc` previo (dos copias, `/var/lib/postgresql/respaldo-ecosistema-antes-store-default-2026-11-25T04-4…` y `…04-50…`), `lock_timeout=5s`, y `servidor/sql/corregir-default-store-inventario.sql`: default a la tienda 1 y reparación de las referencias huérfanas a la tienda 1. Sin reiniciar la API. Resultado: **0 movimientos huérfanos, 0 lotes huérfanos**.
 - **Después:** prueba general en ecosistema **TODO OK** (fecha/trabajador, stock, dos devoluciones seguidas, cantidad negativa ignorada) y en Nego **TODO OK**; regresiones de pantalla Nego **23/23** y ecosistema **26/26**, con teclado, sin internet y 390/768/1366/1920, 0 errores JS. Sin cambiar bundle ni desplegar: el arreglo fue de base, no de código frontal.
-- **Estado:** el dueño debe probar su devolución con **Ctrl+F5**. Commit local de los dos archivos nuevos y las notas; **sin push** (esperamos su OK). `main` intacto.
+- **Estado:** el dueño probó y dijo **«si sube»** el 25/11/2026. Push autorizado y hecho a `origin/fase-11-sunat`: `6644ccb..6c36704` (la corrección `57224e6` y el grafo `6c36704`). Verificado en remoto: `fase-11-sunat` en `6c36704`, `main` intacto.
+- **Revisión de los otros sitios (25/11, solo lectura):** Nego (`siumax`) y Evicamp (`postgres`, la base de `/etc/postgrest.conf`) tenían default 1, **0 movimientos y 0 lotes huérfanos**; en Evicamp además la función de devoluciones tiene los 6 argumentos y permiso para `anon`. `servic` y `siudemo` también limpios. Ningún otro sitio necesitó cambio ni deploy: el arreglo fue solo de base en ecosistema. Falta la prueba final del dueño en ecosistema con **Ctrl+F5**.
 
 ## 24/11/2026 (el rollo ahora dice la unidad: «ROLLO x100 MT») · OpenCode (Big Pickle) — HECHO, PROBADO Y SUBIDO
 

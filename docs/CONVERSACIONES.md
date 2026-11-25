@@ -1571,4 +1571,5 @@
 - Había un segundo fallo: 614 lotes, 4.658 movimientos y 62 ventas con `store_id=2` huérfano; la segunda devolución del mismo lote fallaba en `batches_store_id_fkey`.
 - **Corrección aplicada solo en ecosistema** con respaldo previo y `lock_timeout`: `corregir-default-store-inventario.sql` dejó el default en la tienda 1 y reparó los huérfanos. Quedaron **0 huérfanos**. No se reinició la API.
 - **Verificación:** prueba general **TODO OK** en Nego y ecosistema; regresiones Nego **23/23** y ecosistema **26/26**, teclado, sin internet, 390/768/1366/1920, 0 errores JS. No cambió el bundle, así que no hubo deploy.
-- Falta que el dueño pruebe su devolución con **Ctrl+F5**. Commit local; **sin push** hasta su OK.
+- **Dueño (25/11):** *"si sube"*. Push autorizado y hecho a `origin/fase-11-sunat` (`6644ccb..6c36704`: corrección + grafo). Remoto verificado en `6c36704`, `main` intacto.
+- Antes del push se revisaron las otras bases (solo lectura): Nego (`siumax`) y Evicamp (`postgres`) con default 1 y 0 huérfanos; en Evicamp la función de devoluciones tiene 6 argumentos y permiso para `anon`. `servic` y `siudemo` limpios. No hizo falta tocarlos ni desplegar nada. Falta la prueba final del dueño con **Ctrl+F5** en ecosistema.
