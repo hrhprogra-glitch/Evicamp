@@ -1236,6 +1236,79 @@ main [data-row="true"] [class*="text-xs"],
   main #tabla-salidas-lista [data-row="true"] { height: auto !important; min-height: 79px !important; }
 }
 
+/* ===== SALIDAS EN PC PEQUEÑA (25/11/2026) =====
+   La lista tiene 9 columnas y medía 1547 px: en 1366 o 1024 el botón «VER» quedaba
+   fuera de la pantalla. Esto solo acomoda la lista; no toca ids, teclado, colores,
+   orden de columnas ni la lógica de salidas/devoluciones.
+   · 1101–1366 px: tabla compacta que cabe entera, sin arrastre horizontal.
+   · hasta 1100 px: cada salida se apila como tarjeta con su etiqueta delante. */
+@media (min-width: 1101px) and (max-width: 1366px) {
+  main .tabla-salidas-scroll { overflow-x: visible !important; }
+  main #tabla-salidas-lista { width: 100%; min-width: 0 !important; }
+  main #tabla-salidas-lista table { table-layout: fixed; width: 100% !important; }
+  main #tabla-salidas-lista th,
+  main #tabla-salidas-lista td { padding: 0.35rem 0.35rem !important; }
+  main #tabla-salidas-lista th { white-space: normal !important; }
+  main #tabla-salidas-lista [data-row="true"] { min-height: 68px !important; }
+  main #tabla-salidas-lista th:nth-child(1), main #tabla-salidas-lista td:nth-child(1) { width: 13%; }
+  main #tabla-salidas-lista th:nth-child(2), main #tabla-salidas-lista td:nth-child(2) { width: 9%; }
+  main #tabla-salidas-lista th:nth-child(3), main #tabla-salidas-lista td:nth-child(3) { width: 24%; }
+  main #tabla-salidas-lista th:nth-child(4), main #tabla-salidas-lista td:nth-child(4) { width: 17%; }
+  main #tabla-salidas-lista th:nth-child(5), main #tabla-salidas-lista td:nth-child(5) { width: 12%; }
+  main #tabla-salidas-lista th:nth-child(6), main #tabla-salidas-lista td:nth-child(6) { width: 5%; }
+  main #tabla-salidas-lista th:nth-child(7), main #tabla-salidas-lista td:nth-child(7) { width: 7%; }
+  main #tabla-salidas-lista th:nth-child(8), main #tabla-salidas-lista td:nth-child(8) { width: 7%; }
+  main #tabla-salidas-lista th:nth-child(9), main #tabla-salidas-lista td:nth-child(9) { width: 6%; }
+  main #tabla-salidas-lista td > span,
+  main #tabla-salidas-lista td > div { min-width: 0; max-width: 100%; }
+  main #tabla-salidas-lista td:nth-child(2) { white-space: normal !important; }
+  main #tabla-salidas-lista td:nth-child(3) span,
+  main #tabla-salidas-lista td:nth-child(4) span,
+  main #tabla-salidas-lista td:nth-child(5) span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  main #tabla-salidas-lista [id^="btn-ver-salida-"] { padding-left: 0.35rem; padding-right: 0.35rem; }
+}
+
+@media (max-width: 1100px) {
+  main .tabla-salidas-scroll { overflow-x: visible !important; }
+  main #tabla-salidas-lista { width: 100%; min-width: 0 !important; }
+  main #tabla-salidas-lista table,
+  main #tabla-salidas-lista tbody,
+  main #tabla-salidas-lista tr,
+  main #tabla-salidas-lista td { display: block; width: 100% !important; }
+  main #tabla-salidas-lista thead { display: none !important; }
+  main #tabla-salidas-lista tbody { background: transparent !important; }
+  main #tabla-salidas-lista tr {
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  main #tabla-salidas-lista td {
+    border: 0;
+    padding: 0.18rem 0;
+    text-align: left !important;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+  main #tabla-salidas-lista td::before {
+    content: attr(data-etiqueta);
+    flex: 0 0 7.5rem;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-muted);
+  }
+  main #tabla-salidas-lista td > * { min-width: 0; max-width: 100%; }
+  main #tabla-salidas-lista td:nth-child(3) span,
+  main #tabla-salidas-lista td:nth-child(4) span,
+  main #tabla-salidas-lista td:nth-child(5) span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  main #tabla-salidas-lista [id^="btn-ver-salida-"] { margin-left: 0; }
+}
+
 /* ==========================================================================
    DIFERENCIA PERMANENTE SOLO DEL SITIO OFICIAL ECOSISTEMA (24/11/2026).
    El color de la empresa es AZUL OCÉANO, no verde esmeralda. En el Modo Oscuro

@@ -8,6 +8,11 @@
 
 ---
 
+## 25/11/2026 — Si otra IA despliega desde un commit anterior, tu cambio desaparece del sitio
+- El dueño dijo que no veía el botón en Nego. El sitio servía `index-CJhKMreh.js`, no el bundle que yo había desplegado: otra sesión trabajó desde `d0d4549` (commit anterior al mío), desplegó su cambio y sobrescribió el mío. **Comprobar siempre el `index.html` en vivo y buscar el id del botón en el JS servido** antes de creer que es caché del navegador.
+- No revertir el trabajo ajeno: fusionar las dos ramas (`git merge --no-ff` desde la rama propia), resolver los conflictos de docs conservando **ambas** entradas, regenerar `graphify-out` y volver a compilar/desplegar. El bundle combinado tiene los dos cambios; un deploy posterior desde una rama atrasada vuelve a borrarlos.
+- **Bloqueo externo:** `deploy.cjs` falló con `Timed out while waiting for handshake`; HTTP/HTTPS respondían pero el puerto 22 ni conectaba. No es error del código ni de credenciales (la copia de `.env.vps` es la conocida). Anotar el estado como «deploy pendiente» y no decir «ya está en Nego» hasta verificar el bundle en vivo.
+
 ## 25/11/2026 — Imprimir un listado A4 desde una ventana: el foco se queda en el iframe
 - Un `<iframe srcDoc>` es la forma más limpia de imprimir **solo la hoja** y dejar fuera la app entera (lo mismo que ya se usa en Compras). El botón debe llamar a `iframe.contentWindow.print()`, nunca a `window.print()`. La hoja se arma con HTML + `@page { size: A4 }` y estilos en línea, y el alto del iframe se ajusta en `onLoad` con `contentDocument.documentElement.scrollHeight`.
 - **Trampa real:** `iframe.contentWindow.focus()` antes de `print()` deja el teclado **dentro del iframe**. Los listeners de `window` (como `useCerrarConEscape`) no reciben ese `keydown`: Escape deja de cerrar la ventana. Arreglo: en el `keydown` del `contentDocument`, reenviar un `KeyboardEvent('keydown', {key:'Escape'})` al `window` padre, y además devolver el foco al botón justo después de `print()`.
@@ -15,6 +20,13 @@
 - Las categorías del filtro salen de los propios productos activos (`new Set(...).sort(localeCompare)`), sin consultar otra tabla: así el desplegable no ofrece categorías vacías. El stock se calcula igual que Inventario: **lotes si existen, si no `products.quantity`; si hay variantes, se suman**; nunca copiar solo `quantity` para un listado de almacén.
 - Para columnas opcionales, guardar `Record<Columna, boolean>` y, al desmarcar, impedir que queden todas false (si no, la hoja sale sin ningún dato y parece rota). El HTML se escapa (`& < > "`) antes de meter nombre/categoría de la base en el `srcDoc`.
 - Estado: hecho, probado **27/27** y desplegado **solo en Nego** (`index-C9Qd50Qv.js` / `index-8QJ-XgrO.css`); sin push ni otros sitios. Los «muchos errores» que avisó el dueño siguen pendientes de su lista.
+
+## 25/11/2026 — Salidas en pantallas pequeñas: medir antes, aislar el worktree y verificar el bundle servido
+- El dueño pide **adaptar a distintos tamaños de pantalla**, no hacer scroll horizontal. En 1366 px la lista medía **1547 px** y `VER`/`ESTADO` quedaban fuera; en 1920 px entraba. Medir con Puppeteer antes de cambiar CSS evita adivinar anchos.
+- El repo principal tiene **WIP ajeno en `TablaSalidas.tsx`**: no sobrescribirlo. Se trabajó en un worktree nuevo desde `d0d4549` (commit del bundle que servía Nego), con `node_modules` junction y copia conocida de `.env.vps` (MD5 corto `BBF98048CC`); la del repo principal (`8562F26AD7`) no autentica.
+- **Trampa real:** el primer deploy se hizo bien pero otro trabajo desplegó después desde `pase-todos` y el sitio sirvió su bundle viejo (`C9Qd50Qv`), aunque local existía el nuevo (`CJhKMreh`). Siempre comprobar `index.html` en vivo y comparar el nombre del bundle con `dist/index.html` antes de creer una prueba fallida. La prueba debe usar `page.setCacheEnabled(false)`.
+- Arreglo que funcionó: tabla `table-layout: fixed` con porcentajes entre 1101–1366 px y tarjetas con `td::before { content: attr(data-etiqueta) }` hasta 1100 px; se conservan ids, teclado, columnas y lógica. Prueba `verificar-salidas-pantalla-pc.mjs`: **51 OK, 0 fallos** en 390/768/1024/1280/1366/1920.
+- El dueño autorizó **«si»** solo para Nego. Ecosistema, Evicamp, clientes y push requieren un OK nuevo en esa tanda; el oficial además necesita reponer iconos después de desplegar.
 
 ## 25/11/2026 — «No sale ningún usuario» puede ser una vista que falta, no usuarios que faltan
 - El dueño avisó de urgencia que en Gestión de Usuarios no aparecía nadie. **Antes de crear usuarios**, mirar la API: en ecosistema daba `HTTP 404 relation "public.empleados_publico" does not exist`; la tabla `empleados` tenía 3 filas. La pantalla (`TablaUsuarios.tsx`) lee la **vista** `empleados_publico`, no la tabla. Crear usuarios «para que salga algo» habría sido inventar datos y ocultar la causa real.

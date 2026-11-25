@@ -81,8 +81,8 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
         idBuscador="buscador-salidas"
       />
 
-      <div className="w-full overflow-x-auto custom-scrollbar">
-        <div className="min-w-[1080px]" id="tabla-salidas-lista">
+      <div className="w-full overflow-x-auto custom-scrollbar tabla-salidas-scroll">
+        <div id="tabla-salidas-lista">
           {salidas.length === 0 ? (
             <div className="vacio-sobrio">
               <Search size={32} />
@@ -115,7 +115,7 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
                     title="Presione Enter o haga clic para ver el detalle"
                     className="tabla-fila h-[79px] cursor-pointer"
                   >
-                    <td className="p-4">
+                    <td className="p-4" data-etiqueta="Código / Tipo">
                       <div className="flex items-center gap-1.5">
                         <span className="font-black text-[var(--color-ink)]">{s.codigo}</span>
                         {getTipoBadge(s.tipo)}
@@ -124,21 +124,21 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
                         <span className="text-[9px] text-blue-700 font-bold block mt-0.5">Cont. de {s.salida_raiz_codigo}</span>
                       )}
                     </td>
-                    <td className="p-4 text-[11px] whitespace-nowrap">{s.fecha}</td>
-                    <td className="p-4">
+                    <td className="p-4 text-[11px] whitespace-nowrap" data-etiqueta="Fecha">{s.fecha}</td>
+                    <td className="p-4" data-etiqueta="Cliente / Destino">
                       <span className="font-bold uppercase text-[var(--color-ink)] block">{s.customer?.name || 'Cliente sin nombre'}</span>
                       {s.direccion && (
                         <span className="text-[10px] text-[var(--color-muted)] block truncate max-w-xs">{s.direccion}</span>
                       )}
                     </td>
-                    <td className="p-4">
+                    <td className="p-4" data-etiqueta="Lo que se atiende">
                       {s.bien ? (
                         <span className="font-bold text-[var(--color-accent-dark)] uppercase">{s.bien.nombre} ({s.bien.tipo})</span>
                       ) : (
                         <span className="text-[var(--color-muted)] italic text-[10px]">General</span>
                       )}
                     </td>
-                    <td className="p-4">
+                    <td className="p-4" data-etiqueta="Personal">
                       <div className="flex flex-wrap gap-1 max-w-xs">
                         {s.trabajadores && s.trabajadores.length > 0 ? (
                           s.trabajadores.map((t, tidx) => (
@@ -151,10 +151,10 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
                         )}
                       </div>
                     </td>
-                    <td className="p-4 text-center">
+                    <td className="p-4 text-center" data-etiqueta="Ítems">
                       <span className="font-black">{s.items?.length || 0}</span>
                     </td>
-                    <td className="p-4 text-center">
+                    <td className="p-4 text-center" data-etiqueta="Devoluciones">
                       {/* 24/11: las devoluciones van en su propia columna, no debajo de Ítems. */}
                       {(() => {
                         const cant = (s.devoluciones?.length || 0) || (s.items || []).filter((it) => Number(it.cantidad_devuelta) > 0).length;
@@ -165,8 +165,8 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
                         );
                       })()}
                     </td>
-                    <td className="p-4 text-center">{getEstadoBadge(s.estado)}</td>
-                    <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className="p-4 text-center" data-etiqueta="Estado">{getEstadoBadge(s.estado)}</td>
+                    <td className="p-4 text-center" data-etiqueta="Acciones" onClick={(e) => e.stopPropagation()}>
                       <button
                         id={`btn-ver-salida-${s.id}`}
                         onClick={() => onVerDetalle(s)}
