@@ -7,6 +7,16 @@
 
 ---
 
+## 25/11/2026 (corrección de «Fusionar salidas»: botón al costado y X para desvincular) · OpenCode (Big Pickle) — HECHO Y PROBADO SOLO EN NEGO
+
+- **Dueño:** *"no tiene que estar dentro de nueva salida tiene que estar al costado como un boton al costado derecho porque esta dentro si dijimos que estaria al costado a la izquierda del boton nueva salida"*. Después pidió *"una opción mas tiene que a ver una opción para desvincular salidas"* y, al preguntarle qué debía hacer, eligió **«Quitar una del general»** (no quitar todas ni solo desmarcar en la lista).
+- **Código:** `btn-fusionar-salidas` sale de `ModalNuevaSalida.tsx` (se restauró a como estaba antes del commit `14f1372`, porque ahí seguía un segundo botón con el mismo id y un modal dentro del formulario) y va en `HeaderSalidas.tsx`, **en la misma fila y justo a la izquierda de `btn-nueva-salida`**. `Salidas/index.tsx` abre `ModalFusionarSalidas` desde la lista con `fusionOpen`; ←/→ saltan entre ambos botones; Escape de la fusión vuelve a la lista, no a Nueva salida. Cada salida del GENERAL tiene `btn-desvincular-salida-${id}` (una X): la saca del grupo **solo en memoria**, limpia las cantidades escritas para devolver de esa salida y recalcula materiales y pendiente; **no borra ni edita la salida real**, sin SQL ni base nueva. No se tocaron los 4 fallos preexistentes de `select-bien-salida`.
+- **Verificación:** `npx tsc -b` EXIT 0 y `npm run build` OK: **`index-CdbIQmqK.js` / `index-BLSV1OC5.css`** (el bundle anterior `index-BCWl9GII.js` quedó supersedido). Deploy **solo Nego**, 22 archivos, marcadores `btn-fusionar-salidas` y `btn-desvincular-salida-` comprobados **dentro del JS servido**. Otro agente sobrescribió Nego dos veces con bundles ajenos (`index-CyFtSW6H.js` sin los marcadores y `index-Cy7XoMwt.js` con el botón pero sin la X); se volvió a subir y se verificó de nuevo justo antes del parte.
+- **Pruebas:** `verificar-fusionar-salidas.mjs` **142/142** (antes 114/114 y 138/138): teclado, sin internet, 390/768/1366/1920; exige que el botón esté fuera del modal, en la misma cabecera y a la izquierda, que **solo exista uno**, comprueba ←/→, desvincula SAL-1548 del GENERAL y confirma que la salida real sigue en la lista. La confirmación de devolución se cancela para no tocar datos ni stock. Regresión `verificar-nombre-nota-salidas.mjs` **66/66**. 0 errores de JavaScript.
+- **Estado:** commit local en el worktree `fusionar-salidas`, sin push. **Sin Evicamp, ecosistema, panel ni GitHub** hasta nuevo OK. Falta la revisión visual con **Ctrl+F5** en `nego.siumax.duckdns.org`.
+
+---
+
 ## 25/11/2026 (fusionar salidas en un GENERAL de solo vista, desde Nueva salida) · OpenCode (Big Pickle) — HECHO Y PROBADO SOLO EN NEGO
 
 - El dueño pidió un botón nuevo **a la derecha de Nueva salida** para juntar varias salidas en un GENERAL: ver todos los productos, devolver todo lo pendiente e imprimir un general de todo. Preguntado, eligió **«Solo vista (recomendado)»** y **«En Nueva salida (recomendado)»**, y aprobó con **«empieza»**.

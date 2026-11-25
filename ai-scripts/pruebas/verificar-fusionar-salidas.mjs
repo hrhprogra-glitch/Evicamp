@@ -96,21 +96,33 @@ try {
     await pausa(350);
     const tam = `${w}px`;
 
-    await page.focus('#btn-nueva-salida');
-    await tecla('Enter');
-    await pausa(500);
-    ok(`${tam}: Enter abre Nueva salida`, await existe('#modal-nueva-salida-container'));
-    const botonDerecha = await page.evaluate(() => {
-      const b = document.getElementById('btn-fusionar-salidas')?.getBoundingClientRect();
-      const m = document.getElementById('modal-nueva-salida-container')?.getBoundingClientRect();
-      return !!b && !!m && b.right > m.left + m.width / 2 && b.right <= m.right + 2;
+    const ubicacion = await page.evaluate(() => {
+      const b = document.getElementById('btn-fusionar-salidas');
+      const n = document.getElementById('btn-nueva-salida');
+      if (!b || !n) return null;
+      const rb = b.getBoundingClientRect();
+      const rn = n.getBoundingClientRect();
+      return {
+        fueraDelModal: !b.closest('#modal-nueva-salida-container'),
+        mismoPadre: b.parentElement === n.parentElement,
+        aLaIzquierda: rb.right <= rn.left + 2 && Math.abs(rb.top - rn.top) < rn.height + 8,
+        cantidad: document.querySelectorAll('#btn-fusionar-salidas').length,
+      };
     });
-    ok(`${tam}: «Fusionar salidas» está en el lado derecho de la cabecera`, botonDerecha);
+    ok(`${tam}: «Fusionar salidas» está en la cabecera, fuera de Nueva salida`,
+      !!ubicacion?.fueraDelModal && !!ubicacion?.mismoPadre, JSON.stringify(ubicacion));
+    ok(`${tam}: solo existe un botón «Fusionar salidas»`, ubicacion?.cantidad === 1, JSON.stringify(ubicacion));
+    ok(`${tam}: queda justo a la izquierda de «Nueva salida»`, !!ubicacion?.aLaIzquierda, JSON.stringify(ubicacion));
 
     await page.focus('#btn-fusionar-salidas');
+    await tecla('ArrowRight');
+    ok(`${tam}: → de Fusión lleva a Nueva salida`, (await activo()) === 'btn-nueva-salida', await activo());
+    await tecla('ArrowLeft');
+    ok(`${tam}: ← de Nueva salida vuelve a Fusión`, (await activo()) === 'btn-fusionar-salidas', await activo());
     await tecla('Enter');
-    await pausa(450);
-    ok(`${tam}: Enter abre la ventana de fusión`, await existe('#modal-fusionar-salidas-container'));
+    await pausa(500);
+    ok(`${tam}: Enter abre la fusión SIN abrir Nueva salida`,
+      await existe('#modal-fusionar-salidas-container') && !(await existe('#modal-nueva-salida-container')));
     ok(`${tam}: el buscador de salidas recibe el foco`, (await activo()) === 'buscador-fusionar-salidas', await activo());
 
     await tecla('ArrowUp');
@@ -189,13 +201,35 @@ try {
     ok(`${tam}: cancelar no devuelve nada y sigue en el general`,
       !(await existe('[data-dialogo-sistema]')) && (await existe('#tabla-resumen-fusion')));
 
+    const chips = await page.$$eval('[id^="btn-desvincular-salida-"]', (els) => els.map((e) => ({
+      id: e.id, texto: e.parentElement?.innerText || '',
+    })));
+    const quitar = chips.find((c) => c.texto.includes(CODIGOS[1]));
+    ok(`${tam}: el general ofrece desvincular ${CODIGOS[1]}`, !!quitar,
+      chips.map((c) => c.texto.replace(/\s+/g, ' ')).join(' | '));
+    if (quitar) {
+      await page.focus(`#${quitar.id}`);
+      await tecla('Enter');
+      await pausa(350);
+      const quedo = await texto('tbody[data-fusion-filas]');
+      const restantes = await page.$$eval('[id^="btn-desvincular-salida-"]', (els) => els.length);
+      ok(`${tam}: desvincular quita ${CODIGOS[1]} y deja ${CODIGOS[0]}`,
+        !quedo.includes(CODIGOS[1]) && quedo.includes(CODIGOS[0]));
+      ok(`${tam}: solo queda 1 salida en el general`, restantes === 1, `${restantes} salida(s)`);
+      const subt = await texto('#modal-fusionar-salidas-container .ventana-cabecera__subtitulo');
+      ok(`${tam}: el aviso dice 1 salida`, subt.toLowerCase().includes('1 salida(s)'), subt);
+    }
+
     await tecla('Escape');
     await pausa(350);
-    ok(`${tam}: Escape cierra la fusión y vuelve a Nueva salida`,
-      !(await existe('#modal-fusionar-salidas-container')) && (await existe('#modal-nueva-salida-container')));
-    await tecla('Escape');
-    await pausa(350);
-    ok(`${tam}: Escape cierra Nueva salida`, !(await existe('#modal-nueva-salida-container')));
+    ok(`${tam}: Escape cierra la fusión y vuelve a la lista de Salidas`,
+      !(await existe('#modal-fusionar-salidas-container')) && (await existe('#btn-nueva-salida')));
+
+    await escribir('#buscador-salidas', CODIGOS[1]);
+    await pausa(300);
+    const sigue = await page.evaluate((codigo) => Array.from(document.querySelectorAll('[data-fila-salida="true"]'))
+      .some((f) => (f.innerText || '').includes(codigo)), CODIGOS[1]);
+    ok(`${tam}: desvincular no borra la salida real`, sigue);
   }
 
   ok('Sin errores de JavaScript', errores.length === 0, errores.slice(0, 3).join(' | '));

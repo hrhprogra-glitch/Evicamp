@@ -6461,59 +6461,59 @@
   ],
   "surprises": [
     {
-      "source": "23/11/2026 (197) \u00b7 OpenCode (Big Pickle) \u2014 Fase A: login corto y un solo administrador en Nego (pruebas)",
-      "target": "normalizarEmail()",
+      "source": "18/11/2026 (182) \u00b7 OpenCode (Big Pickle) \u2014 Buscador desplegable de cliente y bot\u00f3n de cliente no registrado en Nueva salida: HECHO, probado y desplegado solo en Nego",
+      "target": "coincideBusqueda()",
       "source_files": [
         "docs/BITACORA.md",
-        "src/utils/sesion.ts"
+        "src/utils/busqueda.ts"
       ],
       "confidence": "INFERRED",
       "relation": "references",
-      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; bridges separate communities; peripheral node `23/11/2026 (197) \u00b7 OpenCode (Big Pickle) \u2014 Fase A: login corto y un solo administrador en Nego (pruebas)` unexpectedly reaches hub `normalizarEmail()`"
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; bridges separate communities; peripheral node `18/11/2026 (182) \u00b7 OpenCode (Big Pickle) \u2014 Buscador desplegable de cliente y bot\u00f3n de cliente no registrado en Nueva salida: HECHO, probado y desplegado solo en Nego` unexpectedly reaches hub `coincideBusqueda()`"
     },
     {
-      "source": "48. Login corto por sitio (23/11/2026, bit\u00e1cora 197)",
-      "target": "normalizarEmail()",
+      "source": "18/11/2026 (175) \u00b7 OpenCode (Big Pickle) \u2014 Todas las tablas de Nego a 50 filas por p\u00e1gina",
+      "target": "PaginacionSobrio()",
+      "source_files": [
+        "docs/BITACORA.md",
+        "src/components/PaginacionSobrio.tsx"
+      ],
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; bridges separate communities; peripheral node `18/11/2026 (175) \u00b7 OpenCode (Big Pickle) \u2014 Todas las tablas de Nego a 50 filas por p\u00e1gina` unexpectedly reaches hub `PaginacionSobrio()`"
+    },
+    {
+      "source": "18/11/2026 (todas las tablas a 50 filas por p\u00e1gina)",
+      "target": "PaginacionSobrio()",
+      "source_files": [
+        "docs/CONVERSACIONES.md",
+        "src/components/PaginacionSobrio.tsx"
+      ],
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; bridges separate communities; peripheral node `18/11/2026 (todas las tablas a 50 filas por p\u00e1gina)` unexpectedly reaches hub `PaginacionSobrio()`"
+    },
+    {
+      "source": "27. Todas las tablas a 50 filas por p\u00e1gina (18/11/2026, bit\u00e1cora 175)",
+      "target": "PaginacionSobrio()",
       "source_files": [
         "docs/MEMORIA-IA.md",
-        "src/utils/sesion.ts"
+        "src/components/PaginacionSobrio.tsx"
       ],
       "confidence": "INFERRED",
       "relation": "references",
-      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; bridges separate communities; peripheral node `48. Login corto por sitio (23/11/2026, bit\u00e1cora 197)` unexpectedly reaches hub `normalizarEmail()`"
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; bridges separate communities; peripheral node `27. Todas las tablas a 50 filas por p\u00e1gina (18/11/2026, bit\u00e1cora 175)` unexpectedly reaches hub `PaginacionSobrio()`"
     },
     {
-      "source": "28/10/2026 (noche, 11) \u00b7 Antigravity",
-      "target": "ModalCobro()",
+      "source": "62. Letra de tablas: medir antes, arreglar en un solo bloque de CSS (24/11/2026, bit\u00e1cora 219)",
+      "target": "PaginacionSobrio()",
       "source_files": [
-        "docs/BITACORA.md",
-        "src/sections/Punto-de-venta/components/ModalCobro.tsx"
+        "docs/MEMORIA-IA.md",
+        "src/components/PaginacionSobrio.tsx"
       ],
       "confidence": "INFERRED",
       "relation": "references",
-      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; bridges separate communities; peripheral node `28/10/2026 (noche, 11) \u00b7 Antigravity` unexpectedly reaches hub `ModalCobro()`"
-    },
-    {
-      "source": "23/11/2026 (212) \u00b7 OpenCode (Big Pickle) \u2014 Punto de espera directo, sin ventana para ponerle nombre (solo Nego)",
-      "target": "ModalNombreEspera()",
-      "source_files": [
-        "docs/BITACORA.md",
-        "src/sections/Punto-de-venta/components/ModalNombreEspera.tsx"
-      ],
-      "confidence": "INFERRED",
-      "relation": "references",
-      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; bridges separate communities; peripheral node `23/11/2026 (212) \u00b7 OpenCode (Big Pickle) \u2014 Punto de espera directo, sin ventana para ponerle nombre (solo Nego)` unexpectedly reaches hub `ModalNombreEspera()`"
-    },
-    {
-      "source": "06/11/2026 (120) \u00b7 Claude \u2014 Crear lote: gastos extra por TODO el lote + montos con separador de miles en todo el sistema (solo siumax)",
-      "target": "formatearMonto()",
-      "source_files": [
-        "docs/BITACORA.md",
-        "src/utils/formato.ts"
-      ],
-      "confidence": "INFERRED",
-      "relation": "references",
-      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; bridges separate communities; peripheral node `06/11/2026 (120) \u00b7 Claude \u2014 Crear lote: gastos extra por TODO el lote + montos con separador de miles en todo el sistema (solo siumax)` unexpectedly reaches hub `formatearMonto()`"
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code \u2194 doc); connects across different repos/directories; bridges separate communities; peripheral node `62. Letra de tablas: medir antes, arreglar en un solo bloque de CSS (24/11/2026, bit\u00e1cora 219)` unexpectedly reaches hub `PaginacionSobrio()`"
     }
   ],
   "tokens": {

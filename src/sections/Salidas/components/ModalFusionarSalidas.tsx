@@ -135,6 +135,17 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose
     setElegidas((prev) => prev.includes(Number(id)) ? prev.filter((x) => x !== Number(id)) : [...prev, Number(id)]);
   };
 
+  // 230: «desvincular» solo saca la salida del GENERAL en memoria: no borra ni edita la salida real,
+  // quita también las cantidades que se hubieran escrito para devolver y recalcula el resumen.
+  const desvincular = (id: number) => {
+    const salida = lista.find((s) => Number(s.id) === Number(id));
+    const ids = new Set((salida?.items || []).map((it) => Number(it.id)));
+    setDevolver((prev) => Object.fromEntries(Object.entries(prev).filter(([clave]) => !ids.has(Number(clave)))));
+    const restantes = elegidas.filter((x) => x !== Number(id));
+    setElegidas(restantes);
+    if (!restantes.length) setEnGeneral(false);
+  };
+
   const devolverTodo = async () => {
     if (procesando) return;
     const grupos = new Map<Salida, { item_id: number; cantidad: number }[]>();
@@ -294,6 +305,27 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, onClose
             </div>
           ) : (
             <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1 font-mono text-xs space-y-4">
+              <div>
+                <p className="font-black uppercase mb-2">Salidas en este general · la X las desvincula (no las borra)</p>
+                <div className="flex flex-wrap gap-2">
+                  {seleccionadas.map((s, idx) => (
+                    <span key={s.id} className="inline-flex items-center gap-2 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] px-2 py-1 font-black">
+                      <span>{s.codigo}</span>
+                      <span className="hidden sm:inline uppercase font-bold text-[var(--color-muted)]">{nombreClienteSalida(s, 'NO REGISTRADO')}</span>
+                      <button
+                        id={`btn-desvincular-salida-${s.id}`}
+                        type="button"
+                        onClick={() => desvincular(Number(s.id))}
+                        title={`Desvincular ${s.codigo} del general`}
+                        aria-label={`Desvincular ${s.codigo} del general`}
+                        data-nav-fusion={`0,${idx}`}
+                        className="w-6 h-6 border-2 border-[var(--color-ink)] flex items-center justify-center cursor-pointer hover:bg-[var(--color-danger)] hover:text-white"
+                      ><X size={14} /></button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block font-black uppercase mb-1" htmlFor="input-fecha-devolucion-fusion">Fecha de la devolución</label>

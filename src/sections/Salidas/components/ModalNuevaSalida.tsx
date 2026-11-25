@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Truck, X, Plus, Trash2, Search, Check, RotateCcw, Zap, Package, Layers } from 'lucide-react';
+import { Truck, X, Plus, Trash2, Search, Check, RotateCcw, Zap, Package } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { fotoDeCache, sincronizarFotosFaltantes } from '../../../utils/cacheFotos';
 import { traerTodo } from '../../../utils/traerTodo';
@@ -12,7 +12,6 @@ import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import { coincideBusqueda } from '../../../utils/busqueda';
 import { conPresentaciones } from '../../../utils/presentaciones';
 import { VistaPreviaSalida } from './VistaPreviaSalida';
-import { ModalFusionarSalidas } from './ModalFusionarSalidas';
 import { UnidadMaterial } from './UnidadMaterial';
 import { useEmpresaComprobante } from '../empresa';
 import { ID_CLIENTE_NOTA, esSalidaNota, nombreClienteSalida } from '../clienteNota';
@@ -34,9 +33,6 @@ interface ModalNuevaSalidaProps {
   } | null;
   onClose: () => void;
   onSuccess: (salidaCreada: any) => void;
-  // 230: la lista ya cargada en Salidas se usa para fusionar sin depender de internet.
-  salidas?: Salida[];
-  onReload?: () => void;
 }
 
 // Foto referencial del producto, como en la Caja (14/11/2026, dueño: "que se parezca al de la caja en ver una imagen
@@ -74,16 +70,13 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   datosIniciales,
   onClose,
   onSuccess,
-  salidas = [],
-  onReload,
 }) => {
   // La salida recién guardada se muestra en la vista previa; la empresa da logo y nombre al comprobante.
   const [salidaParaPrevia, setSalidaParaPrevia] = useState<Salida | null>(null);
-  const [fusionOpen, setFusionOpen] = useState(false);
   const empresa = useEmpresaComprobante();
 
-  // 194/230: con la vista previa o la fusión abiertas, Escape cierra la de arriba (no el formulario de atrás).
-  useCerrarConEscape(isOpen && !salidaParaPrevia && !fusionOpen, onClose);
+  // 194: con la vista previa abierta, Escape la cierra a ella (no el formulario de atrás).
+  useCerrarConEscape(isOpen && !salidaParaPrevia, onClose);
 
   // Form State
   const [tipo, setTipo] = useState<TipoSalida>('SERVICIO');
@@ -954,17 +947,6 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               </span>
             )}
             <button
-              id="btn-fusionar-salidas"
-              type="button"
-              onClick={() => setFusionOpen(true)}
-              title="Fusionar salidas en un general (solo vista)"
-              className="h-10 px-2 sm:px-3 bg-[var(--color-surface)] border-2 border-[var(--color-ink)] font-black uppercase text-[11px] sm:text-xs flex items-center gap-1 sm:gap-1.5 hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer"
-            >
-              <Layers size={16} className="hidden sm:block" />
-              <span className="sm:hidden">Fusionar</span>
-              <span className="hidden sm:inline">Fusionar salidas</span>
-            </button>
-            <button
               id="btn-cerrar-modal-nueva-salida"
               onClick={onClose}
               className="ventana-cerrar"
@@ -1595,14 +1577,6 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         </div>
       </div>
     </div>
-    {fusionOpen && (
-      <ModalFusionarSalidas
-        isOpen={fusionOpen}
-        salidas={salidas}
-        onClose={() => setFusionOpen(false)}
-        onReload={() => onReload?.()}
-      />
-    )}
     {salidaParaPrevia && (
       <VistaPreviaSalida
         salida={salidaParaPrevia}

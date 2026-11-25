@@ -3,6 +3,7 @@ import { supabase } from '../../db/supabase';
 import { HeaderSalidas } from './components/HeaderSalidas';
 import { TablaSalidas } from './components/TablaSalidas';
 import { ModalNuevaSalida } from './components/ModalNuevaSalida';
+import { ModalFusionarSalidas } from './components/ModalFusionarSalidas';
 import { ModalDetalleSalida } from './components/ModalDetalleSalida';
 import { conNombreClienteNota } from './clienteNota';
 import type { Salida, TipoSalida, EstadoSalida } from './types';
@@ -26,6 +27,8 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
 
   // Modales
   const [modalNuevoOpen, setModalNuevoOpen] = useState(false);
+  // 230: la fusión se abre desde la cabecera, no desde el formulario de Nueva salida.
+  const [fusionOpen, setFusionOpen] = useState(false);
   const [salidaParaContinuar, setSalidaParaContinuar] = useState<Salida | null>(null);
   const [salidaSeleccionada, setSalidaSeleccionada] = useState<Salida | null>(null);
 
@@ -182,6 +185,7 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
           setPaginaActual(1);
         }}
         onNuevaSalida={handleNuevaSalida}
+        onFusionar={() => setFusionOpen(true)}
         metricas={metricas}
         onVolver={onVolver}
       />
@@ -208,7 +212,15 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
           onSuccess={() => {
             fetchSalidas();
           }}
+        />
+      )}
+
+      {/* Modal Fusionar Salidas (botón al costado de Nueva salida, solo vista) */}
+      {fusionOpen && (
+        <ModalFusionarSalidas
+          isOpen={fusionOpen}
           salidas={salidas}
+          onClose={() => setFusionOpen(false)}
           onReload={fetchSalidas}
         />
       )}
