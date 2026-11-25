@@ -14,6 +14,7 @@ import { conPresentaciones } from '../../../utils/presentaciones';
 import { VistaPreviaSalida } from './VistaPreviaSalida';
 import { UnidadMaterial } from './UnidadMaterial';
 import { useEmpresaComprobante } from '../empresa';
+import { ID_CLIENTE_NOTA, esSalidaNota, nombreClienteSalida } from '../clienteNota';
 import type { TipoSalida, Salida } from '../types';
 
 interface ModalNuevaSalidaProps {
@@ -62,10 +63,6 @@ let _cacheCatalogosServic: {
 } = {};
 
 const CLAVE_BORRADOR_SALIDA = 'siumax_servic_borrador_salida';
-
-// 224 (dueño 24/11/2026): cliente interno invisible (activo=false) que se usa como referencia cuando el nombre
-// se registra solo como nota. No aparece en el desplegable; el nombre real sigue yendo en observaciones.
-const ID_CLIENTE_NOTA = 990001;
 
 export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   isOpen,
@@ -242,7 +239,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       if (salidaRaiz) {
         setTipo(salidaRaiz.tipo);
         setCustomerId(salidaRaiz.customer_id);
-        setClienteLibre('');
+        // Si se continúa una nota, se conserva el nombre que el dueño puso.
+        setClienteLibre(esSalidaNota(salidaRaiz) ? nombreClienteSalida(salidaRaiz, '') : '');
         setBienId(salidaRaiz.bien_id || '');
         setBienLibre('');
         setDireccion(salidaRaiz.direccion || '');
