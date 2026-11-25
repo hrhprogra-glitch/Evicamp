@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 const tools = process.argv[2] || 'D:/Programación/siumax/herramientas-pruebas';
+const sitio = process.argv[3] || 'nego';
 process.loadEnvFile(path.join(aqui, '..', '..', '.env.vps'));
 const require = createRequire(path.join(tools, 'x.js'));
 const puppeteer = require('puppeteer-core');
@@ -13,9 +14,15 @@ const puppeteer = require('puppeteer-core');
 const res = [];
 const ok = (n, c, x = '') => res.push(`${c ? 'OK ' : 'MAL'} ${n}${x !== '' ? ' — ' + x : ''}`);
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
-const URL = 'https://nego.siumax.duckdns.org';
-const usuario = process.env.SIUMAX_ADMIN_USUARIO || 'admin@siumax.com';
-const clave = process.env.SIUMAX_ADMIN_CLAVE;
+const URLS = {
+  nego: 'https://nego.siumax.duckdns.org',
+  evicamp: 'https://evicamp.duckdns.org',
+  ecosistema: 'https://ecosistema123.duckdns.org',
+};
+const URL = URLS[sitio];
+if (!URL) throw new Error(`Sitio desconocido: ${sitio}. Opciones: ${Object.keys(URLS).join(', ')}`);
+const usuario = sitio === 'ecosistema' ? process.env.ECOSISTEMA_ADMIN_USUARIO : process.env.SIUMAX_ADMIN_USUARIO || 'admin@siumax.com';
+const clave = sitio === 'ecosistema' ? process.env.ECOSISTEMA_ADMIN_CLAVE : process.env.SIUMAX_ADMIN_CLAVE;
 if (!clave) throw new Error('Falta SIUMAX_ADMIN_CLAVE en .env.vps');
 
 const nav = await puppeteer.launch({
