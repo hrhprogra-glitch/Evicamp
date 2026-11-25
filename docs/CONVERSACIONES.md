@@ -1530,3 +1530,8 @@
 - **Dueño:** **«empeiza»**. Antes se le propuso corregir la presentación al cargar las salidas, sin tocar la base ni los componentes que tienen trabajo ajeno sin commitear.
 - Hecho: el nombre escrito se lee de `observaciones` y se aplica en memoria a la tabla, el buscador, el detalle, el comprobante y el «Continuar salida». El cliente interno 990001 sigue igual; no se crean clientes ni se cambian observaciones. Solo Nego.
 - Se le avisa con claridad: el código compila y el build salió bien, pero el VPS rechazó el deploy porque el puerto 22 está cerrado. El sitio HTTPS sigue sirviendo el bundle anterior, así que **todavía no ve el cambio**. Sin Evicamp, ecosistema ni push. Falta que se levante SSH o autorice otra forma de subir el bundle.
+
+## 25/11/2026 (el dueño dice «subelo»)
+- **Dueño:** **«subelo»**. El puerto 22 volvió a responder y se subió solo Nego: 22 archivos, sin Evicamp, ecosistema, base ni push.
+- Primero se vio un bundle ajeno sin el cambio; se volvió a subir y en vivo quedó **`index-4DjJ7A18.js` / `index-Cf4OlVIC.css`**, confirmado por el texto del helper dentro del JS. La prueba nueva pasó **66/66** con teclado, sin internet y en 390/768/1366/1920.
+- Falta que el dueño revise con **Ctrl+F5** en `nego.siumax.duckdns.org`. La regresión adaptiva sigue con 4 fallos viejos del foco en Nueva salida, que no se tocaron.

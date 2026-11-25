@@ -7,14 +7,25 @@
 
 ---
 
+## 25/11/2026 (continuación: Nego ya subido y verificado) · OpenCode (Big Pickle)
+
+- El dueño dijo **«subelo»**. El puerto 22 volvió a responder y `node ai-scripts/deploy.cjs siumax` subió **22 archivos** a Nego desde el worktree limpio `nombre-nota-nego`. Sin Evicamp, ecosistema, base ni push.
+- Apareció un bundle ajeno **dos veces** (`index-BeIFa2v-.js` y después `index-DRqv6GXc.js`) que **no contenía** el marcador del helper. Se volvió a subir el propio en cada ocasión y en vivo quedó **`index-4DjJ7A18.js` / `index-Cf4OlVIC.css`**, con el texto `CLIENTE NO REGISTRADO (NOTA)` dentro del JS. Verificado por marcador, no solo por el nombre del archivo.
+- Prueba `verificar-nombre-nota-salidas.mjs` contra el sitio en vivo: **66/66**, sin errores de JavaScript, con teclado, sin internet y en 390/768/1366/1920. Tabla, buscador, detalle, comprobante y «Continuar salida» muestran el nombre de SAL-1547 y SAL-1548.
+- Regresión adaptiva de Salida/Caja/Agenda: **188 comprobaciones, 4 fallos**. Los 4 son el foco al elegir nota en **Nueva salida** (`select-bien-salida`), camino que este cambio no toca; quedan como hallazgo ajeno, sin modificarlo.
+- La verificación genérica antigua `verificar-deploy-nego.mjs` ya no aplica: espera `#tabla-analisis-salidas` y esa vista no está en el recorrido actual. No se cambió el guion.
+- Siguiente paso: que el dueño revise con **Ctrl+F5** en `nego.siumax.duckdns.org`. Si otro agente vuelve a subir su bundle, comprobar el marcador antes de darlo por perdido.
+
+---
+
 ## 25/11/2026 (nombre de la nota en la tabla de Salidas) · OpenCode (Big Pickle) — Código listo; deploy bloqueado por SSH
 
 - El dueño se quejó: *"e notado que cuando registro una nota en salida osea pongo un nombre que no esta en clientes y que sea nota en la tabla no sale el nombre de la nota si no sale asi 'cliente no registrado (nota)'"*. Aprobó el trabajo con **«empeiza»**.
 - **Hecho solo en Nego, sin tocar la base:** nuevo `src/sections/Salidas/clienteNota.ts` (`ID_CLIENTE_NOTA = 990001`, `NOMBRE_CLIENTE_NOTA = 'CLIENTE NO REGISTRADO (NOTA)'`) que lee la **última** etiqueta `CLIENTE:` de `observaciones`. `Salidas/index.tsx` aplica `conNombreClienteNota` al cargar la lista y al abrir el detalle; `ModalNuevaSalida.tsx` conserva `clienteLibre` al «Continuar salida» de una nota. Tabla, detalle, comprobante, buscador y Continuar usan ese mismo nombre en memoria. **No** se cambiaron `TablaSalidas.tsx`, `VistaPreviaSalida.tsx`, observaciones, ids ni stock: WIP ajeno intacto.
 - `npx tsc --noEmit` OK en el repo principal y en el worktree limpio. `npm run build` OK: bundles generados **`index-4DjJ7A18.js` / `index-Cf4OlVIC.css`**.
-- Prueba nueva `ai-scripts/pruebas/verificar-nombre-nota-salidas.mjs`: solo lectura, **teclado**, **sin internet** y 390/768/1366/1920; revisa SAL-1547 y SAL-1548 en tabla, buscador, detalle, comprobante y Continuar. `node --check` OK. La pasada de línea base contra el bundle anterior dio **14/42**, esperado: el buscador no encontraba las notas y Continuar no traía el nombre. Se ajustó para buscar primero por código y luego por nombre (hay un cliente registrado con nombre igual); **falta ejecutarla con el bundle nuevo**.
-- **Deploy NO completado:** 3 intentos en el worktree limpio `C:/Users/User/AppData/Local/Temp/opencode/nombre-nota-nego` con solo los 3 archivos propios y la copia de SSH que sí autenticaba; el VPS dio `Timed out while waiting for handshake` y `ETIMEDOUT`. `Test-NetConnection ... -Port 22` → **False**; HTTPS sí responde (200), pero en vivo sigue **`index-CJhKMreh.js` / `index-D74V8jBk.css`**, no el bundle nuevo. Sin Evicamp, ecosistema ni push.
-- Siguiente paso: que el dueño levante el puerto 22 (o autorice otra forma de subir); reintentar `node ai-scripts/deploy.cjs siumax` desde ese worktree, correr la prueba ajustada y las regresiones de Salidas, y repasar con **Ctrl+F5**. Commit local solo de los archivos propios y los 4 documentos; sin push.
+- Prueba nueva `ai-scripts/pruebas/verificar-nombre-nota-salidas.mjs`: solo lectura, **teclado**, **sin internet** y 390/768/1366/1920; revisa SAL-1547 y SAL-1548 en tabla, buscador, detalle, comprobante y Continuar. `node --check` OK. La pasada de línea base contra el bundle anterior dio **14/42**, esperado: el buscador no encontraba las notas y Continuar no traía el nombre. Se ajustó para buscar primero por código y luego por nombre (hay un cliente registrado con nombre igual). **Con el bundle nuevo pasó 66/66** (ver entrada de arriba).
+- **Deploy resuelto más tarde en la misma tarde:** los 3 primeros intentos fallaron por handshake/timeout y `Test-NetConnection ... -Port 22` dio **False**; el dueño dijo **«subelo»**, el puerto volvió a responder y la subida terminó con **22 archivos** (ver entrada de arriba). Sin Evicamp, ecosistema ni push.
+- Queda la revisión visual del dueño con **Ctrl+F5**. Commit local solo de los archivos propios y los 4 documentos; sin push.
 
 ---
 
