@@ -14,6 +14,8 @@ const URLS = {
 };
 const sitio = process.argv[2] || 'nego';
 if (!URLS[sitio]) { console.error(`Sitio desconocido: ${sitio}`); process.exit(1); }
+const usuario = sitio === 'ecosistema' ? process.env.ECOSISTEMA_ADMIN_USUARIO : 'admin@siumax.com';
+const clave = sitio === 'ecosistema' ? process.env.ECOSISTEMA_ADMIN_CLAVE : process.env.SIUMAX_ADMIN_CLAVE;
 
 let ok = 0, fallos = 0;
 const comprobar = (nombre, condicion, detalle = '') => {
@@ -35,8 +37,8 @@ async function probar(ancho, alto) {
   try {
     await page.goto(URLS[sitio], { waitUntil: 'networkidle2' });
     await page.waitForSelector('#input-login-usuario', { timeout: 20000 });
-    await page.focus('#input-login-usuario'); await page.keyboard.type('admin@siumax.com');
-    await page.focus('#input-login-password'); await page.keyboard.type(process.env.SIUMAX_ADMIN_CLAVE || '');
+    await page.focus('#input-login-usuario'); await page.keyboard.type(usuario || '');
+    await page.focus('#input-login-password'); await page.keyboard.type(clave || '');
     await page.keyboard.press('Enter');
     await page.waitForSelector('#sidebar-btn-salidas', { timeout: 30000 });
     await pausa(700);

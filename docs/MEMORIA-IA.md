@@ -10,7 +10,9 @@
 
 ## 25/11/2026 — Regla de turnos: integrar antes de desplegar Nego
 - Si otra IA está desplegando Nego en paralelo, **no entrar en guerra de bundles**: integrar sus commits publicados (`git merge` / `fetch`) y desplegar una sola versión con todos los cambios. El dueño eligió **«Subir a GitHub y avisar»**: los arreglos deben quedar en `origin/fase-11-sunat` para que cualquiera que despliegue los arrastre.
-- Antes de dar por terminado, comparar el bundle de `index.html` en vivo con `dist/index.html`; en esta tanda el sitio fue sobrescrito tres veces (`CrDD9EXm` → `DyfpQR9q` → `CyFtSW6H` → `Cy7XoMwt` → `BjFb7fvN` → `Cg6JyrwK`).
+- Antes de dar por terminado, comparar el bundle de `index.html` en vivo con `dist/index.html`; en esta tanda el sitio fue sobrescrito varias veces (`CrDD9EXm` → `DyfpQR9q` → `CyFtSW6H` → `Cy7XoMwt` → `BjFb7fvN` → `Cg6JyrwK` → `CdbIQmqK` → `CftHzyu0`). El parte final debe nombrar el bundle **verificado en vivo**, no el del primer deploy.
+- Si otra IA tiene un commit local que yo no tengo (`git log HEAD..<hash>`), integrarlo antes de republicar; en el cierre se integró `8d7b960` (fusión al costado + X) con `c636b12` y se conservaron sus 142 pruebas. No publicar su trabajo en los otros tres sitios: su OK era «solo Nego».
+- `verificar-cantidad-salida.mjs` usa el login de Nego/Evicamp y credenciales distintas para ecosistema; en Evicamp el selector de login es otro y esa prueba puntual no corre. Si Evicamp sirve el mismo JS que ecosistema (comprobarlo), basta la verificación de bundles; no culpar al arreglo por un timeout de login.
 
 ## 25/11/2026 — Cantidad de Salidas: no guardar el borrado intermedio, y cuidado con el WIP ajeno al desplegar
 - El campo de cantidad **de la fila** (no el de arriba) guardaba cada pulsación: borrar `25` dejaba `2` y guardaba ese `2`; borrar el resto se ignoraba porque la cantidad no puede ser `<= 0`. Al perder el foco se reponía el valor guardado (`2`). Arreglo: conservar el texto, incluso vacío, mientras se edita; guardar solo números válidos y reponer el valor de entrada al salir. Regla útil: **no guardes un estado intermedio del usuariocomo si fuera definitivo**.

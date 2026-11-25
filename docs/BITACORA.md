@@ -7,6 +7,14 @@
 
 ---
 
+## 25/11/2026 (cantidad de Salidas: pase a los cuatro sitios y cierre) · OpenCode (Big Pickle) — HECHO EN NEGO, EVICAMP, ECOSISTEMA Y PANEL
+
+- **Dueño:** *"ya subelo a todos para que se actualicen"*. Con ese OK se corrió `node ai-scripts/deploy.cjs todos` (destino explícito): **22 archivos en Nego, Evicamp, ecosistema y la carpeta compartida del panel de clientes**, sin tocar la base ni `main`. Se repusieron los iconos del oficial (`c159d216…`).
+- **Verificación del pase:** bundles **12/12** en Nego, ecosistema y Evicamp; carpeta de clientes con el mismo JS/CSS; cantidad **22/22 en ecosistema** (y en Nego) y lista adaptable **51/51 en ecosistema**, 0 errores JS. Evicamp sirve el **mismo JS** que ecosistema: la prueba directa de cantidad allí no corrió porque el login de Evicamp usa otro selector, no por el código. Sin aviso de plan ni botón de pago.
+- **Última colisión e integración:** otra IA (`fusionar-salidas`, commit `8d7b960`, botón al costado de Nueva salida y X para desvincular del GENERAL) volvió a desplegar Nego con `index-CdbIQmqK.js`, que **sí traía el bug de la cantidad**. Se integró ese commit con el merge **`c636b12`** (conservando su trabajo y el arreglo de cantidad), se recompiló y se republicó **solo Nego** con bundle **`index-CftHzyu0.js` / `index-Bo7VCcsX.css`**, confirmado en `index.html` en vivo.
+- **Pruebas finales sobre ese bundle en Nego:** cantidad **22/22** (1366 y 390), fusión/desvinculación **142/142**, nombre de nota **66/66** y lista adaptable **51/51** (390–1920), 0 errores JS.
+- **GitHub:** arreglo de cantidad publicado en `origin/fase-11-sunat` (`19aedcb..3bb7f72`); el cierre con la integración de `8d7b960` y la prueba con credenciales de ecosistema se sube en el último commit. Quien despliegue Nego debe traer primero esa rama. Falta solo la revisión visual del dueño con **Ctrl+F5** en los cuatro sitios.
+
 ## 25/11/2026 (AVISO PARA CLAUDE/ANTIGRAVITY: no volver a sobrescribir Nego con un bundle sin este arreglo)
 - El dueño preguntó por qué no se podía borrar completa la cantidad, autorizó el arreglo (**«si»**) y, al ver que otra IA seguía sobrescribiendo Nego, eligió **«Subir a GitHub y avisar»**.
 - **La corrección de la cantidad ya está integrada en `origin/fase-11-sunat`** junto con el nombre de nota (`f7a2a92`) y la fusión de salidas (`189b7ff`). Quien despliegue Nego desde ahora debe **traer primero `origin/fase-11-sunat`** (`git fetch origin` + merge/reset según su rama) y comprobar que el JS sirvido trae el arreglo con `verificar-cantidad-salida.mjs`. Si se despliega desde `pase-todos` sin integrar, el bug vuelve (`25 → 2` al salir del campo).
