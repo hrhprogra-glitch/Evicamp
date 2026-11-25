@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `19aedcb8`
+- Built from commit: `14f13725`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1472,7 +1472,7 @@ Nodes (3): finanzas.jpg (Finance Carousel Image), Finanzas Login Carousel Slide,
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `node-ssh` connect `escritorio/package.json` to `revisar-selector.mjs`, `Vite Logo (favicon)`, `prueba-cambio-cpe-ui.mjs`, `prueba-fase11-1-ui.mjs`, `prueba-fase11-2-ui.mjs`, `check.ts`, `revisar-ventanas-caja.mjs`, `patch-stock-metros-ecosistema.cjs`, `ver-ventanas.mjs`, `package.json`, `patch-mangueras-ecosistema.cjs`, `migrar-eco.cjs`, `limpiar-bases-fase1.cjs`, `prueba-fase11-6-ui.mjs`, `prueba-fase11-3-ui.mjs`, `prueba-historial-cpe-ui.mjs`, `cargar-datos-nego.cjs`, `descargar-backups.cjs`, `probar-restauracion.cjs`, `aplicar-fase9-10-siumax.cjs`, `fix-phantom.cjs`, `facturador-servidor.cjs`, `imagenes-servidor.cjs`, `aplicar-salidas-228-ecosistema.cjs`, `prueba-fase11-8-ui.mjs`, `limpiar-siumax-total.cjs`, `test-vps-insert.ts`, `prueba-fase11-4-ui.mjs`?**
-  _High betweenness centrality (0.199) - this node is a cross-community bridge._
+  _High betweenness centrality (0.197) - this node is a cross-community bridge._
 - **Are the 5 inferred relationships involving `useCerrarConEscape()` (e.g. with `17/11/2026 (174) · OpenCode (Big Pickle) — Clic en cualquier fila abre el detalle, como Inventario > Productos` and `29/10/2026 (tarde) · Claude — Videos tutoriales`) actually correct?**
   _`useCerrarConEscape()` has 5 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `DEBIAN_FRONTEND`, `autoprefixer`, `postcss` to the rest of the system?**
@@ -1480,8 +1480,8 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `Bitácora compartida (Claude ↔ Antigravity ↔ cualquier IA)` be split into smaller, more focused modules?**
   _Cohesion score 0.012048192771084338 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `react` to `Clientes/index.tsx`, `formatearMonto`, `ModalNuevaSalida.tsx`, `package.json`, `compilerOptions`, `coincideBusqueda`, `TiendaWeb/index.tsx`, `fix-desc.cjs`, `PaginacionSobrio`, `permisos.ts`, `avisar`, `comprobante.ts`, `ModalDetalleOrden.tsx`, `fix-themes.cjs`, `Agenda/index.tsx`, `Product`, `ModalNuevaCotizacion.tsx`, `PanelCompras.tsx`, `fix-filters.cjs`, `fix-font-size.cjs`, `SideBar.tsx`, `impresion.ts`, `package.json`, `Encargos/index.tsx`, `BarraConexion.tsx`, `sesion.ts`, `ModalDetalleRegistroCliente.tsx`, `AnalisisSalidasProductos.tsx`, `TablaMovimientos.tsx`, `28/10/2026: Fase 4.2 (Cliente opcional en la Caja)`, `cambiar-link.sh`, `fix-delete.cjs`, `restore-lotes.cjs`, `ThemeSwitcher.tsx`, `tsconfig.json`, `PestanaFacturacion.tsx`?**
-  _High betweenness centrality (0.104) - this node is a cross-community bridge._
+  _High betweenness centrality (0.098) - this node is a cross-community bridge._
 - **Should `escritorio/package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.028935846183133447 - nodes in this community are weakly interconnected._
 - **Why does `Bitácora compartida (Claude ↔ Antigravity ↔ cualquier IA)` connect `Bitácora compartida (Claude ↔ Antigravity ↔ cualquier IA)` to `Clientes/index.tsx`, `panel.py`, `formatearMonto`, `05/11/2026 (102) · Antigravity — ENTREGA A CLAUDE: resumen de sesión, estado y pendientes`, `ModalNuevaSalida.tsx`, `package.json`, `compilerOptions`, `coincideBusqueda`, `TiendaWeb/index.tsx`, `fix-desc.cjs`, `PaginacionSobrio`, `comprobante.ts`, `fix-themes.cjs`, `Agenda/index.tsx`, `Product`, `facturador.mjs`, `fix-font-size.cjs`, `SideBar.tsx`, `impresion.ts`, `Encargos/index.tsx`, `ModalDetalleRegistroCliente.tsx`, `.showPicker`, `fix-tot.cjs`, `cambiar-link.sh`, `flechasEspaciales.ts`?**
-  _High betweenness centrality (0.091) - this node is a cross-community bridge._
+  _High betweenness centrality (0.095) - this node is a cross-community bridge._

@@ -8,6 +8,15 @@
 
 ---
 
+## 25/11/2026 — Persistencia del GENERAL: copiar la definición de permisos en vivo y no perder el grupo al recargar
+- Para tocar `fn_permisos_servicios` en Nego, **copiar primero `pg_get_functiondef()` desde la base en vivo** y añadir solo las rutas nuevas. Las copias en `servidor/sql/seguridad-sesion.sql` y en `eliminar-devolucion-salida.sql` están desactualizadas: sobrescribir con ellas borra permisos que hoy sí existen. En Nego **no hay rol `authenticated`**: los GRANT van solo a `anon`.
+- `setval(seq, 0, true)` falla porque el mínimo de la secuencia es 1: para un SQL repetible con tabla vacía usar `setval(seq, 1, false)`; si ya hay filas, `setval(seq, max, true)`.
+- El badge y el botón de la tabla necesitan el grupo **en el objeto `Salida`**, no solo en estado aparte: `fetchSalidas` consulta `salida_fusiones` con el join a `salida_fusion_items`, arma `salida_ids`/`salida_codigos` y lo adjunta a cada salida. Un `ref` (`fusionesRef`) evita que el `onReload` del detalle —que recarga **una sola** salida— le quite el grupo al objeto mostrado.
+- **Trampa de teclado encontrada por la prueba:** si el `<tr>` con `tabIndex` hace `preventDefault()` en `Enter`, el navegador **no genera el clic del `<button>` hijo**. En `alTeclearFila`, saltar cuando `(e.target as HTMLElement).closest('button')` para que «Ver» y «General» respondan a Enter.
+- `useCerrarConEscape` ya apila ventanas: abrir el GENERAL desde el detalle y dar Escape cierra solo la fusión. La prueba debe comprobar ambos contenedores.
+- Para probar persistencia sin internet externo: `setRequestInterception(true)` y dejar pasar solo el dominio del sitio; a diferencia del modo offline, esto **sí permite las RPC** de guardar/desvincular.
+- Estado: SQL aplicado solo en `siumax`, build `index-Pavf8IjW.js`, deploy solo Nego, pruebas **48/48 + 142/142 + 66/66**, commit local sin push. Grupo de ejemplo **FUS-0001 (SAL-1547, SAL-1548)** dejado en la base para la revisión visual.
+
 ## 25/11/2026 — Fusionar salidas: GENERAL de solo vista, y trampas de la prueba que lo valida
 - El dueño eligió **«Solo vista»** y **«En Nueva salida»** y aprobó con **«empieza»**. Eso significa: **no crear salida, no descontar stock dos veces**; el GENERAL es una `Salida` sintética de código `GENERAL` armada en memoria con la lista ya cargada. Reutilizar `VistaPreviaSalida` evita hacer otro comprobante.
 - «Devolver todo» no es una RPC global: hay que **agrupar por salida** y llamar `fn_registrar_devoluciones_lote` una vez por cada una, con cantidades `Math.min(escrito, pendiente)`. Así lo ya devuelto no se cuenta dos veces. Una sola confirmación y, en la prueba, **cancelarla** (`#dialogo-sistema-cancelar`) para no tocar datos ni stock.

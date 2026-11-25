@@ -2934,10 +2934,10 @@
     "semantic_hash": "df371a32e7c15c71ebc609ae142d03f2"
   },
   "src/sections/Salidas/components/ModalDetalleSalida.tsx": {
-    "mtime": 1795633335.2518384,
-    "seen": 1795634072.1442704,
-    "ast_hash": "e2a3c08a5ee40761063877ca4cc406c1",
-    "semantic_hash": "e2a3c08a5ee40761063877ca4cc406c1"
+    "mtime": 1795637283.9727864,
+    "seen": 1795637819.370944,
+    "ast_hash": "a38288d28012769bee93f24488264031",
+    "semantic_hash": "a38288d28012769bee93f24488264031"
   },
   "src/sections/Salidas/components/ModalDevolucion.tsx": {
     "mtime": 1795633335.2518384,
@@ -2952,22 +2952,22 @@
     "semantic_hash": "d59144b6f49bbf14f54cc6cf503f1b24"
   },
   "src/sections/Salidas/components/TablaSalidas.tsx": {
-    "mtime": 1795633335.2528434,
-    "seen": 1795634072.1442742,
-    "ast_hash": "d34f245f08ea8600df1a66cfb8698930",
-    "semantic_hash": "d34f245f08ea8600df1a66cfb8698930"
+    "mtime": 1795637507.400139,
+    "seen": 1795637819.3715405,
+    "ast_hash": "e9f43e88bf1912c5bf517ce0bf401978",
+    "semantic_hash": "e9f43e88bf1912c5bf517ce0bf401978"
   },
   "src/sections/Salidas/index.tsx": {
-    "mtime": 1795634390.0540912,
-    "seen": 1795635200.8167286,
-    "ast_hash": "9e6894039a7cb18da9bf5a22d0aaaf59",
-    "semantic_hash": "9e6894039a7cb18da9bf5a22d0aaaf59"
+    "mtime": 1795637238.4234705,
+    "seen": 1795637819.3721988,
+    "ast_hash": "cf9aba75d0e7b255136d9c272971e0e2",
+    "semantic_hash": "cf9aba75d0e7b255136d9c272971e0e2"
   },
   "src/sections/Salidas/types.ts": {
-    "mtime": 1795633335.2548537,
-    "seen": 1795634072.1442783,
-    "ast_hash": "e63ea4555a9ed275ecb483582f4632ea",
-    "semantic_hash": "e63ea4555a9ed275ecb483582f4632ea"
+    "mtime": 1795637199.7988677,
+    "seen": 1795637819.3722017,
+    "ast_hash": "72af6013c6efe4ed48525c61b06d5624",
+    "semantic_hash": "72af6013c6efe4ed48525c61b06d5624"
   },
   "ai-scripts/pruebas/prueba-enter-se-queda-nego.mjs": {
     "mtime": 1795633334.6618655,
@@ -3930,9 +3930,27 @@
     "semantic_hash": "b2d7822570cfcc7190c32960185f4557"
   },
   "src/sections/Salidas/components/ModalFusionarSalidas.tsx": {
-    "mtime": 1795634417.5665312,
-    "seen": 1795635200.81555,
-    "ast_hash": "a4291c49557a7dfd2e1178cb0f69f7e7",
-    "semantic_hash": "a4291c49557a7dfd2e1178cb0f69f7e7"
+    "mtime": 1795637340.702984,
+    "seen": 1795637819.3713536,
+    "ast_hash": "b2ece53545f50cb94a3529b8a29473fb",
+    "semantic_hash": "b2ece53545f50cb94a3529b8a29473fb"
+  },
+  "ai-scripts/aplicar-fusiones-salidas.cjs": {
+    "mtime": 1795637141.6506267,
+    "seen": 1795637819.2594116,
+    "ast_hash": "6296fe0dbd29f82e31853ddff5ffd307",
+    "semantic_hash": "6296fe0dbd29f82e31853ddff5ffd307"
+  },
+  "ai-scripts/pruebas/verificar-persistencia-fusion.mjs": {
+    "mtime": 1795637450.026657,
+    "seen": 1795637819.3198025,
+    "ast_hash": "5decf45f85e6185b73b6eeaf5489a045",
+    "semantic_hash": "5decf45f85e6185b73b6eeaf5489a045"
+  },
+  "servidor/sql/fusiones-salidas.sql": {
+    "mtime": 1795637181.2754228,
+    "seen": 1795637819.3360128,
+    "ast_hash": "977f417cb3b736a7cb4fc2de850b9617",
+    "semantic_hash": "977f417cb3b736a7cb4fc2de850b9617"
   }
 }

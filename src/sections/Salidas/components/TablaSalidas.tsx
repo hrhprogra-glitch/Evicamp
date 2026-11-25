@@ -1,11 +1,12 @@
 import React from 'react';
-import { Eye, Search } from 'lucide-react';
+import { Eye, Layers, Search } from 'lucide-react';
 import { PaginacionSobrio } from '../../../components/PaginacionSobrio';
-import type { Salida } from '../types';
+import type { Salida, SalidaFusion } from '../types';
 
 interface TablaSalidasProps {
   salidas: Salida[];
   onVerDetalle: (salida: Salida) => void;
+  onVerGeneral: (fusion: SalidaFusion) => void;
   paginaActual: number;
   totalPaginas: number;
   onCambiarPagina: (pag: number) => void;
@@ -14,6 +15,7 @@ interface TablaSalidasProps {
 export const TablaSalidas: React.FC<TablaSalidasProps> = ({
   salidas,
   onVerDetalle,
+  onVerGeneral,
   paginaActual,
   totalPaginas,
   onCambiarPagina,
@@ -38,6 +40,9 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
   };
 
   const alTeclearFila = (e: React.KeyboardEvent, idx: number, s: Salida) => {
+    // 230: si la tecla viene de un botón de la fila («Ver» / «General»), el botón hace su trabajo.
+    // Si el <tr> hiciera preventDefault aquí, el navegador no generaría el clic del botón.
+    if ((e.target as HTMLElement).closest('button')) return;
     // 24/11/2026: esta fila es la ÚNICA que mueve el selector entre filas. Antes un listener
     // global de la pantalla volvía a moverlo y bajaba/subía doble. stopPropagation evita que
     // cualquier teclado general vuelva a actuar sobre la misma tecla.
@@ -123,6 +128,14 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
                       {s.salida_raiz_codigo && (
                         <span className="text-[9px] text-blue-700 font-bold block mt-0.5">Cont. de {s.salida_raiz_codigo}</span>
                       )}
+                      {s.fusion && (
+                        <span
+                          id={`badge-fusion-${s.id}`}
+                          data-fusion-codigo={s.fusion.codigo}
+                          title={`Guardada en el general ${s.fusion.codigo}`}
+                          className="bg-indigo-100 text-indigo-800 border border-indigo-300 px-1.5 py-0.5 text-[9px] font-black uppercase block mt-0.5 w-fit"
+                        >Fusionada · {s.fusion.codigo}</span>
+                      )}
                     </td>
                     <td className="p-4 text-[11px] whitespace-nowrap" data-etiqueta="Fecha">{s.fecha}</td>
                     <td className="p-4" data-etiqueta="Cliente / Destino">
@@ -167,13 +180,26 @@ export const TablaSalidas: React.FC<TablaSalidasProps> = ({
                     </td>
                     <td className="p-4 text-center" data-etiqueta="Estado">{getEstadoBadge(s.estado)}</td>
                     <td className="p-4 text-center" data-etiqueta="Acciones" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        id={`btn-ver-salida-${s.id}`}
-                        onClick={() => onVerDetalle(s)}
-                        className="px-2.5 py-1 border border-[var(--color-border)] hover:bg-[var(--color-ink)] hover:text-white font-bold uppercase text-[10px] flex items-center gap-1 mx-auto cursor-pointer"
-                      >
-                        <Eye size={12} /> Ver
-                      </button>
+                      <div className="flex items-center justify-center gap-1 flex-wrap">
+                        <button
+                          id={`btn-ver-salida-${s.id}`}
+                          onClick={() => onVerDetalle(s)}
+                          className="px-2.5 py-1 border border-[var(--color-border)] hover:bg-[var(--color-ink)] hover:text-white font-bold uppercase text-[10px] flex items-center gap-1 cursor-pointer"
+                        >
+                          <Eye size={12} /> Ver
+                        </button>
+                        {s.fusion && (
+                          <button
+                            id={`btn-ver-general-fusion-${s.id}`}
+                            type="button"
+                            onClick={() => onVerGeneral(s.fusion!)}
+                            title={`Ver general ${s.fusion.codigo}`}
+                            className="px-2.5 py-1 border-2 border-indigo-700 text-indigo-800 font-black uppercase text-[10px] flex items-center gap-1 cursor-pointer hover:bg-indigo-700 hover:text-white"
+                          >
+                            <Layers size={12} /> General
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
