@@ -7,6 +7,16 @@
 
 ---
 
+## 25/11/2026 (la ventana «Fusionar salidas» marca lo ya fusionado y se elige con clic en la fila) · OpenCode (Big Pickle) — HECHO Y PROBADO SOLO EN NEGO
+
+- **Dueño:** pidió dos ajustes a la ventana: *"en la ventana de fusionar salidas tiene que salir que ya esta fusionada"* y *"tambien que se pueda elegir dando clic en cualquier parte de la fila, no solo en el cuadrito"*. Al confirmarle la interpretación respondió **«Sí, es eso»** y autorizó con **«empieza»**.
+- **Código:** en `ModalFusionarSalidas.tsx` cada salida del listado muestra el badge **`Fusionada · FUS-0001`** (`badge-fusion-lista-${id}`, con `data-fusion-codigo-lista`) cuando ya pertenece a un GENERAL guardado. El `<tr>` lleva `data-fila-fusion` y `onClick` alterna la selección; el cuadrito `btn-fusion-elegir-${id}` sigue funcionando y usa `stopPropagation()` para no alternar dos veces. Sin tocar base ni SQL: el badge lee el `fusion` que ya trae cada salida.
+- **Prueba ampliada:** `verificar-fusionar-salidas.mjs` ahora comprueba los badges en 390/768/1366/1920, que un clic en la celda elige y otro deselecciona, y que el cuadro sigue eligiendo una sola vez. Dos trampas corregidas en la prueba: el id interno de `SAL-1547` es **398** y el de `SAL-1548` es **399** (no el número del código), por eso busca la fila por código; y los clics dejan el foco en los cuadros, así que vuelve al buscador antes de medir ↑/↓. Resultado final **158/158**, 0 errores JS, teclado intacto y sin internet externo.
+- **Verificación:** `npx tsc -b` EXIT 0; build **`index-C2jeYVUH.js` / `index-hR37m3DN.css`**; deploy con destino explícito `node ai-scripts/deploy.cjs siumax` (22 archivos, **solo Nego**). Marcadores `badge-fusion-lista-`, `data-fila-fusion`, `btn-fusionar-salidas`, `btn-fusion-guardar`, `btn-ver-general-fusion-`, `btn-detalle-ver-general`, `fn_guardar_fusion_salidas` y `salida_fusiones` comprobados **dentro del JS servido**. El grupo de ejemplo **`FUS-0001 → SAL-1547, SAL-1548`** sigue intacto (ids 398/399) tras un respaldo extra (`/root/backups/siumax-antes-restaurar-grupo-20261125210258.dump`).
+- **Estado:** commit local en el worktree `fusionar-salidas`, sin push. **Sin Evicamp, ecosistema, panel ni GitHub** hasta nuevo OK del dueño. Falta su revisión en vivo con **Ctrl+F5** en `nego.siumax.duckdns.org`.
+
+---
+
 ## 25/11/2026 (persistencia del GENERAL: badge en la tabla y «Fusionada con…» en el detalle) · OpenCode (Big Pickle) — HECHO Y PROBADO SOLO EN NEGO
 
 - **Dueño:** *"que se guarde en la tabla y en la ventana de fusión de salida en la tabla que diga fusionado y cuando entro al detalle ahi muestre con quien como lo que hicistes en ver general"*. Aprobó el plan con **«empieza»**.

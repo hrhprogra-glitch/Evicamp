@@ -125,6 +125,47 @@ try {
       await existe('#modal-fusionar-salidas-container') && !(await existe('#modal-nueva-salida-container')));
     ok(`${tam}: el buscador de salidas recibe el foco`, (await activo()) === 'buscador-fusionar-salidas', await activo());
 
+    // 231: en la lista se ven las salidas ya fusionadas y un clic en la fila ya las elige.
+    const badgesLista = await page.$$eval('#lista-fusionar-salidas [id^="badge-fusion-lista-"]', (els) =>
+      els.map((e) => ({ id: e.id, codigo: e.getAttribute('data-fusion-codigo-lista') || '' })));
+    ok(`${tam}: la lista marca las salidas ya fusionadas`,
+      badgesLista.length > 0 && badgesLista.some((b) => /^FUS-/i.test(b.codigo)),
+      badgesLista.slice(0, 3).map((b) => `${b.id}:${b.codigo}`).join(' | ') || 'sin badges');
+
+    // El id interno no es el número del código: se busca la fila por código.
+    const filaDatos = await page.evaluate((codigo) => {
+      const fila = Array.from(document.querySelectorAll('#lista-fusionar-salidas tr[data-fila-fusion]'))
+        .find((f) => (f.innerText || '').includes(codigo));
+      if (!fila) return null;
+      return {
+        id: fila.getAttribute('data-fila-fusion'),
+        boton: fila.querySelector('[id^="btn-fusion-elegir-"]')?.id || '',
+      };
+    }, CODIGOS[0]);
+    if (filaDatos?.boton) {
+      const boton = `#${filaDatos.boton}`;
+      const celda = `#lista-fusionar-salidas tr[data-fila-fusion="${filaDatos.id}"] td:nth-child(3)`;
+      const antes = await page.$eval(boton, (e) => e.getAttribute('aria-pressed') === 'true');
+      await page.click(celda);
+      await pausa(200);
+      const despues = await page.$eval(boton, (e) => e.getAttribute('aria-pressed') === 'true');
+      ok(`${tam}: clic en la fila elige ${CODIGOS[0]} sin tocar el cuadro`, despues === !antes, `antes=${antes} después=${despues}`);
+      await page.click(celda);
+      await pausa(200);
+      ok(`${tam}: otro clic en la fila lo deselecciona`,
+        (await page.$eval(boton, (e) => e.getAttribute('aria-pressed') === 'true')) === antes);
+      await page.click(boton);
+      await pausa(150);
+      const conCuadro = await page.$eval(boton, (e) => e.getAttribute('aria-pressed') === 'true');
+      ok(`${tam}: el cuadro sigue eligiendo una sola vez`, conCuadro === !antes);
+      await page.click(boton);
+      await pausa(150);
+    } else {
+      ok(`${tam}: clic en la fila elige ${CODIGOS[0]} sin tocar el cuadro`, false, 'fila no encontrada');
+    }
+
+    // Los clics dejan el foco en los cuadros: se devuelve al buscador para probar las flechas.
+    await page.focus('#buscador-fusionar-salidas');
     await tecla('ArrowUp');
     ok(`${tam}: ↑ desde el buscador sube a la X`, (await activo()) === 'btn-cerrar-fusionar-salidas', await activo());
     await tecla('ArrowDown');

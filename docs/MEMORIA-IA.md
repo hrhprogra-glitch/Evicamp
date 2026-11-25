@@ -8,6 +8,12 @@
 
 ---
 
+## 25/11/2026 — Fusionar salidas: badge en la lista y clic en la fila sin romper el teclado
+- El badge de una salida ya fusionada se arma con el `fusion` que `fetchSalidas` adjunta a cada `Salida`; no hace falta una consulta nueva en la ventana. Ponerlo junto al código (`badge-fusion-lista-${id}` + `data-fusion-codigo-lista`) deja que la prueba lo encuentre sin depender del texto que el CSS pone en mayúsculas.
+- Si el `<tr>` recibe `onClick` para elegir, el `<button>` de la casilla debe llamar `e.stopPropagation()`: si no, un solo clic alterna dos veces y parece que el cuadrito no funciona.
+- **Trampas de la prueba ampliada:** el id interno de `SAL-1547` es **398** y el de `SAL-1548` es **399**; buscar `tr[data-fila-fusion="1547"]` no encuentra nada. Buscar la fila por su código y sacar de ella el `id` y el `id` del botón. Después de `page.click`, el foco queda en el cuadro, no en el buscador: volver a `page.focus('#buscador-fusionar-salidas')` antes de probar ↑/↓ o la prueba mide el movimiento desde el lugar equivocado y acusa un fallo que no existe.
+-Estado: `npx tsc -b` EXIT 0, build **`index-C2jeYVUH.js`**, deploy solo Nego, prueba **158/158** con teclado, sin internet externo y 390/768/1366/1920. Commit local sin push; Evicamp, ecosistema, panel y GitHub esperan un OK nuevo. El grupo de ejemplo `FUS-0001 (398, 399)` se dejó intacto.
+
 ## 25/11/2026 — Persistencia del GENERAL: copiar la definición de permisos en vivo y no perder el grupo al recargar
 - Para tocar `fn_permisos_servicios` en Nego, **copiar primero `pg_get_functiondef()` desde la base en vivo** y añadir solo las rutas nuevas. Las copias en `servidor/sql/seguridad-sesion.sql` y en `eliminar-devolucion-salida.sql` están desactualizadas: sobrescribir con ellas borra permisos que hoy sí existen. En Nego **no hay rol `authenticated`**: los GRANT van solo a `anon`.
 - `setval(seq, 0, true)` falla porque el mínimo de la secuencia es 1: para un SQL repetible con tabla vacía usar `setval(seq, 1, false)`; si ya hay filas, `setval(seq, max, true)`.
