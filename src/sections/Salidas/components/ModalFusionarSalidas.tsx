@@ -359,19 +359,35 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, fusione
                     {filtradas.map((s, idx) => {
                       const marcada = elegidas.includes(Number(s.id));
                       return (
-                        <tr key={s.id} className={marcada ? 'bg-[var(--color-accent)]/20' : ''}>
+                        <tr
+                          key={s.id}
+                          data-fila-fusion={s.id}
+                          onClick={() => alternar(Number(s.id))}
+                          title="Haga clic en la fila para elegir o quitar esta salida"
+                          className={`${marcada ? 'bg-[var(--color-accent)]/20' : ''} cursor-pointer`}
+                        >
                           <td className="p-2">
                             <button
                               id={`btn-fusion-elegir-${s.id}`}
                               type="button"
-                              onClick={() => alternar(Number(s.id))}
+                              onClick={(e) => { e.stopPropagation(); alternar(Number(s.id)); }}
                               aria-pressed={marcada}
                               data-nav-fusion={`${idx + 1},0`}
                               className="w-8 h-8 border-2 border-[var(--color-ink)] flex items-center justify-center cursor-pointer"
                               title={marcada ? 'Quitar salida' : 'Agregar salida'}
                             >{marcada ? <Check size={16} /> : null}</button>
                           </td>
-                          <td className="p-2 font-black">{s.codigo}</td>
+                          <td className="p-2 font-black">
+                            {s.codigo}
+                            {s.fusion && (
+                              <span
+                                id={`badge-fusion-lista-${s.id}`}
+                                data-fusion-codigo-lista={s.fusion.codigo}
+                                title={`Ya está en el general ${s.fusion.codigo}`}
+                                className="bg-indigo-100 text-indigo-800 border border-indigo-300 px-1.5 py-0.5 text-[9px] font-black uppercase block mt-0.5 w-fit"
+                              >Fusionada · {s.fusion.codigo}</span>
+                            )}
+                          </td>
                           <td className="p-2 uppercase">{nombreClienteSalida(s, 'NO REGISTRADO')}</td>
                           <td className="p-2 uppercase">{s.bien?.nombre || 'General'}</td>
                           <td className="p-2">{s.fecha ? String(s.fecha).slice(0, 10) : '-'}</td>
