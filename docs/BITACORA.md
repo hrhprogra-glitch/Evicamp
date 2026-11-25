@@ -7,13 +7,14 @@
 
 ---
 
-## 24/11/2026 (el rollo ahora dice la unidad: «ROLLO x100 MT») · OpenCode (Big Pickle) — SOLO NEGO, ESPERANDO OK
+## 24/11/2026 (el rollo ahora dice la unidad: «ROLLO x100 MT») · OpenCode (Big Pickle) — HECHO, PROBADO Y SUBIDO
 
 - El dueño pidió que el `100` no se leyera como unidades: *"dice rollo x100 ejemplo no dice 100 que 100mt osea la unidad que esta entiendes ?"*. Confirmó el texto **`ROLLO x100 MT`** y eligió **«Primero solo Nego»**.
 - **Código:** `src/utils/presentaciones.ts` tiene un ayudante `nombreRolloConUnidad`: solo a los clones `ROLLO` les agrega la unidad base del producto (M/MTR/METRO → **MT**). Así queda `MANGUERA CIEGA DE 20MM (100MT) (ROLLO x100 MT)` en **Caja y Salidas**, que comparten la utilidad. El texto de cajas/paquetes que usa Compras (`nombrePresentacion`) **no se tocó**. El factor y la conversión a metros siguen iguales.
-- Prueba en vivo actualizada: `verificar-cambios-ecosistema.mjs` ahora exige `(ROLLO x100 MT)`, la elección con flechas y que la fila diga `ROLLO X100 MT` con `100 M` (aún no corrida contra ecosistema).
-- `npm run build` OK, bundle **`index-DdYWVHW4.js`**; deploy **solo Nego** (`deploy.cjs siumax`, 22 archivos) y regresión **23/23** con teclado, sin internet y 390/768/1366/1920, 0 errores JS. Sin bases tocadas, sin push.
-- **Siguiente paso:** con el OK del dueño, desplegar ecosistema (+ iconos), Evicamp y clientes, correr la prueba ampliada (26/26) y hacer push. Recordar Ctrl+F5.
+- Prueba en vivo actualizada: `verificar-cambios-ecosistema.mjs` exige `(ROLLO x100 MT)`, la elección con flechas y que la fila diga `ROLLO X100 MT` con `100 M`.
+- `npm run build` OK, bundle **`index-DdYWVHW4.js`**. Con el OK del dueño (*"perfecto subelo"*) se desplegó primero en Nego y después en **ecosistema** (22 archivos + iconos `c159d216…`), **Evicamp** (22) y **clientes** (22), siempre con destino explícito. Sin bases tocadas.
+- **Pruebas:** Nego **23/23** y ecosistema **26/26**, con teclado, sin internet y 390/768/1366/1920, 0 errores JS. En vivo se vio `MANGUERA CIEGA DE 20MM (100MT) (ROLLO x100 MT)` con `3 ROLLO` y la fila agregada como `100 M`. En Inventario/Opciones avanzadas sigue el texto guardado `ROLLO x100` (es la presentación del producto, no el nombre del buscador).
+- **Push autorizado:** `git push origin HEAD:fase-11-sunat`. `main` intacto. Falta solo la revisión visual del dueño con **Ctrl+F5**.
 
 ## 24/11/2026 (Salidas con ROLLO como Caja, en los cuatro destinos y GitHub) · OpenCode (Big Pickle) — HECHO, PROBADO Y SUBIDO
 
