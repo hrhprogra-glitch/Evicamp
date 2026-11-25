@@ -71,6 +71,20 @@ async function probar(ancho, alto) {
     const sel = `#${fila}`;
     comprobar(`${ancho}: la fila empieza en 25`, (await valor(sel)) === '25', `valor=${await valor(sel)}`);
 
+    // Dueño 25/11: al clicar la cantidad se selecciona todo y escribir reemplaza, no agrega.
+    await page.click(sel);
+    await page.keyboard.type('7');
+    comprobar(`${ancho}: clic selecciona todo y 7 reemplaza el 25`, (await valor(sel)) === '7', `valor=${await valor(sel)}`);
+    await page.click(sel);
+    await page.keyboard.type('3');
+    comprobar(`${ancho}: segundo clic tambien selecciona todo`, (await valor(sel)) === '3', `valor=${await valor(sel)}`);
+    await page.focus(sel);
+    await borrarTodo();
+    await page.keyboard.type('25');
+    await page.keyboard.press('Enter');
+    await pausa(200);
+    comprobar(`${ancho}: se repone 25 para las demas comprobaciones`, (await valor(sel)) === '25', `valor=${await valor(sel)}`);
+
     // Caso del dueño: borrar 25 por completo.
     await page.focus(sel);
     await borrarTodo();

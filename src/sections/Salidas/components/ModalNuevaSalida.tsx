@@ -1480,9 +1480,13 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                               step="any"
                               min="0.001"
                               value={cantidadEditando[claveItem(it, idx)] ?? String(it.cantidad)}
-                              onFocus={() => {
+                              onFocus={(e) => {
                                 cantidadAlEntrar.current[claveItem(it, idx)] = it.cantidad;
+                                // Dueño 25/11/2026: al entrar en la cantidad de la fila, seleccionar todo
+                                // para reemplazar el número escribiendo directo (regla del teclado SiuMax).
+                                e.currentTarget.select();
                               }}
+                              onClick={(e) => e.currentTarget.select()}
                               onChange={(e) => {
                                 const texto = e.target.value;
                                 setCantidadEditando((m) => ({ ...m, [claveItem(it, idx)]: texto }));

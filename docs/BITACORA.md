@@ -7,6 +7,14 @@
 
 ---
 
+## 25/11/2026 (seleccionar toda la cantidad al clic en una fila) · OpenCode (Big Pickle) — HECHO Y PROBADO SOLO EN NEGO
+
+- **Dueño:** *"perfecto pero cuando presiono la cantidad del producto ya agregado que se selecione completo asi para remplazarlo rápido"*. Se aplicó solo al campo de cantidad **de la fila** de Nueva salida: al entrar (clic o Tab) se selecciona todo el número y un segundo clic también lo reselecciona, así escribir directo reemplaza el valor sin borrar a mano. No se tocó el campo de arriba, los botones `−/+`, los ids, el estilo ni la lógica de guardado.
+- Antes de tocar código se integró el commit ajeno que había subido otra IA (`64db5d5`, presentaciones con precio 0) mediante **fast-forward**; Nego servía `index-CL3CrvWb.js` y se comprobó que ya traía el arreglo de borrado (22/22).
+- **Bundle verificado en vivo:** **`index-DxoorOrB.js` / `index-Bo7VCcsX.css`**, 22 archivos subidos solo a Nego con `deploy.cjs siumax` (destino explícito).
+- **Pruebas:** `verificar-cantidad-salida.mjs` ampliada a **28/28** en 1366×768 y 390×844 (clic → escribir `7` reemplaza `25`; segundo clic → `3`; reposición a `25`; borrado completo; `−/+`; Enter; 0 errores JS). Regresiones: fusión/desvinculación **142/142**, nombre de nota **66/66**, lista adaptable **51/51**. Sin tocar base ni `main`.
+- **Estado:** commit local; **sin push, sin Evicamp/ecosistema/panel** hasta el OK del dueño. Falta su revisión visual con **Ctrl+F5** en Nego.
+
 ## 25/11/2026 (cantidad de Salidas: pase a los cuatro sitios y cierre) · OpenCode (Big Pickle) — HECHO EN NEGO, EVICAMP, ECOSISTEMA Y PANEL
 
 - **Dueño:** *"ya subelo a todos para que se actualicen"*. Con ese OK se corrió `node ai-scripts/deploy.cjs todos` (destino explícito): **22 archivos en Nego, Evicamp, ecosistema y la carpeta compartida del panel de clientes**, sin tocar la base ni `main`. Se repusieron los iconos del oficial (`c159d216…`).
