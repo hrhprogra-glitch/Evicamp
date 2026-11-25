@@ -197,10 +197,12 @@ export const ModalImprimirProductos: React.FC<Props> = ({ onClose }) => {
   };
 
   const html = useMemo(() => {
+    const claseColumna = (id: Columna) =>
+      id === 'pedido' ? ' class="pedido"' : (id === 'stock' || id === 'precio') ? ' class="num"' : '';
     const cabeceras = columnasActivas
-      .map((c) => `<th${c.id === 'pedido' ? ' class="pedido"' : ''}>${c.etiqueta}</th>`).join('');
+      .map((c) => `<th${claseColumna(c.id)}>${c.etiqueta}</th>`).join('');
     const filas = filtrados.map((p) => `<tr>${columnasActivas.map((c) =>
-      `<td${c.id === 'pedido' ? ' class="pedido"' : ''}>${valorCelda(c.id, p)}</td>`).join('')}</tr>`).join('');
+      `<td${claseColumna(c.id)}>${valorCelda(c.id, p)}</td>`).join('')}</tr>`).join('');
     const nombreEmpresa = escaparHtml(empresa.nombre || 'ECO SISTEMAS URH');
     const ruc = empresa.ruc ? `<small>RUC: ${escaparHtml(empresa.ruc)}</small>` : '';
     const telefono = empresa.telefono ? `<small>Tel.: ${escaparHtml(empresa.telefono)}</small>` : '';
@@ -213,23 +215,28 @@ export const ModalImprimirProductos: React.FC<Props> = ({ onClose }) => {
 <style>
 @page { size: A4; margin: 12mm; }
 * { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 html, body { margin: 0; background: #fff; color: #111; font-family: Arial, Helvetica, sans-serif; font-size: 10px; }
-.cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-top: 4px solid #111; border-bottom: 1px solid #111; padding: 10px 0 8px; margin-bottom: 12px; }
+.cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-top: 5px solid #111; border-bottom: 1px solid #111; padding: 10px 0 8px; margin-bottom: 12px; }
 .empresa { font-size: 14px; font-weight: 800; letter-spacing: .5px; }
 .empresa small { display: block; font-size: 9px; font-weight: normal; margin-top: 2px; }
 .titulo { text-align: right; }
 .titulo strong { font-size: 15px; letter-spacing: 1.5px; }
 .titulo div { font-size: 9px; margin-top: 3px; }
-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-th, td { border: 1px solid #111; padding: 4px 5px; text-align: left; vertical-align: middle; overflow-wrap: anywhere; }
-th { background: #e8e8e8; font-size: 9px; text-transform: uppercase; letter-spacing: .5px; }
-tbody tr:nth-child(even) td { background: #fafafa; }
-th.pedido, td.pedido { width: 90px; text-align: center; }
-td.pedido { background: #fff !important; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; border-top: 3px double #111; }
+th, td { border: 1px solid #111; padding: 5px 6px; text-align: left; vertical-align: middle; overflow-wrap: anywhere; }
+th { background: #1f2937; color: #fff; font-size: 9px; text-transform: uppercase; letter-spacing: .6px; text-align: center; }
+th:first-child, td:first-child { border-left: 2px solid #111; }
+th:last-child, td:last-child { border-right: 2px solid #111; }
+tbody tr:nth-child(even) td { background: #f3f4f6; }
+tbody td { height: 21px; }
+th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+th.pedido, td.pedido { width: 96px; text-align: center; }
+td.pedido { background: #fff !important; border-bottom: 2px solid #111; }
 thead { display: table-header-group; }
 tr { break-inside: avoid; }
-tfoot td { background: #e8e8e8; font-weight: bold; }
-.pie { display: flex; justify-content: space-between; margin-top: 8px; font-size: 8px; color: #444; }
+tfoot td { background: #e8e8e8; font-weight: bold; border-top: 2px solid #111; }
+.pie { display: flex; justify-content: space-between; margin-top: 8px; padding-top: 4px; border-top: 1px solid #111; font-size: 8px; color: #444; }
 @media screen { html, body { overflow: hidden !important; } }
 </style></head><body>
 <div class="cabecera">

@@ -85,6 +85,17 @@ try {
     return !!(d?.querySelector('.cabecera') && d?.querySelector('.pie') && /@page/.test(d?.styleSheets?.[0]?.cssRules ? [...d.styleSheets[0].cssRules].map((r) => r.cssText).join('') : ''));
   });
   ok('La hoja A4 lleva cabecera, pie y regla de página', hojaEstilizada);
+  const tablaEstilizada = await page.evaluate(() => {
+    const d = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument;
+    const th = d?.querySelector('thead th');
+    const filas = d?.querySelectorAll('tbody tr');
+    if (!th || !filas || filas.length < 2) return false;
+    const fondoTh = getComputedStyle(th).backgroundColor;
+    const fondoPar = getComputedStyle(filas[1].querySelector('td')).backgroundColor;
+    const fondoImpar = getComputedStyle(filas[0].querySelector('td')).backgroundColor;
+    return fondoTh !== 'rgba(0, 0, 0, 0)' && fondoTh !== 'rgb(255, 255, 255)' && fondoPar !== fondoImpar;
+  });
+  ok('La tabla tiene encabezado oscuro y filas alternas', tablaEstilizada);
   const unaFila = await page.evaluate(() => {
     const fs = [...document.querySelectorAll('[role="dialog"] fieldset')];
     return fs.length >= 2 && Math.abs(fs[0].getBoundingClientRect().top - fs[1].getBoundingClientRect().top) < 8;
