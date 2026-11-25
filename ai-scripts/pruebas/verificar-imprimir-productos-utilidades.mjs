@@ -1,6 +1,6 @@
 // 25/11/2026 — Prueba REAL del botón «Imprimir productos» en Utilidades (solo Nego).
 // Teclado, sin internet, 390/768/1366/1920, columnas opcionales, filtro por categoría y 0 errores JS.
-// Uso: node ai-scripts/pruebas/verificar-imprimir-productos-utilidades.mjs [carpeta tools]
+// Uso: node ai-scripts/pruebas/verificar-imprimir-productos-utilidades.mjs [carpeta tools] [nego|evicamp|ecosistema]
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,9 +21,19 @@ const URLS = {
 };
 const URL = URLS[sitio];
 if (!URL) throw new Error(`Sitio desconocido: ${sitio}. Opciones: ${Object.keys(URLS).join(', ')}`);
-const usuario = sitio === 'ecosistema' ? process.env.ECOSISTEMA_ADMIN_USUARIO : process.env.SIUMAX_ADMIN_USUARIO || 'admin@siumax.com';
-const clave = sitio === 'ecosistema' ? process.env.ECOSISTEMA_ADMIN_CLAVE : process.env.SIUMAX_ADMIN_CLAVE;
-if (!clave) throw new Error('Falta SIUMAX_ADMIN_CLAVE en .env.vps');
+const USUARIO = {
+  nego: process.env.SIUMAX_ADMIN_USUARIO || 'admin@siumax.com',
+  evicamp: process.env.EVICAMP_ADMIN_USUARIO || 'evi',
+  ecosistema: process.env.ECOSISTEMA_ADMIN_USUARIO,
+};
+const CLAVE = {
+  nego: process.env.SIUMAX_ADMIN_CLAVE,
+  evicamp: process.env.EVICAMP_ADMIN_CLAVE || process.env.SIUMAX_ADMIN_CLAVE,
+  ecosistema: process.env.ECOSISTEMA_ADMIN_CLAVE,
+};
+const usuario = USUARIO[sitio];
+const clave = CLAVE[sitio];
+if (!clave) throw new Error(`Falta la clave de ${sitio} en .env.vps`);
 
 const nav = await puppeteer.launch({
   executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',

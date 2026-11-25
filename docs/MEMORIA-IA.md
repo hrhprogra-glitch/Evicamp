@@ -8,6 +8,12 @@
 
 ---
 
+## 25/11/2026 — Pase a tres sitios: verificar cada uno y no pisar el avance que aparece mientras tanto
+- Desplegar siempre con destino explícito (`deploy.cjs siumax|evicamp|ecosistema`); tras ecosistema reponer iconos con `restaurar-iconos-ecosistema.cjs` y confirmar el MD5. Un mismo bundle en los tres sitios no implica que las pruebas den igual: Nego y ecosistema se probaron con login real (47/47 cada uno), Evicamp no tenía clave de administrador disponible.
+- **Evicamp usa la base `evidiary`, tabla `usuarios` (`usuario`, `clave_hash`), con un solo usuario `evi`.** No hay clave en `.env.vps`: no inventarla, no cambiarla y no tocar la base para «poder probar». Si no se puede entrar, verificar al menos el JS servido (`btn-imprimir-productos-utilidades`, `Por pedir`, `tr.bajo td:not(.pedido)`, `logo-CDQ`, `currentTarget.select`) y decir claramente que la prueba funcional quedó pendiente. La prueba acepta `EVICAMP_ADMIN_USUARIO`/`EVICAMP_ADMIN_CLAVE` si el dueño las entrega.
+- Si mientras se verifica aparece un bundle más nuevo en Nego, **no redeployar para «igualar» los tres sitios**: ese bundle puede ser el avance de otra sesión. Comprobar que conserva lo propio (markers + prueba 47/47) y dejarlo. Si el commit nuevo está solo en un worktree sin rama (`git branch -a --contains <hash>` sale vacío), fusionarlo en la rama de integración para que no se pierda, sin llevarlo a los otros sitios si era trabajo «solo Nego».
+
+
 ## 25/11/2026 — «Fusionar» de verdad: grupo completo, desmarcar uno y bundles que cambian a mitad de prueba
 - Al marcar una salida ya fusionada hay que marcar **todas** las del mismo `FUS-…` (se compara `fusion.id` y `fusion.codigo` por si algún grupo se recargó con otro id). Al desmarcar, se llama a `fn_desvincular_salida_fusion` en ese instante y se recalcula el grupo con el `general_borrado`/`quedan` que devuelve la RPC; si queda una sola, la base borra el grupo.
 - El id interno de `SAL-1547` es **398** y el de `SAL-1548` es **399**; nunca asumir que el id es el número del código. Una prueba que suponga «el grupo tiene 3» falla cuando el estado de la base trae 2 o 4: **medir el grupo desde el DOM** (`data-fusion-codigo-lista`) y comparar con eso.

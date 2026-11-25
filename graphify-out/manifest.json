@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795642242.5910122,
-    "seen": 1795642293.0937135,
-    "ast_hash": "33aecfe4f4c9e415cf432a3d30ce7cd9",
+    "mtime": 1795643100.8788488,
+    "seen": 1795643170.7194026,
+    "ast_hash": "2a8fb10568b9577cc534201430a9fe73",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795642260.8000283,
-    "seen": 1795642293.0937147,
-    "ast_hash": "93da69e7e288e47fe948818555f26a8a",
+    "mtime": 1795643123.8841293,
+    "seen": 1795643170.719403,
+    "ast_hash": "62f720941c353c9a1653142e3576c9fd",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795642268.606459,
-    "seen": 1795642293.0937157,
-    "ast_hash": "4c10d37d35b503938cc8d4a4effadcaa",
+    "mtime": 1795643153.8864448,
+    "seen": 1795643170.719404,
+    "ast_hash": "82af656eac6839285a01a73bc3d73564",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795642274.6957572,
-    "seen": 1795642293.093718,
-    "ast_hash": "f38d69238d73c0a9c604a6530a48d1c3",
+    "mtime": 1795643133.469565,
+    "seen": 1795643170.719406,
+    "ast_hash": "b12e7c17c406832d5411caa99bbfcc01",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -3894,9 +3894,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-imprimir-productos-utilidades.mjs": {
-    "mtime": 1795637616.020105,
-    "seen": 1795637881.1124742,
-    "ast_hash": "fbc24d0bb77133d9c515a143cdbaa7ba",
+    "mtime": 1795643087.5793116,
+    "seen": 1795643170.7191112,
+    "ast_hash": "b985631acd1ac99356e546d5aabbfc88",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/ModalImprimirProductos.tsx": {
@@ -3930,9 +3930,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-fusionar-salidas.mjs": {
-    "mtime": 1795640844.8804185,
-    "seen": 1795641199.0147192,
-    "ast_hash": "ebdd2f1c72440335cde9b768157419f8",
+    "mtime": 1795643062.7321317,
+    "seen": 1795643170.7191088,
+    "ast_hash": "0e510dbe9321a3f13229ae2c584ee040",
     "semantic_hash": ""
   },
   "ai-scripts/verificar-bundle-clientes.cjs": {
@@ -3942,9 +3942,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalFusionarSalidas.tsx": {
-    "mtime": 1795640844.8890433,
-    "seen": 1795641199.015026,
-    "ast_hash": "5cc683c785f90acbed8d71cedac3e1b1",
+    "mtime": 1795643062.7408972,
+    "seen": 1795643170.719322,
+    "ast_hash": "3947f0c2dc9adb378dcada06e8ae8746",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-cantidad-salida.mjs": {
@@ -3960,15 +3960,21 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-persistencia-fusion.mjs": {
-    "mtime": 1795640216.6011302,
-    "seen": 1795640589.4199095,
-    "ast_hash": "e1df9559a19fef8e6e1ad7854fc385a9",
+    "mtime": 1795643062.733153,
+    "seen": 1795643170.719113,
+    "ast_hash": "fd2822fe2c239d600c13b678698ad2d3",
     "semantic_hash": ""
   },
   "servidor/sql/fusiones-salidas.sql": {
-    "mtime": 1795640216.6621344,
-    "seen": 1795640589.4200602,
-    "ast_hash": "dd0714b14d42abf330b9628d2debd072",
+    "mtime": 1795643062.7408972,
+    "seen": 1795643170.7191844,
+    "ast_hash": "85cf7a5d8f8d727b26780218e8458f14",
+    "semantic_hash": ""
+  },
+  "ai-scripts/restaurar-grupo-ejemplo.cjs": {
+    "mtime": 1795643062.733153,
+    "seen": 1795643170.7191226,
+    "ast_hash": "6d6d27e5ba1172bbc5ac4fa6ba33cfbb",
     "semantic_hash": ""
   }
 }
