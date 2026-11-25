@@ -1512,3 +1512,9 @@
 - **Dueño:** **«Sí, empieza (Recommended)»**.
 - Hecho: antes los 5 productos tenían `unit='Metro'` y el rollo solo en el nombre; ahora son `UND`, con `ref_unit='METRO'` y `ref_qty=500`. Respaldo completo guardado en `C:/Users/User/AppData/Local/Temp/opencode/respaldo-productos-metro-2026-11-24.json`. No cambiaron cantidades, stock, precios ni historial. Salidas muestra «UND / 1 UND = 500 M» leyendo el producto; las salidas viejas que dicen Metro siguen con texto fijo de respaldo.
 - Desplegado solo ecosistema (**`index-CNDCe1Qi.js` / `index-CtGZbGlg.css`**, iconos repuestos). Prueba ampliada **25/25** y regresiones **12/12**, **14/14**, **35/35**, **6/6**, **11/11**, con login real, teclado, sin internet y 390/768/1366/1920. Commit local; **sin push**. Falta su revisión con **Ctrl+F5**.
+
+## 24/11/2026 (el dueño pregunta si quedan productos de kilos o más de metros)
+- **Dueño:** *"ay prodcutos de kilos que hay que corregir o otros de metros o eso son los unicos revisa ??"*.
+- Revisión **solo lectura** de los 511 productos, las 2910 líneas de salidas y las presentaciones: no hay productos en kilos, no hay presentaciones de kilo o metro y solo los 5 ya corregidos tienen `ref_unit='METRO'` con `ref_qty=500`. Las 59 líneas de salidas que decían `Metro` son exactamente de esos 5 productos.
+- Se le explica que hay 12 tubos con «3/5 MTS» en el nombre (ids 100336–100348), pero se venden por unidad (`ref_qty=1`) y nunca salieron como `Metro`: no se corregirán salvo que el dueño pida una nota de equivalencia distinta. `MANOMETRO` salió en la lista solo por contener la palabra «metro».
+- Sin cambios en base, código ni sitio; sin push.

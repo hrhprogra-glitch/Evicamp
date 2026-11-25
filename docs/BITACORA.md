@@ -7,6 +7,15 @@
 
 ---
 
+## 24/11/2026 (revisión completa: ¿hay más productos de kilo o metro?) · OpenCode (Big Pickle) — Solo lectura
+
+- El dueño preguntó: *"ay prodcutos de kilos que hay que corregir o otros de metros o eso son los unicos revisa ??"*. Se revisaron **los 511 productos** de `products`, **las 2910 líneas** de `salida_items` y las presentaciones. No se escribió en la base ni en el sitio.
+- **Unidades del catálogo:** 506 productos dicen `Unidad` y solo los 5 corregidos dicen `UND`. **No hay ni un producto con unidad KG/KILO**, ni `control_type` de peso (los 511 son `STOCK`), ni presentaciones de kilo o metro.
+- **Equivalencias:** solo los 5 ids corregidos tienen `ref_unit='METRO'` y `ref_qty=500`. El resto tiene `ref_unit/ref_qty=Unidad/1`. No hay otro producto con equivalencia guardada.
+- **Salidas:** de 2910 líneas, 2177 dicen `Unidad`, 674 `UND` y **59 `Metro`**; esas 59 son exactamente de los 5 corregidos (6 + 2 + 14 + 2 + 35 líneas). No hay ninguna línea en kilos.
+- **Casos parecidos que NO se corrigen:** 12 tubos de 3 o 5 MTS (ids 100336 a 100348) tienen «MTS» en el **nombre**, pero se venden **por unidad** (`unit='Unidad'`, `ref_qty=1`) y nunca aparecieron como `Metro` en salidas; un 13.er nombre (`MANOMETRO`) es falso positivo por la palabra «metro». Si el dueño quiere una nota «1 UND = 5 MTS» en esos tubos, se decide aparte.
+- Sin cambios en base, código ni sitio; sin push.
+
 ## 24/11/2026 (Inventario corregido: los 5 productos de metro ya son UND = 500 M) · OpenCode (Big Pickle) — HECHO, desplegado y probado
 
 - El dueño insistió: *"pero tienes que corregirlo en el inventario para que esos productos salgan bien en salidas !!1"*. Con su **«Sí, empieza (Recommended)»** se corrigió el origen en ecosistema, no solo la etiqueta de Salidas.
