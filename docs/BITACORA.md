@@ -7,6 +7,14 @@
 
 ---
 
+## 24/11/2026 (pedidos nuevos en Salidas: buscadores, salto de foco, teclado, cantidad y unidades) · OpenCode (Big Pickle) — Solo diagnóstico, esperando el «empieza»
+
+- El dueño pidió en Salidas de ecosistema: buscador de producto en el detalle y otro en Devolver; que al hacer clic afuera no baje solo; que el selector de la ventana de devolución no quede atrapado con las flechas; que se pueda cambiar el monto/cantidad; y que en mangueras (y en todos los productos de metros/kilos) se corrija que «1 unidad son 500 metros».
+- Revisado **solo lectura** con `graphify query` y lectura de `ModalDetalleSalida.tsx`, `ModalDevolucionesSalida.tsx`, `ModalNuevaSalida.tsx`, `unidades.ts`, `presentaciones.ts`, `types.ts` y los SQL de migración. No se tocó código, base, sitio ni credenciales; no se desplegó ni se hizo push.
+- **Cantidad que no cambia:** en «Nueva salida / Continuar salida» el cuadro llama a `handleModificarCantidad(idx, parseFloat(valor))` y esa función descarta vacío o cero (`NaN`/`<= 0`), así que borrar el número para escribir otro lo devuelve al valor anterior. En el **detalle** no hay campos editables desde la 228 (lo pidió el dueño); en **Devolver** el «Monto a devolver» es calculado y el cuadro «A devolver» se deshabilita cuando el pendiente es 0. Falta que el dueño diga en cuál de las tres ventanas le pasó.
+- **Unidades:** los productos migrados de Eco con metro tienen `unit='M'`, `control_type='UND'`, `sunat_unit_code='NIU'` y `presentaciones={"unidad":"Metro","presentacion":"UN"}`. Ese JSON no trae `factor`, así que `presentacionesValidas()` lo ignora: el tamaño del rollo (500/400/100 m) solo está en el **nombre** y las cantidades guardadas cuentan **rollos** (stock 2.86, devoluciones 0.76, etc.). Multiplicar lo guardado por 500 cambiaría stock e historial: no se hará sin autorización y respaldo. Falta que el dueño elija: **solo mostrar** la equivalencia (ej. «1 rollo = 500 M») o **cambiar los datos**.
+- Sigue pendiente la respuesta sobre si los buscadores **filtran los materiales de esa salida** o buscan en el **catálogo general**. Estado: propuesta esperando el «empieza».
+
 ## 24/11/2026 (URGENTE: devoluciones visibles + icono limpiador en Salidas de ecosistema) · OpenCode (Big Pickle) — Hecho y desplegado
 
 - El dueño pidió: *"agregues las devoluciones de ecosistema es urgente porque mi cliente está asustado porque se borra meses de devoluciones ... el limpiador de filtro era un icono se cambio por todas quiero que vuelva ser el icono de limpiador de filtros todo eso esta en salidas"*.

@@ -8,6 +8,11 @@
 
 ---
 
+## 24/11/2026 — Salidas: cantidad que no cambia y unidades migradas de metros/kilos (diagnóstico, no ejecutado)
+- Si el dueño dice que «la cantidad no cambia», preguntar **en qué ventana**: el **detalle** es solo lectura desde la 228 (lo pidió él), en «Nueva/Continuar salida» `handleModificarCantidad` descarta `NaN` y `<= 0` (borrar el cuadro para reescribir lo devuelve al valor anterior), y en «Devolver» el «Monto a devolver» es calculado y `input-devolver-*` se deshabilita con `pendiente <= 0`.
+- Los productos migrados de Eco con metro quedaron con `unit='M'`, `control_type='UND'`, `sunat_unit_code='NIU'` y `presentaciones={"unidad":"Metro","presentacion":"UN"}`. Ese JSON **no tiene `factor`**, así que `presentacionesValidas()` lo ignora. El tamaño del rollo (500/400/100 m) solo está en el **nombre** y las cantidades de `salida_items`/stock cuentan **rollos** (2.86, 0.76…). No multiplicar lo guardado por 500 sin respaldo y OK explícito: cambiaría stock, montos e historial de 1213 devoluciones.
+- Antes de proponer cambios de unidades, confirmar si el dueño quiere **solo mostrar** la equivalencia (por ejemplo «1 rollo = 500 M») o **cambiar datos**. Nunca inventar el factor de todos los productos de kilos/metros leyendo solo el nombre sin validarlo.
+
 ## 24/11/2026 — Salidas ecosistema: marquita `dev.` y limpiador FilterX (URGENTE, ya hecho)
 - Si el dueño dice que «se borran meses de devoluciones» en Salidas: **no se borraron**. Antes de tocar la base, revisa si la **marquita `dev.` aparece en la lista** (`TablaSalidas.tsx`, celda de Items). El 24/11 el bundle desplegado en ecosistema venía de un worktree con `TablaSalidas.tsx` anterior y no la tenía; por eso el cliente se asustó, aunque el detalle sí mostraba las devoluciones.
 - La marquita se pone con `s.devoluciones?.length || items con cantidad_devuelta > 0` y el texto `N dev.`. **Ojo:** el repo principal tiene WIP ajeno en `TablaSalidas.tsx` (rediseño responsive). No copies ese archivo completo al worktree: edita SOLO la celda de Items en el worktree limpio.
