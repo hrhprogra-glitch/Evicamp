@@ -7,6 +7,17 @@
 
 ---
 
+## 25/11/2026 (nombre de la nota en la tabla de Salidas) · OpenCode (Big Pickle) — Código listo; deploy bloqueado por SSH
+
+- El dueño se quejó: *"e notado que cuando registro una nota en salida osea pongo un nombre que no esta en clientes y que sea nota en la tabla no sale el nombre de la nota si no sale asi 'cliente no registrado (nota)'"*. Aprobó el trabajo con **«empeiza»**.
+- **Hecho solo en Nego, sin tocar la base:** nuevo `src/sections/Salidas/clienteNota.ts` (`ID_CLIENTE_NOTA = 990001`, `NOMBRE_CLIENTE_NOTA = 'CLIENTE NO REGISTRADO (NOTA)'`) que lee la **última** etiqueta `CLIENTE:` de `observaciones`. `Salidas/index.tsx` aplica `conNombreClienteNota` al cargar la lista y al abrir el detalle; `ModalNuevaSalida.tsx` conserva `clienteLibre` al «Continuar salida» de una nota. Tabla, detalle, comprobante, buscador y Continuar usan ese mismo nombre en memoria. **No** se cambiaron `TablaSalidas.tsx`, `VistaPreviaSalida.tsx`, observaciones, ids ni stock: WIP ajeno intacto.
+- `npx tsc --noEmit` OK en el repo principal y en el worktree limpio. `npm run build` OK: bundles generados **`index-4DjJ7A18.js` / `index-Cf4OlVIC.css`**.
+- Prueba nueva `ai-scripts/pruebas/verificar-nombre-nota-salidas.mjs`: solo lectura, **teclado**, **sin internet** y 390/768/1366/1920; revisa SAL-1547 y SAL-1548 en tabla, buscador, detalle, comprobante y Continuar. `node --check` OK. La pasada de línea base contra el bundle anterior dio **14/42**, esperado: el buscador no encontraba las notas y Continuar no traía el nombre. Se ajustó para buscar primero por código y luego por nombre (hay un cliente registrado con nombre igual); **falta ejecutarla con el bundle nuevo**.
+- **Deploy NO completado:** 3 intentos en el worktree limpio `C:/Users/User/AppData/Local/Temp/opencode/nombre-nota-nego` con solo los 3 archivos propios y la copia de SSH que sí autenticaba; el VPS dio `Timed out while waiting for handshake` y `ETIMEDOUT`. `Test-NetConnection ... -Port 22` → **False**; HTTPS sí responde (200), pero en vivo sigue **`index-CJhKMreh.js` / `index-D74V8jBk.css`**, no el bundle nuevo. Sin Evicamp, ecosistema ni push.
+- Siguiente paso: que el dueño levante el puerto 22 (o autorice otra forma de subir); reintentar `node ai-scripts/deploy.cjs siumax` desde ese worktree, correr la prueba ajustada y las regresiones de Salidas, y repasar con **Ctrl+F5**. Commit local solo de los archivos propios y los 4 documentos; sin push.
+
+---
+
 ## 24/11/2026 (aclaración del alcance: qué se cambió y qué no) · OpenCode (Big Pickle) — Solo respuesta
 
 - El dueño preguntó si se cambió código de ecosistema y si se hizo primero en Nego/Siumax y luego se subió a Evicamp, a su GitHub y a ecosistema.

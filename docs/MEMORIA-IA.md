@@ -8,6 +8,12 @@
 
 ---
 
+## 25/11/2026 — El nombre de una nota vive en observaciones, no en `customer.name`
+- Al registrar una nota se usa el cliente interno invisible 990001 (`CLIENTE NO REGISTRADO (NOTA)`), pero el nombre real se guarda al final de `observaciones` como `CLIENTE: NOMBRE`. Tabla, detalle, comprobante y buscador leen `customer.name`; por eso la corrección debe hacerse **en memoria al cargar Salidas** (`Salidas/index.tsx` y el `onVerDetalle`), no en los componentes ni en la base. Extraer la **última** etiqueta `CLIENTE:` porque una nota puede tener más de una.
+- Al «Continuar salida» de una nota hay que llevar ese nombre a `clienteLibre` y a `busquedaCliente`; si no, el nombre se pierde en el formulario aunque la salida ya lo muestra.
+- En las pruebas, buscar primero por **código** (`SAL-1547`, `SAL-1548`) y después por nombre: existe un cliente registrado con el mismo nombre y una búsqueda por nombre puede encontrar otra salida. Guardar el id del botón de la fila para confirmar que el buscador encuentra la nota correcta.
+- Si `Test-NetConnection <VPS> -Port 22` da **False**, no insistir con el deploy: el sitio HTTPS puede seguir respondiendo 200 mientras el bundle nuevo no se publica. Avisar al dueño y dejar el worktree limpio listo para reintentar.
+
 ## 24/11/2026 — Inventario es la fuente de la unidad: 5 productos de metro ya son UND = 500 M
 - Si Salidas sigue mostrando «Metro», **corrige el producto en Inventario**, no solo la etiqueta del componente. Los 5 afectados son los ids 100282, 100298, 100313, 100315, 100322: antes `unit='Metro'`, `weight_unit='Metro'`, `ref_unit='Metro'`, `ref_qty=1`, con el rollo (100/400/500) solo en `unit_weight`/el nombre.
 - Con OK del dueño (**«Sí, empieza»**) se guardó respaldo de las filas completas y se hizo un `PATCH` de **solo esas 5 filas**: `unit='UND'`, `weight_unit='UND'`, `ref_unit='METRO'`, `ref_qty=500`, `unit_weight='500.00'`. Respaldo: `C:/Users/User/AppData/Local/Temp/opencode/respaldo-productos-metro-2026-11-24.json`. **Nunca** tocar stock, precios, lotes ni historial para arreglar una etiqueta.

@@ -1524,3 +1524,9 @@
 - Respuesta: **sí se cambió código de ecosistema**, directamente en un worktree limpio basado en `D:/Programación/eco-sistema` (`salidas-6-cambios`), **no primero en Nego/Siumax**. Los 6 cambios y la lectura de la equivalencia desde Inventario están en los commits locales `740d665` y `a856573`.
 - **No** se cambió código de Nego/Siumax ni de Evicamp en esta tanda y **no** se hizo push a GitHub. Deploy solo de ecosistema (22 archivos y sus iconos). El push de la 228 (`a88002a`) fue otro pedido anterior, con autorización del dueño.
 - Sin cambios nuevos; queda pendiente su revisión visual con Ctrl+F5 y cualquier push solo si lo pide.
+
+## 25/11/2026 (el nombre de la nota debe verse en la tabla de Salidas)
+- **Dueño:** *"e notado que cuando registro una nota en salida osea pongo un nombre que no esta en clientes y que sea nota en la tabla no sale el nombre de la nota si no sale asi 'cliente no registrado (nota)'"*.
+- **Dueño:** **«empeiza»**. Antes se le propuso corregir la presentación al cargar las salidas, sin tocar la base ni los componentes que tienen trabajo ajeno sin commitear.
+- Hecho: el nombre escrito se lee de `observaciones` y se aplica en memoria a la tabla, el buscador, el detalle, el comprobante y el «Continuar salida». El cliente interno 990001 sigue igual; no se crean clientes ni se cambian observaciones. Solo Nego.
+- Se le avisa con claridad: el código compila y el build salió bien, pero el VPS rechazó el deploy porque el puerto 22 está cerrado. El sitio HTTPS sigue sirviendo el bundle anterior, así que **todavía no ve el cambio**. Sin Evicamp, ecosistema ni push. Falta que se levante SSH o autorice otra forma de subir el bundle.

@@ -4,6 +4,7 @@ import { HeaderSalidas } from './components/HeaderSalidas';
 import { TablaSalidas } from './components/TablaSalidas';
 import { ModalNuevaSalida } from './components/ModalNuevaSalida';
 import { ModalDetalleSalida } from './components/ModalDetalleSalida';
+import { conNombreClienteNota } from './clienteNota';
 import type { Salida, TipoSalida, EstadoSalida } from './types';
 
 interface SalidasProps {
@@ -58,7 +59,8 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
       }
 
       if (error) throw error;
-      setSalidas((data as any[]) || []);
+      // Las notas llevan el nombre escrito en observaciones; el cliente interno solo es una referencia.
+      setSalidas(((data as any[]) || []).map(conNombreClienteNota));
     } catch (err) {
       console.error('Error cargando salidas:', err);
     } finally {
@@ -282,7 +284,7 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
                 data = retry.data as any;
                 error = retry.error as any;
               }
-              if (data) setSalidaSeleccionada(data as any);
+              if (data) setSalidaSeleccionada(conNombreClienteNota(data as any));
             }
           }}
           onContinuar={(salida) => {
