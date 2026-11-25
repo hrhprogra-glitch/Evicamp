@@ -7,8 +7,7 @@ import { unidadDe } from './unidades';
 
 export interface Presentacion { unidad: string; factor: number; precio: number; barcode?: string | null }
 
-/** Las válidas (unidad entera distinta de UND, trae 2 o más, precio 0 o mayor), sin repetir unidad + factor.
- *  24/11/2026: el dueño confirmó que aún no hay precios, así que S/ 0.00 también se muestra. */
+/** Las válidas (unidad entera distinta de UND, trae 2 o más, precio mayor que 0), sin repetir unidad + factor. */
 export const presentacionesValidas = (lista: unknown): Presentacion[] => {
   if (!Array.isArray(lista)) return [];
   const vistas = new Set<string>();
@@ -28,39 +27,23 @@ export const presentacionesValidas = (lista: unknown): Presentacion[] => {
 /** Nombre que se ve: "CAJA x12" */
 export const nombrePresentacion = (p: Pick<Presentacion, 'unidad' | 'factor'>) => `${unidadDe({ unit: p.unidad }).nombre.toUpperCase()} x${p.factor}`;
 
-/** 24/11/2026 (dueño): en el buscador el rollo debe decir la unidad de lo que trae,
- *  p. ej. «ROLLO x100 MT», no solo «ROLLO x100» (el 100 son metros, no unidades).
- *  Solo se toca el rollo: el texto de cajas/paquetes que usa Compras se deja igual. */
-const nombreRolloConUnidad = (producto: Product, pr: Presentacion) => {
-  const base = nombrePresentacion(pr);
-  if (pr.unidad !== 'ROLLO') return base;
-  const u = String(producto.unit || '').toUpperCase().trim();
-  if (!u || u === 'UND') return base;
-  // El producto se vende por M (SUNAT MTR) y en su nombre dice 100MT: mostramos MT.
-  const corto = u === 'M' || u === 'MTR' || u === 'METRO' || u === 'METROS' || u === 'MT' ? 'MT' : u;
-  return `${base} ${corto}`;
-};
-
 /** Para la Caja: cada producto y, además, cada presentación como otro "producto" para buscar, escanear y vender.
  *  La presentación lleva productoId (el producto real), su factor y su stock en presentaciones enteras. */
 export const conPresentaciones = (productos: Product[]): Product[] => productos.flatMap((p) => [
   p,
-  ...presentacionesValidas(p.presentaciones).map((pr, i): Product => {
-    const nombre = nombreRolloConUnidad(p, pr);
-    return {
-      ...p,
-      id: `${p.id}::${i}`,
-      productoId: String(p.id),
-      name: `${p.name} (${nombre})`,
-      price: pr.precio,
-      barcode: pr.barcode || '',
-      code: '',
-      unit: pr.unidad,
-      control_type: 'UND',
-      quantity: Math.floor(Number(p.quantity || 0) / pr.factor),
-      preciosCantidad: [],
-      presentaciones: [],
-      presentacion: { nombre, factor: pr.factor, codigo: unidadDe({ unit: pr.unidad }).codigo },
-    };
-  }),
+  ...presentacionesValidas(p.presentaciones).map((pr, i): Product => ({
+    ...p,
+    id: `${p.id}::${i}`,
+    productoId: String(p.id),
+    name: `${p.name} (${nombrePresentacion(pr)})`,
+    price: pr.precio,
+    barcode: pr.barcode || '',
+    code: '',
+    unit: pr.unidad,
+    control_type: 'UND',
+    quantity: Math.floor(Number(p.quantity || 0) / pr.factor),
+    preciosCantidad: [],
+    presentaciones: [],
+    presentacion: { nombre: nombrePresentacion(pr), factor: pr.factor, codigo: unidadDe({ unit: pr.unidad }).codigo },
+  })),
 ]);

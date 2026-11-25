@@ -2532,6 +2532,7 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
                               value={f.factor} onChange={(e) => cambiarPres(i, 'factor', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'factor')}
                               readOnly={precioBloqueado} aria-label={`Presentación ${i + 1}: cuántas trae`}
                               className="w-20 bg-[var(--color-surface)] border-2 border-[#CBD5E1] p-2 text-xs font-black text-right outline-none focus:border-[var(--color-success)] focus:ring-2 focus:ring-[var(--color-success)] read-only:opacity-60" />
+                            <span className="text-[10px] font-black text-[#64748B] uppercase">{formData.weightUnit}</span>
                             <span className="text-[10px] font-black text-[#64748B] uppercase">S/</span>
                             <input id={`pres-precio-${i}`} type="number" min="0" step="0.01" autoComplete="off" data-lpignore="true" placeholder="0.00"
                               value={f.precio} onChange={(e) => cambiarPres(i, 'precio', e.target.value)} onKeyDown={(e) => teclasPres(e, i, 'precio')}
