@@ -6,6 +6,7 @@ import { UnidadMaterial } from './UnidadMaterial';
 
 export type MaterialDevolucion = {
   id?: number;
+  product_id?: number | null;
   descripcion: string;
   unidad: string;
   cantidad: number;
@@ -17,6 +18,8 @@ interface ModalDevolucionesSalidaProps {
   isOpen: boolean;
   codigo: string;
   materiales: MaterialDevolucion[];
+  // Equivalencia de metros por UND leída de Inventario (products.ref_qty), por producto.
+  equivalencias: Record<number, number>;
   devolver: Record<number, string>;
   setDevolver: React.Dispatch<React.SetStateAction<Record<number, string>>>;
   motivoDev: string;
@@ -37,6 +40,7 @@ export const ModalDevolucionesSalida: React.FC<ModalDevolucionesSalidaProps> = (
   isOpen,
   codigo,
   materiales,
+  equivalencias,
   devolver,
   setDevolver,
   motivoDev,
@@ -185,7 +189,7 @@ export const ModalDevolucionesSalida: React.FC<ModalDevolucionesSalidaProps> = (
                   return (
                     <tr key={m.id || `dev-${idx}`} className="hover:bg-black/5">
                       <td className="p-2 font-bold uppercase">{m.descripcion}</td>
-                      <td className="p-2 text-center"><UnidadMaterial unidad={m.unidad} /></td>
+                      <td className="p-2 text-center"><UnidadMaterial unidad={m.unidad} equivalenciaM={equivalencias[Number(m.product_id)]} /></td>
                       <td className="p-2 text-right font-bold">{Number(m.cantidad || 0)}</td>
                       <td className="p-2 text-right font-bold text-amber-700">{Number(m.cantidad_devuelta || 0)}</td>
                       <td className="p-2 text-right font-bold">{pendiente}</td>
