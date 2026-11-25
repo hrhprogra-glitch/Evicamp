@@ -7,6 +7,11 @@
 
 ---
 
+## 25/11/2026 (AVISO PARA CLAUDE/ANTIGRAVITY: no volver a sobrescribir Nego con un bundle sin este arreglo)
+- El dueño preguntó por qué no se podía borrar completa la cantidad, autorizó el arreglo (**«si»**) y, al ver que otra IA seguía sobrescribiendo Nego, eligió **«Subir a GitHub y avisar»**.
+- **La corrección de la cantidad ya está integrada en `origin/fase-11-sunat`** junto con el nombre de nota (`f7a2a92`) y la fusión de salidas (`189b7ff`). Quien despliegue Nego desde ahora debe **traer primero `origin/fase-11-sunat`** (`git fetch origin` + merge/reset según su rama) y comprobar que el JS sirvido trae el arreglo con `verificar-cantidad-salida.mjs`. Si se despliega desde `pase-todos` sin integrar, el bug vuelve (`25 → 2` al salir del campo).
+- Para el dueño esto es **un arreglo pequeño y claro**: borrar `25` deja el campo vacío; si sale sin escribir nada, vuelve `25` (nunca el `2` a medias). No cambiaron ids, teclado, estilo ni la lógica de guardar.
+
 ## 25/11/2026 (borrar por completo la cantidad en Nueva salida) · OpenCode (Big Pickle) — ARREGLADO EN CÓDIGO, PRUEBA PENDIENTE TRAS COLISIÓN DE DEPLOY
 
 - **Dueño:** *"en la salida no puedo borrar la cantidad cuando se ingresa el producto … ejemplo 25 lo quiero borrar pero solo borro el 5 y no el 2 porque sucede eso ?"*. Preguntó la causa; se le explicó y autorizó el arreglo con **«si»**, primero en Nego.

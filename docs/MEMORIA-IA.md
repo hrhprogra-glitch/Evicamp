@@ -8,6 +8,10 @@
 
 ---
 
+## 25/11/2026 — Regla de turnos: integrar antes de desplegar Nego
+- Si otra IA está desplegando Nego en paralelo, **no entrar en guerra de bundles**: integrar sus commits publicados (`git merge` / `fetch`) y desplegar una sola versión con todos los cambios. El dueño eligió **«Subir a GitHub y avisar»**: los arreglos deben quedar en `origin/fase-11-sunat` para que cualquiera que despliegue los arrastre.
+- Antes de dar por terminado, comparar el bundle de `index.html` en vivo con `dist/index.html`; en esta tanda el sitio fue sobrescrito tres veces (`CrDD9EXm` → `DyfpQR9q` → `CyFtSW6H` → `Cy7XoMwt` → `BjFb7fvN` → `Cg6JyrwK`).
+
 ## 25/11/2026 — Cantidad de Salidas: no guardar el borrado intermedio, y cuidado con el WIP ajeno al desplegar
 - El campo de cantidad **de la fila** (no el de arriba) guardaba cada pulsación: borrar `25` dejaba `2` y guardaba ese `2`; borrar el resto se ignoraba porque la cantidad no puede ser `<= 0`. Al perder el foco se reponía el valor guardado (`2`). Arreglo: conservar el texto, incluso vacío, mientras se edita; guardar solo números válidos y reponer el valor de entrada al salir. Regla útil: **no guardes un estado intermedio del usuariocomo si fuera definitivo**.
 - La regla 9 del teclado (`flechasEspaciales.ts`) devuelve el foco al campo de origen tras Enter. No pelear con `blur()`: si Enter debe confirmar, confirmar el valor y dejar que el foco vuelva solo. Una prueba que exija «Enter sale del campo» está mal planteada en este proyecto.
