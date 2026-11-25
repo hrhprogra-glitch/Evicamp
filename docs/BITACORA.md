@@ -7,13 +7,13 @@
 
 ---
 
-## 25/11/2026 (seleccionar toda la cantidad al clic en una fila) · OpenCode (Big Pickle) — HECHO Y PROBADO SOLO EN NEGO
+## 25/11/2026 (seleccionar toda la cantidad al clic en una fila) · OpenCode (Big Pickle) — HECHO EN LOS CUATRO SITIOS Y SUBIDO
 
 - **Dueño:** *"perfecto pero cuando presiono la cantidad del producto ya agregado que se selecione completo asi para remplazarlo rápido"*. Se aplicó solo al campo de cantidad **de la fila** de Nueva salida: al entrar (clic o Tab) se selecciona todo el número y un segundo clic también lo reselecciona, así escribir directo reemplaza el valor sin borrar a mano. No se tocó el campo de arriba, los botones `−/+`, los ids, el estilo ni la lógica de guardado.
 - Antes de tocar código se integró el commit ajeno que había subido otra IA (`64db5d5`, presentaciones con precio 0) mediante **fast-forward**; Nego servía `index-CL3CrvWb.js` y se comprobó que ya traía el arreglo de borrado (22/22).
 - **Bundle verificado en vivo:** **`index-DxoorOrB.js` / `index-Bo7VCcsX.css`**, 22 archivos subidos solo a Nego con `deploy.cjs siumax` (destino explícito).
 - **Pruebas:** `verificar-cantidad-salida.mjs` ampliada a **28/28** en 1366×768 y 390×844 (clic → escribir `7` reemplaza `25`; segundo clic → `3`; reposición a `25`; borrado completo; `−/+`; Enter; 0 errores JS). Regresiones: fusión/desvinculación **142/142**, nombre de nota **66/66**, lista adaptable **51/51**. Sin tocar base ni `main`.
-- **Estado:** commit local; **sin push, sin Evicamp/ecosistema/panel** hasta el OK del dueño. Falta su revisión visual con **Ctrl+F5** en Nego.
+- **Pase a todos (OK del dueño: *"Sí, a todos y GitHub"*):** `deploy.cjs todos` subió **22 archivos por sitio** a **Nego, Evicamp, ecosistema y panel de clientes**; iconos del oficial repuestos (`c159d216…`). Los cuatro sirven el mismo bundle **`index-DxoorOrB.js` / `index-Bo7VCcsX.css`** (comprobado en vivo, bundles **12/12** y carpeta de clientes). Pruebas tras el pase: cantidad **28/28 en Nego y ecosistema** (clic + reemplazo, segundo clic, borrado completo, `−/+`, Enter) y lista adaptable **51/51 en ecosistema**, 0 errores JS. El bundle incluye también los cambios ya integrados de otras IAs (fusión al costado con X y presentaciones con precio 0). Push a `origin/fase-11-sunat` en el último commit; `main` intacto, sin base ni SQL. Falta solo la revisión visual del dueño con **Ctrl+F5** en los cuatro sitios.
 
 ## 25/11/2026 (cantidad de Salidas: pase a los cuatro sitios y cierre) · OpenCode (Big Pickle) — HECHO EN NEGO, EVICAMP, ECOSISTEMA Y PANEL
 
