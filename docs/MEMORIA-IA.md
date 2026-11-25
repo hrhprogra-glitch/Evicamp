@@ -8,6 +8,10 @@
 
 ---
 
+## 25/11/2026 — Cantidad de Salidas: no guardar el borrado intermedio, y cuidado con el WIP ajeno al desplegar
+- El campo de cantidad **de la fila** (no el de arriba) guardaba cada pulsación: borrar `25` dejaba `2` y guardaba ese `2`; borrar el resto se ignoraba porque la cantidad no puede ser `<= 0`. Al perder el foco se reponía el valor guardado (`2`). Arreglo: conservar el texto, incluso vacío, mientras se edita; guardar solo números válidos y reponer el valor de entrada al salir. Regla útil: **no guardes un estado intermedio del usuariocomo si fuera definitivo**.
+- La regla 9 del teclado (`flechasEspaciales.ts`) devuelve el foco al campo de origen tras Enter. No pelear con `blur()`: si Enter debe confirmar, confirmar el valor y dejar que el foco vuelva solo. Una prueba que exija «Enter sale del campo» está mal planteada en este proyecto.
+- Otra IA desplegó Nego a los pocos minutos desde el repo principal, cuyo WIP **revertía** el arreglo (el bundle servido pasó de `CrDD9EXm` a `DyfpQR9q`). Antes de dar por bueno un deploy, **comparar `index.html` en vivo con `dist/index.html`** y repetir la prueba; y si hay commits ajenos nuevos en `origin/fase-11-sunat`, integrarlos antes de republicar para no quitarle arreglos al dueño.
 ## 25/11/2026 — Si otra IA despliega desde un commit anterior, tu cambio desaparece del sitio
 - El dueño dijo que no veía el botón en Nego. El sitio servía `index-CJhKMreh.js`, no el bundle que yo había desplegado: otra sesión trabajó desde `d0d4549` (commit anterior al mío), desplegó su cambio y sobrescribió el mío. **Comprobar siempre el `index.html` en vivo y buscar el id del botón en el JS servido** antes de creer que es caché del navegador.
 - No revertir el trabajo ajeno: fusionar las dos ramas (`git merge --no-ff` desde la rama propia), resolver los conflictos de docs conservando **ambas** entradas, regenerar `graphify-out` y volver a compilar/desplegar. El bundle combinado tiene los dos cambios; un deploy posterior desde una rama atrasada vuelve a borrarlos.
@@ -17,6 +21,14 @@
 ## 25/11/2026 — La sobrescritura puede repetirse: verificar el DOM, no solo el JS
 - Publicar no basta: otra sesión (`e22050d`, nombre de nota en Salidas) desplegó de nuevo desde una rama sin mi botón y Nego sirvió `index-4DjJ7A18.js`. El dueño volvió a decir que no veía «Imprimir productos». **Comprobar en vivo con navegador los ids reales de los botones**, además de mirar el bundle en el JS.
 - Cada vez que aparezca un bundle nuevo, fusionar esa rama también (`git merge --no-ff`), conservar las tres entradas en docs y volver a compilar/probar. El bundle final con todo junto es `index-D4ichCYo.js` / `index-BvV_knbV.css`.
+
+## 25/11/2026 — Logo en PDF: usar el logo de la empresa con respaldo local
+- En la hoja A4 el logo debe salir del mismo `useEmpresaComprobante()` que los comprobantes; si no hay logo configurado, caer al import local `logo.png`. Escapar siempre la URL antes de ponerla en `src`.
+- La prueba debe comprobar `img.complete && img.naturalWidth > 0` dentro del iframe, no solo que exista la etiqueta: así se detecta que la imagen realmente cargó sin internet.
+
+## 25/11/2026 — Cuarta sobrescritura y desborde en cabecera de Nueva salida
+- Otra sesión publicó `index-BCWl9GII.js` desde `salidas-pantalla-pc` sin el botón de impresión, aunque luego fusionó `189b7ff`. Regla: **después de cada deploy ajeno, volver a mirar bundle en vivo y botones en el DOM**, no suponer que la fusión ajena ya incluye los cambios propios.
+- Al fusionar ese cambio («borrar cantidad») la cabecera de Nueva salida empujaba «Fusionar salidas» fuera del modal en 390/1366/1920. Arreglo: `min-w-0` en el bloque del título y `shrink-0` en el grupo de botones. La prueba de fusión volvió a **114/114**.
 
 ## 25/11/2026 — Tercera sobrescritura: cada cambio nuevo debe fusionarse antes de publicar
 - Apareció `index-KIvGnE8B.js` desde `fusionar-salidas` (`14f1372`) y el botón desapareció otra vez. Procedimiento que ya se repitió tres veces: ver bundle en vivo → ver botones en el DOM → `git merge --no-ff` de la rama nueva → conservar **todas** las entradas de docs → `graphify update .` → build → deploy → correr **todas** las pruebas (impresión, Salidas PC, nota y fusión).

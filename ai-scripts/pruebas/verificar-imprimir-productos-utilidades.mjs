@@ -80,6 +80,16 @@ try {
   ok('Sin internet carga los productos activos', v0.filas.length > 0, `${v0.filas.length} filas`);
   ok('Por defecto trae Cant. a pedir y no Precio', v0.cabeceras.join('|') === 'CÓDIGO|NOMBRE|CATEGORÍA|STOCK|CANT. A PEDIR', v0.cabeceras.join('|'));
   ok('El encabezado dice LISTADO DE PRODUCTOS', /LISTADO DE PRODUCTOS/.test(v0.texto));
+  await page.waitForFunction(() => {
+    const img = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument?.querySelector('img.logo');
+    return !!img && img.complete && img.naturalWidth > 0;
+  }, { timeout: 10000 });
+  const logoEnCabecera = await page.evaluate(() => {
+    const d = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument;
+    const img = d?.querySelector('.cabecera img.logo');
+    return !!img && !!d?.querySelector('.cabecera .marca') && (img.src || '').length > 0 && img.naturalWidth > 0;
+  });
+  ok('La hoja lleva el logo de la empresa en la cabecera', logoEnCabecera);
   const hojaEstilizada = await page.evaluate(() => {
     const d = document.querySelector('iframe[title="Vista previa del listado de productos"]')?.contentDocument;
     return !!(d?.querySelector('.cabecera') && d?.querySelector('.pie') && /@page/.test(d?.styleSheets?.[0]?.cssRules ? [...d.styleSheets[0].cssRules].map((r) => r.cssText).join('') : ''));

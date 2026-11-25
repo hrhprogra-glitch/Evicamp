@@ -137,6 +137,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   // La cantidad se controla con texto mientras se edita (clave estable por producto), así se puede
   // borrar y volver a escribir sin que React reponga el valor viejo. Al salir del campo se suelta.
   const [cantidadEditando, setCantidadEditando] = useState<Record<string, string>>({});
+  // 25/11/2026: si borra todo y sale del campo, se repone la cantidad original (25) y no el "2" a medias.
+  const cantidadAlEntrar = useRef<Record<string, number>>({});
   const claveItem = (it: { product_id?: number | null; descripcion?: string }, idx: number) =>
     it.product_id != null ? `p${it.product_id}` : `d${it.descripcion || idx}`;
 
@@ -667,6 +669,17 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     });
   };
 
+  // Al salir del campo: guarda el número escrito; si quedó vacío, devuelve el valor de entrada.
+  // Así borrar "25" deja el campo vacío mientras se edita y no se guarda el "2" intermedio.
+  const confirmarCantidadFila = (clave: string, index: number, texto: string) => {
+    const valor = parseFloat(texto);
+    if (!isNaN(valor) && valor > 0) {
+      handleModificarCantidad(index, valor);
+    } else if (cantidadAlEntrar.current[clave] != null) {
+      handleModificarCantidad(index, cantidadAlEntrar.current[clave]);
+    }
+  };
+
   const handlePasoCantidad = (index: number, delta: number) => {
     setItems((prev) => {
       const copia = [...prev];
@@ -938,7 +951,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
             <div className="ventana-cabecera__icono">
               <Truck size={20} />
             </div>
-            <div>
+            <div className="min-w-0">
               <h2 className="ventana-cabecera__titulo">
                 {salidaRaiz ? `Continuar Salida (${salidaRaiz.codigo})` : 'Punto de Salida a Obra / Servicio'}
               </h2>
@@ -947,7 +960,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {tieneBorrador && !salidaRaiz && (
               <span className="hidden sm:inline-block text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 px-2 py-1 font-bold uppercase tracking-wider">
                 ✓ Borrador auto-guardado
@@ -1485,17 +1498,29 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                               step="any"
                               min="0.001"
                               value={cantidadEditando[claveItem(it, idx)] ?? String(it.cantidad)}
+                              onFocus={() => {
+                                cantidadAlEntrar.current[claveItem(it, idx)] = it.cantidad;
+                              }}
                               onChange={(e) => {
                                 const texto = e.target.value;
                                 setCantidadEditando((m) => ({ ...m, [claveItem(it, idx)]: texto }));
-                                handleModificarCantidad(idx, parseFloat(texto));
+                                const valor = parseFloat(texto);
+                                if (!isNaN(valor) && valor > 0) handleModificarCantidad(idx, valor);
                               }}
-                              onBlur={() => {
+                              onBlur={(e) => {
+                                const clave = claveItem(it, idx);
+                                confirmarCantidadFila(clave, idx, e.currentTarget.value);
                                 setCantidadEditando((m) => {
                                   const copia = { ...m };
-                                  delete copia[claveItem(it, idx)];
+                                  delete copia[clave];
                                   return copia;
                                 });
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  e.currentTarget.blur();
+                                }
                               }}
                               className="w-16 p-1 text-center font-black border border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none rounded-none bg-[var(--color-surface)]"
                             />

@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795634435.0780008,
-    "seen": 1795634472.2104356,
-    "ast_hash": "d5098776578ef1a0d448d16ae0cd6dbc",
+    "mtime": 1795635712.9869156,
+    "seen": 1795635759.2604444,
+    "ast_hash": "4d8096bd93fba65f68b13fc2fb855b8a",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795634447.3388505,
-    "seen": 1795634472.2104366,
-    "ast_hash": "152d8d0ef079c2181fd81ed88024c16b",
+    "mtime": 1795635721.5737748,
+    "seen": 1795635759.2604456,
+    "ast_hash": "9508679da2800458994a02c819ca1247",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795634453.8783898,
-    "seen": 1795634472.2104375,
-    "ast_hash": "b3954a14ba96de52de3965bc69085cb0",
+    "mtime": 1795635727.6008542,
+    "seen": 1795635759.260447,
+    "ast_hash": "5796440b2b8a9799b19a73e832e02c0b",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795634441.137841,
-    "seen": 1795634472.2104394,
-    "ast_hash": "3cf317ea58d424a404f0b64ed69186b1",
+    "mtime": 1795635717.3613777,
+    "seen": 1795635759.2604504,
+    "ast_hash": "49735ff7078e4e95eea737a68a8f53ca",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2946,9 +2946,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalNuevaSalida.tsx": {
-    "mtime": 1795634146.8096476,
-    "seen": 1795634472.2103481,
-    "ast_hash": "be2da0e87dd7e7420ff29c517597e21e",
+    "mtime": 1795635477.0883162,
+    "seen": 1795635759.2603073,
+    "ast_hash": "fdfa2371890fb4556dc8c9cbf25b5542",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/TablaSalidas.tsx": {
@@ -3894,15 +3894,15 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-imprimir-productos-utilidades.mjs": {
-    "mtime": 1795633349.4668987,
-    "seen": 1795633460.1111958,
-    "ast_hash": "ed89a1bba92e28f8c87e0972c8965a94",
+    "mtime": 1795634655.5052001,
+    "seen": 1795635759.2599528,
+    "ast_hash": "2fc3a7d3745a749933263d8dec632245",
     "semantic_hash": ""
   },
   "src/sections/Utilidades/components/ModalImprimirProductos.tsx": {
-    "mtime": 1795633344.0064886,
-    "seen": 1795633460.1114316,
-    "ast_hash": "82b6fd2276310875c30f7f24ceb57966",
+    "mtime": 1795634651.5977159,
+    "seen": 1795635759.2603467,
+    "ast_hash": "5b1b6033e00442f6aecf0a1c5512d4b9",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-salidas-pantalla-pc.mjs": {
@@ -3945,6 +3945,12 @@
     "mtime": 1795634130.012669,
     "seen": 1795634472.210347,
     "ast_hash": "90fc6c1048390d2aa0a749e9aa69f6a1",
+    "semantic_hash": ""
+  },
+  "ai-scripts/pruebas/verificar-cantidad-salida.mjs": {
+    "mtime": 1795634903.3461034,
+    "seen": 1795635759.259939,
+    "ast_hash": "4324f1978d710c8e7c9ef77c67929584",
     "semantic_hash": ""
   }
 }

@@ -11,6 +11,7 @@ import { avisar } from '../../../utils/dialogos';
 import { fechaLocalPeru } from '../../../utils/ingresos';
 import { formatearMonto } from '../../../utils/formato';
 import { useEmpresaComprobante } from '../../Salidas/empresa';
+import logoSiumax from '../../../assets/logo.png';
 
 interface Props {
   onClose: () => void;
@@ -204,6 +205,7 @@ export const ModalImprimirProductos: React.FC<Props> = ({ onClose }) => {
     const filas = filtrados.map((p) => `<tr>${columnasActivas.map((c) =>
       `<td${claseColumna(c.id)}>${valorCelda(c.id, p)}</td>`).join('')}</tr>`).join('');
     const nombreEmpresa = escaparHtml(empresa.nombre || 'ECO SISTEMAS URH');
+    const logo = escaparHtml(empresa.logo || logoSiumax);
     const ruc = empresa.ruc ? `<small>RUC: ${escaparHtml(empresa.ruc)}</small>` : '';
     const telefono = empresa.telefono ? `<small>Tel.: ${escaparHtml(empresa.telefono)}</small>` : '';
     const subtitulo = todasCategorias
@@ -218,6 +220,8 @@ export const ModalImprimirProductos: React.FC<Props> = ({ onClose }) => {
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 html, body { margin: 0; background: #fff; color: #111; font-family: Arial, Helvetica, sans-serif; font-size: 10px; }
 .cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-top: 5px solid #111; border-bottom: 1px solid #111; padding: 10px 0 8px; margin-bottom: 12px; }
+.marca { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.logo { width: 52px; height: 42px; object-fit: contain; object-position: left center; }
 .empresa { font-size: 14px; font-weight: 800; letter-spacing: .5px; }
 .empresa small { display: block; font-size: 9px; font-weight: normal; margin-top: 2px; }
 .titulo { text-align: right; }
@@ -240,7 +244,7 @@ tfoot td { background: #e8e8e8; font-weight: bold; border-top: 2px solid #111; }
 @media screen { html, body { overflow: hidden !important; } }
 </style></head><body>
 <div class="cabecera">
-  <div class="empresa">${nombreEmpresa}${ruc}${telefono}</div>
+  <div class="marca"><img class="logo" src="${logo}" alt="Logo de la empresa"><div class="empresa">${nombreEmpresa}${ruc}${telefono}</div></div>
   <div class="titulo"><strong>LISTADO DE PRODUCTOS</strong><div>${escaparHtml(subtitulo)}</div><div>Fecha: ${escaparHtml(fechaLocalPeru())}</div></div>
 </div>
 <table><thead><tr>${cabeceras}</tr></thead><tbody>${filas}</tbody>
