@@ -8,6 +8,13 @@
 
 ---
 
+## 25/11/2026 — «Fusionar» de verdad: grupo completo, desmarcar uno y bundles que cambian a mitad de prueba
+- Al marcar una salida ya fusionada hay que marcar **todas** las del mismo `FUS-…` (se compara `fusion.id` y `fusion.codigo` por si algún grupo se recargó con otro id). Al desmarcar, se llama a `fn_desvincular_salida_fusion` en ese instante y se recalcula el grupo con el `general_borrado`/`quedan` que devuelve la RPC; si queda una sola, la base borra el grupo.
+- El id interno de `SAL-1547` es **398** y el de `SAL-1548` es **399**; nunca asumir que el id es el número del código. Una prueba que suponga «el grupo tiene 3» falla cuando el estado de la base trae 2 o 4: **medir el grupo desde el DOM** (`data-fusion-codigo-lista`) y comparar con eso.
+- Si otra IA despliega Nego **mientras corre la prueba**, la página cambia de bundle a mitad y los fallos parecen de código. En esta tanda Nego pasó de `DUUdZqRP` a `L8UP4hxD` y `D-gYUBB1` durante la corrida: había que mirar `index.html` en vivo, converger en el commit más nuevo (`be7dd54`), volver a desplegar y repetir. **Verificar el bundle antes y después de cada prueba larga**.
+- El dueño avisó que trabajaba aparte: además de integrar sus commits, su **WIP sin commitear** en `Inventario` se copió al worktree de integración (sin modificar el original) para que el bundle combinado no le quitara su avance. Nunca desplegar desde una rama que no incluya ese WIP/commit.
+- Grupo de ejemplo dejado en `FUS-0001 → {398, 399}` con `ai-scripts/restaurar-grupo-ejemplo.cjs`; las pruebas que guardan fusión cambian la base, así que hay que restaurar **después** y también antes de repetir la prueba de solo lectura.
+
 ## 25/11/2026 — Regla de turnos: integrar antes de desplegar Nego
 - Si otra IA está desplegando Nego en paralelo, **no entrar en guerra de bundles**: integrar sus commits publicados (`git merge` / `fetch`) y desplegar una sola versión con todos los cambios. El dueño eligió **«Subir a GitHub y avisar»**: los arreglos deben quedar en `origin/fase-11-sunat` para que cualquiera que despliegue los arrastre.
 - Antes de dar por terminado, comparar el bundle de `index.html` en vivo con `dist/index.html`; en esta tanda el sitio fue sobrescrito varias veces (`CrDD9EXm` → `DyfpQR9q` → `CyFtSW6H` → `Cy7XoMwt` → `BjFb7fvN` → `Cg6JyrwK` → `CdbIQmqK` → `CftHzyu0`). El parte final debe nombrar el bundle **verificado en vivo**, no el del primer deploy.

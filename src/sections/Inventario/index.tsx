@@ -242,6 +242,11 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     return () => window.removeEventListener('siumax-fotos-actualizadas', alActualizarFotos);
   }, []);
 
+  // Mantener la caché en memoria al día para que, al volver a Inventario, se vea el stock actual sin refrescar la página.
+  useEffect(() => {
+    if (products.length > 0) setCacheInventario({ products, dbCategories });
+  }, [products, dbCategories]);
+
   const categoriasUnicas = useMemo(() => {
     const cats = products.map(p => p.category).filter(Boolean);
     // 🔥 Mezclamos las que ya tienen productos con TODAS las de tu tabla
@@ -913,16 +918,14 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             // [ RETORNO TÉCNICO ]: Si se borra un lote, actualizamos la memoria de productos
             onLoteDeleted={(productId, quantityRemoved) => {
               setProducts(prev => prev.map(p => {
-                if (p.id === productId) {
-                  const nuevoStock = Math.max(0, p.quantity - quantityRemoved);
-                  return {
-                    ...p,
-                    quantity: nuevoStock,
-                    // Si el stock llega a 0, reseteamos el costo visual para que no confunda
-                    cost: nuevoStock === 0 ? 0 : p.cost 
-                  };
-                }
-                return p;
+                if (String(p.id) !== String(productId)) return p;
+                const nuevoStock = Math.max(0, p.quantity - quantityRemoved);
+                return {
+                  ...p,
+                  quantity: nuevoStock,
+                  // Si el stock llega a 0, reseteamos el costo visual para que no confunda
+                  cost: nuevoStock === 0 ? 0 : p.cost 
+                };
               }));
             }}
           />
@@ -1051,7 +1054,7 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
             : Number(lote.initial_quantity || lote.quantity);
 
           setProducts(prevProducts => prevProducts.map(p => 
-            p.id === lote.product_id 
+            String(p.id) === String(lote.product_id)
               ? { 
                   ...p, 
                   quantity: Math.max(0, p.quantity + cantidadDiferencia),

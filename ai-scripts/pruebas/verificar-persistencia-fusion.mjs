@@ -1,7 +1,7 @@
 // 230 (25/11/2026): persistencia del GENERAL de salidas en Nego.
-// Guarda un grupo, recarga la página y comprueba badge + botón en la tabla y «Fusionada con...»
-// en el detalle; luego usa la X y comprueba que el grupo actualizado también sobrevive a la recarga.
-// Sin internet externo (se bloquea todo lo que no sea el propio sitio). Uso:
+// «Fusionar» guarda un grupo de 3, recarga y comprueba badge + botón en la tabla y «Fusionada con...»
+// en el detalle; luego marca una del grupo (se marcan todas) y la desmarca (sale solo esa) y lo
+// comprueba tras otra recarga. Sin internet externo (solo pasa el propio sitio). Uso:
 //   node ai-scripts/pruebas/verificar-persistencia-fusion.mjs <carpeta tools con puppeteer-core>
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -108,25 +108,39 @@ try {
   await page.focus('#btn-fusionar-salidas');
   await tecla('Enter');
   await pausa(450);
-  for (const codigo of [A, B]) {
+  const tercero = await page.evaluate(() => {
+    const fila = Array.from(document.querySelectorAll('#lista-fusionar-salidas tr[data-fila-fusion]'))
+      .find((f) => !f.querySelector('[id^="badge-fusion-lista-"]')
+        && !/SAL-1547|SAL-1548/.test(f.querySelector('td:nth-child(2)')?.innerText || ''));
+    if (!fila) return null;
+    return {
+      codigo: ((fila.querySelector('td:nth-child(2)')?.innerText || '').match(/SAL-\d+/) || [''])[0],
+      id: fila.querySelector('[id^="btn-fusion-elegir-"]')?.id || '',
+    };
+  });
+  ok('Hay una tercera salida libre para probar que el resto sigue fusionado', !!tercero?.id, JSON.stringify(tercero));
+
+  for (const codigo of [A, B, ...(tercero?.codigo ? [tercero.codigo] : [])]) {
     await escribir('#buscador-fusionar-salidas', codigo);
     const id = await page.evaluate(() => document.querySelector('[id^="btn-fusion-elegir-"]')?.id || '');
-    ok(`Encuentra ${codigo} para guardar`, !!id, id);
+    ok(`Encuentra ${codigo} para fusionar`, !!id, id);
     if (!id) continue;
-    await page.focus(`#${id}`);
-    await tecla('Enter');
+    const marcada = await page.$eval(`#${id}`, (e) => e.getAttribute('aria-pressed') === 'true');
+    if (!marcada) {
+      await page.focus(`#${id}`);
+      await tecla('Enter');
+    }
   }
-  await page.focus('#btn-fusion-ver-general');
-  await tecla('Enter');
-  await pausa(350);
-  ok('Muestra el general antes de guardar', await existe('#tabla-resumen-fusion'));
-  await page.focus('#btn-fusion-guardar');
+  ok('«Ver general» ahora es el botón «Fusionar»',
+    (await texto('#btn-fusion-ejecutar')).toLowerCase().includes('fusionar'),
+    await texto('#btn-fusion-ejecutar'));
+  await page.focus('#btn-fusion-ejecutar');
   await tecla('Enter');
   await pausa(1200);
+  const avisoGuardado = await texto('#dialogo-sistema-texto');
+  const codigoFusion = (avisoGuardado.match(/FUS-\d+/) || [])[0] || '';
+  ok('«Fusionar» guarda y muestra el código del GENERAL', !!codigoFusion, avisoGuardado.replace(/\s+/g, ' '));
   await cerrarDialogos();
-  const subtGuardado = await texto('#modal-fusionar-salidas-container .ventana-cabecera__subtitulo');
-  const codigoFusion = (subtGuardado.match(/FUS-\d+/) || [])[0] || '';
-  ok('Guardar fusión muestra el código del GENERAL', !!codigoFusion, subtGuardado.replace(/\s+/g, ' '));
   await tecla('Escape');
   await pausa(350);
 
@@ -194,30 +208,49 @@ try {
       !(await existe('#modal-fusionar-salidas-container')) && (await existe('#modal-detalle-salida-container')));
   }
 
-  // --- La X actualiza el grupo guardado en la base ---
+  // --- Al marcar una del grupo se marcan todas; al desmarcarla se quita solo esa ---
   await cerrarVentanas();
   await page.focus('#btn-fusionar-salidas');
   await tecla('Enter');
-  await pausa(400);
-  const idBotonA = await page.evaluate(() => document.querySelector(`[id^="btn-abrir-fusion-general-"]`)?.id || '');
+  await pausa(450);
+  const idBotonA = await page.evaluate(() => document.querySelector('[id^="btn-abrir-fusion-general-"]')?.id || '');
   ok('El modal lista el GENERAL guardado', !!idBotonA, idBotonA);
-  if (idBotonA) {
-    await page.focus(`#${idBotonA}`);
-    await tecla('Enter');
-    await pausa(350);
-    const chip = await page.evaluate((codigo) => {
-      const b = Array.from(document.querySelectorAll('[id^="btn-desvincular-salida-"]'))
-        .find((x) => (x.parentElement?.innerText || '').includes(codigo));
-      return b?.id || '';
-    }, B);
-    ok('El GENERAL guardado trae las dos salidas', !!chip, chip);
-    if (chip) {
-      await page.focus(`#${chip}`);
-      await tecla('Enter');
-      await pausa(1100);
-      const queda = await texto('tbody[data-fusion-filas]');
-      ok('La X quita solo una salida del GENERAL', !queda.includes(B) && queda.includes(A), queda.slice(0, 90));
-    }
+
+  const filaB = await page.evaluate((codigo) => {
+    const fila = Array.from(document.querySelectorAll('#lista-fusionar-salidas tr[data-fila-fusion]'))
+      .find((f) => (f.querySelector('td:nth-child(2)')?.innerText || '').includes(codigo));
+    if (!fila) return null;
+    return {
+      boton: fila.querySelector('[id^="btn-fusion-elegir-"]')?.id || '',
+      celda: `#lista-fusionar-salidas tr[data-fila-fusion="${fila.getAttribute('data-fila-fusion')}"] td:nth-child(3)`,
+    };
+  }, B);
+  ok('Encuentra la fila de SAL-1548 en la lista', !!filaB?.boton, JSON.stringify(filaB));
+  if (filaB?.boton) {
+    // El grupo puede tener 2, 3 o más salidas según el estado de la base: se mide, no se supone.
+    const esperados = await page.evaluate((boton) => {
+      const codigo = document.querySelector(`#badge-fusion-lista-${boton.replace('btn-fusion-elegir-', '')}`)
+        ?.getAttribute('data-fusion-codigo-lista') || '';
+      return Array.from(document.querySelectorAll(`#lista-fusionar-salidas [data-fusion-codigo-lista="${codigo}"]`))
+        .filter((e) => e.id.startsWith('badge-fusion-lista-')).length;
+    }, filaB.boton);
+    ok('Mide cuántas salidas tiene el GENERAL', esperados >= 2, `${esperados} salida(s)`);
+    await page.click(filaB.celda);
+    await pausa(300);
+    const marcados = await page.$$eval('#lista-fusionar-salidas [id^="btn-fusion-elegir-"][aria-pressed="true"]',
+      (els) => els.map((e) => e.id));
+    ok('Al marcar una del grupo se marcan todas las del GENERAL',
+      marcados.length === esperados && marcados.includes(filaB.boton),
+      `grupo=${esperados} marcados=${marcados.length}: ${marcados.join(' | ')}`);
+
+    await page.click(filaB.celda);
+    await pausa(1400);
+    const despues = await page.$$eval('#lista-fusionar-salidas [id^="btn-fusion-elegir-"][aria-pressed="true"]',
+      (els) => els.map((e) => e.id));
+    ok('Al desmarcar solo se quita esa salida', despues.length === esperados - 1 && !despues.includes(filaB.boton),
+      `antes=${esperados} después=${despues.length}: ${despues.join(' | ')}`);
+    ok('La salida desmarcada pierde su badge en la lista',
+      !(await existe(`#badge-fusion-lista-${filaB.boton.replace('btn-fusion-elegir-', '')}`)));
   }
   await tecla('Escape');
   await pausa(300);
@@ -232,8 +265,9 @@ try {
       }))[0] || null;
     return { a: buscar('SAL-1547'), b: buscar('SAL-1548') };
   });
-  ok('Tras la X y recargar, SAL-1547 sigue fusionada', estadoTrasRecarga.a?.fusion === codigoFusion, JSON.stringify(estadoTrasRecarga));
-  ok('Tras la X y recargar, SAL-1548 ya no está fusionada', !estadoTrasRecarga.b?.fusion, JSON.stringify(estadoTrasRecarga));
+  ok('Tras desmarcar y recargar, SAL-1547 sigue fusionada con el mismo GENERAL',
+    estadoTrasRecarga.a?.fusion === codigoFusion, JSON.stringify(estadoTrasRecarga));
+  ok('Tras desmarcar y recargar, SAL-1548 ya no está fusionada', !estadoTrasRecarga.b?.fusion, JSON.stringify(estadoTrasRecarga));
 
   ok('Sin errores de JavaScript', errores.length === 0, errores.slice(0, 3).join(' | '));
 } catch (e) {

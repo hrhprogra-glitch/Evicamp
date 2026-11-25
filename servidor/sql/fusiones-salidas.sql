@@ -90,10 +90,10 @@ BEGIN
     );
   END IF;
 
-  -- Quitar estas salidas de cualquier general anterior y borrar generales que quedaron vacíos.
+  -- Quitar estas salidas de cualquier general anterior y borrar generales que se quedaron con una sola.
   DELETE FROM public.salida_fusion_items WHERE salida_id = ANY(v_ids);
   DELETE FROM public.salida_fusiones f
-   WHERE NOT EXISTS (SELECT 1 FROM public.salida_fusion_items i WHERE i.fusion_id = f.id);
+   WHERE (SELECT count(*) FROM public.salida_fusion_items i WHERE i.fusion_id = f.id) < 2;
 
   INSERT INTO public.salida_fusiones (codigo, usuario)
   VALUES ('FUS-' || lpad(nextval('public.seq_fusiones_codigo')::text, 4, '0'), coalesce(p_usuario, 'Sistema'))
@@ -133,7 +133,8 @@ BEGIN
   END IF;
 
   SELECT count(*) INTO v_quedan FROM public.salida_fusion_items WHERE fusion_id = p_fusion_id;
-  IF v_quedan = 0 THEN
+  -- Una fusión necesita al menos dos salidas: si al quitar esta queda una sola, se borra el grupo.
+  IF v_quedan < 2 THEN
     DELETE FROM public.salida_fusiones WHERE id = p_fusion_id;
     v_borrada := true;
   ELSE

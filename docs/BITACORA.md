@@ -7,6 +7,17 @@
 
 ---
 
+## 25/11/2026 («Fusionar» guarda de verdad, marcar/desmarcar el grupo) · OpenCode (Big Pickle) — HECHO SOLO EN NEGO, SIN PUSH
+
+- **Dueño:** *"si marco uno que esta fusionado se seleciona los que estan fusionados en esa fución ahora el ver general sera el boton fusionar asi para que fusionar salidas fusione de verdad ahora para quitar una salida de la fusión solo tengo que presionarlo y desmarcarlo y el resto sigue fucionado entiendes ?"*. Preguntado, eligió **botón «Fusionar» en la ventana**, **guardar al desmarcar** y **borrar la fusión si queda una sola salida**. Aprobó con **«empieza»**.
+- **Base (`siumax`, con respaldo `/root/backups/siumax-antes-fusiones-20261125211431.dump`):** `fn_desvincular_salida_fusion` y `fn_guardar_fusion_salidas` ahora borran el grupo cuando quedan **menos de 2** salidas. La definición viva de `fn_permisos_servicios` se copió y solo se amplió; GRANT solo a `anon`. El GENERAL sigue siendo **solo vista**: no crea salida ni descuenta stock dos veces.
+- **Código:** `ModalFusionarSalidas.tsx` — marcar una salida con `Fusionada · FUS-…` marca **todo su grupo**; desmarcarla llama a la RPC y quita **solo esa**, las demás siguen fusionadas; el botón del pie «Ver general» pasa a **«Fusionar»** y guarda. El general guardado se abre desde el botón del grupo, la tabla y el detalle. Subtítulo y prueba adaptados al nuevo texto.
+- **Integración (aviso del dueño: *"estoy trabajando aparte … no quiero perder mi avance"*):** Nego servía `index-DxoorOrB.js`, más nuevo que el worktree propio. Se integraron los commits ajenos más nuevos (`64db5d5`, `f3173a6`, `cf4d34f`, `be7dd54`) y se conservó también el **WIP ajeno** de `Inventario/index.tsx` y `TablaProductos.tsx` (copiado al worktree de integración, sin tocar el original). Durante la tanda otra IA desplegó `L8UP4hxD` y `D-gYUBB1` a mitad de una prueba: por eso esa corrida dio 10/25; se convergió en `be7dd54` y se repitió. **Bundle final verificado en vivo: `index-3Px-CiPa.js` / `index-DRCSlWbD.css`** (22 archivos, solo Nego, `deploy.cjs siumax`).
+- **Pruebas (teclado, sin internet externo, 390/768/1366/1920, 0 errores JS):** `verificar-fusionar-salidas.mjs` **158/158**; `verificar-persistencia-fusion.mjs` **53/53** («Fusionar» guarda, recarga, marca el grupo, desmarca solo una y otra recarga); regresiones ajenas `verificar-cantidad-salida.mjs` **28/28** y `verificar-imprimir-productos-utilidades.mjs` **47/47**. La prueba mide el tamaño del grupo (2, 3 o más) en vez de suponer 3.
+- **Estado de la base al terminar:** grupo de ejemplo restaurado con `ai-scripts/restaurar-grupo-ejemplo.cjs` (+ respaldo propio) a **FUS-0001 → SAL-1547, SAL-1548** (ids 398, 399). Commit local en worktree isolado, **sin push**. Sin Evicamp, ecosistema, panel ni GitHub hasta nuevo OK. Falta la revisión del dueño con **Ctrl+F5**.
+
+---
+
 ## 25/11/2026 (seleccionar toda la cantidad al clic en una fila) · OpenCode (Big Pickle) — HECHO EN LOS CUATRO SITIOS Y SUBIDO
 
 - **Dueño:** *"perfecto pero cuando presiono la cantidad del producto ya agregado que se selecione completo asi para remplazarlo rápido"*. Se aplicó solo al campo de cantidad **de la fila** de Nueva salida: al entrar (clic o Tab) se selecciona todo el número y un segundo clic también lo reselecciona, así escribir directo reemplaza el valor sin borrar a mano. No se tocó el campo de arriba, los botones `−/+`, los ids, el estilo ni la lógica de guardado.
