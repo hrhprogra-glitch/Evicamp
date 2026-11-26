@@ -7,6 +7,15 @@
 
 ---
 
+## 26/11/2026 (PUBLICADO en Nego, Evicamp y ecosistema: categorías + cabecera fija) · OpenCode (Big Pickle)
+
+- **Dueño:** *"perfecto ya quedo ya lo vi ahora subelo esta perfecto"* y confirmó destinos: **negosiumax, Evicamp y ecosistema**. No pidió panel de clientes, ni push, ni SQL.
+- **Copia limpia:** worktree temporal desde `fix-categorias-inventario` (`dc8a84f`, trae el `Map` de categorías y el POS como en la versión publicada) + `src/index.css` de la carpeta principal con la cabecera fija corregida. Commit local de la copia: `78b4329` en `publicar-cabeceras-categorias`. **No se tocó el WIP del dueño.**
+- **Build:** `tsc -b` + `vite build` OK. Bundle **`index-Cb3UU2HL.js` / `index-tRYieeQy.css`**. El CSS minificado contiene `main .tabla-marco table thead,main .tabla-marco .tabla-cabecera{z-index:10;position:sticky;top:0}` y `@media(min-width:1366px){...overflow:clip visible}`.
+- **Deploy:** `node ai-scripts/deploy.cjs siumax`, `... ecosistema` (+ `restaurar-iconos-ecosistema.cjs`, iconos `c159d216…`) y `... evicamp`: **22 archivos por sitio**, sin errores. Nginx recargado por el script.
+- **Verificado en vivo:** los tres sitios sirven `index-Cb3UU2HL.js` / `index-tRYieeQy.css`. En Nego: **11/11 cabeceras con scroll** se quedan arriba al bajar (0 errores JS) y el filtro de Inventario sigue con **35 opciones, 0 duplicados** (una sola «Reducciones»).
+- El dueño debe revisar con **Ctrl+F5** en los tres sitios. Sin push, SQL ni reinicio de API.
+
 ## 26/11/2026 (CORRECCIÓN: el dueño no veía cambio; la primera regla no bastaba) · OpenCode (Big Pickle) — SIN PUBLICAR
 
 - **Dueño:** *"no veo un cambio lo veo igual en todas las tablas"*. **Tenía razón.** La medición anterior (13/13) fue engañosa: medía `top<=2` en vistas que ya tenían `sticky` desde antes, y en las que no, el `sticky` no surtía efecto.

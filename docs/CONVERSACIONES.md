@@ -1815,3 +1815,7 @@
 ## 26/11/2026 (dueño: no veo cambio, las tablas se ven igual)
 - **Dueño:** *"no veo un cambio lo veo igual en todas las tablas"*.
 - **Respuesta:** confirmé que tenía razón. La primera regla no surtía efecto en las tablas con un `div.overflow-x-auto` entre la cabecera y el contenedor que baja. Se corrigió con `overflow-x: clip` solo desde 1366px (en pantallas pequeñas se conserva el scroll horizontal). Verificado 11/11 cabeceras con scroll en el localhost. Sigue sin publicar.
+
+## 26/11/2026 (dueño autoriza subir: cabecera fija + categorías)
+- **Dueño:** *"perfecto ya quedo ya lo vi ahora subelo esta perfecto"*, y al preguntar confirmó: *"subelo a negosiumax, evicamp y ecosistema"*.
+- **Hecho:** publicado solo lo propio desde copia limpia ( categorías sin duplicados + cabecera fija corregida). 22 archivos por sitio; bundle `index-Cb3UU2HL.js` / `index-tRYieeQy.css`. Verificado en vivo. Sin push, SQL ni panel de clientes.
