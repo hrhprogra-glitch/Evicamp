@@ -1786,3 +1786,8 @@
 ## 26/11/2026 (dueño: le faltan encabezados en PC)
 - **Dueño:** *"perfecto pero te falto Código / Tipo Fecha Cliente / Destino Lo que se atiende Personal Asignado Items Devoluciones Estado Acciones"*. Al preguntar dónde, dijo: *"En la PC"*.
 - **Revisión:** los 9 encabezados están visibles en 1101/1280/1366/1437/1679/1920 px, con letra de 14 px y sin cortes. En tablet/celular la fila se oculta y cada dato lleva su etiqueta. No se cambió código: se pidió al dueño que confirme cuál encabezado no ve y que haga Ctrl+F5 por si mira el bundle viejo.
+
+## 26/11/2026 (dueño autoriza publicar solo la parte de OpenCode)
+- **Dueño:** *"perfecto quedo fabuloso tan fabuloso que quiero que lo publiques pero ojo solo tu parte"*, luego *"subelo a negosiumax, ecosistema y evicamp"*. Ante el detalle de la búsqueda: *"sube lo tuyo yo ya subi lo mio tambien"*.
+- **Acción:** publicado SOLO lo propio desde un worktree limpio, con destino explícito a Nego, ecosistema (iconos repuestos, md5 `c159d216…`) y Evicamp; 22 archivos por sitio. Bundle en vivo `index-BO9FGGG3.js` / `index-jeuFo7Yv.css` en los tres.
+- **Límite respetado:** no se tocó el WIP del dueño ni su working copy. En la copía de publicación se revirtió un fragmento de búsqueda que mi commit `29fcac5` había incluido por error; por eso lo publicado usa el orden anterior (código exacto primero). Sin push, SQL ni panel de clientes.

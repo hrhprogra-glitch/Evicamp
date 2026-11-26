@@ -7,6 +7,14 @@
 
 ---
 
+## 26/11/2026 (publicado SOLO lo mío en Nego, ecosistema y Evicamp) · OpenCode (Big Pickle) — HECHO, SIN PUSH NI SQL
+
+- **Dueño:** *"perfecto quedo fabuloso tan fabuloso que quiero que lo publiques pero ojo solo tu parte"* y después *"subelo a negosiumax, ecosistema y evicamp"*. Al aparecer el detalle de la búsqueda confirmó: *"sube lo tuyo yo ya subi lo mio tambien"*.
+- **Detalle resuelto antes de subir:** el build desde un worktree limpio fallaba porque mi commit `29fcac5` había metido sin querer un fragmento del trabajo del dueño (`puntajeBusqueda` en `TerminalBusqueda.tsx`) que depende de su `src/utils/busqueda.ts` sin commitear. **No toqué su archivo ni su working copy**: solo en la copía de publicación se volvió al orden anterior (código exacto primero), para no publicar su trabajo a medias.
+- **Publicación:** desde worktree limpio (`C:/Users/ADMIN/AppData/Local/Temp/opencode/siumax-publicar`), con destino explícito: `deploy.cjs siumax` → `deploy.cjs ecosistema` (+ `restaurar-iconos-ecosistema.cjs`, MD5 `c159d216…` confirmado) → `deploy.cjs evicamp`. **22 archivos por sitio** y los tres sirven en vivo **`index-BO9FGGG3.js` / `index-jeuFo7Yv.css`** (comprobado por HTTP en los 3 dominios).
+- **Incluido:** Caja con título **POS** e ID/hora/cliente/avisos en una fila; Salidas con encabezados de 14 px, datos de 15 px, 9 columnas completas y estados en una línea. **No incluido:** el WIP del dueño (Clientes, Inventario, búsqueda, etc.).
+- **No se hizo:** push a GitHub, SQL de escritura, reinicio de API, panel de clientes ni cambios en su working copy. Falta la revisión del dueño con **Ctrl+F5**.
+
 ## 26/11/2026 (revisión de los 9 encabezados de Salidas en PC) · OpenCode (Big Pickle) — SOLO LECTURA
 
 - **Dueño:** *"perfecto pero te faltó Código / Tipo, Fecha, Cliente / Destino, Lo que se atiende, Personal Asignado, Items, Devoluciones, Estado, Acciones"*. Preguntado dónde, respondió: *"En la PC"*.
