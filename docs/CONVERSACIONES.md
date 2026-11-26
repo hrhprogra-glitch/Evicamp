@@ -1791,3 +1791,7 @@
 - **Dueño:** *"perfecto quedo fabuloso tan fabuloso que quiero que lo publiques pero ojo solo tu parte"*, luego *"subelo a negosiumax, ecosistema y evicamp"*. Ante el detalle de la búsqueda: *"sube lo tuyo yo ya subi lo mio tambien"*.
 - **Acción:** publicado SOLO lo propio desde un worktree limpio, con destino explícito a Nego, ecosistema (iconos repuestos, md5 `c159d216…`) y Evicamp; 22 archivos por sitio. Bundle en vivo `index-BO9FGGG3.js` / `index-jeuFo7Yv.css` en los tres.
 - **Límite respetado:** no se tocó el WIP del dueño ni su working copy. En la copía de publicación se revirtió un fragmento de búsqueda que mi commit `29fcac5` había incluido por error; por eso lo publicado usa el orden anterior (código exacto primero). Sin push, SQL ni panel de clientes.
+
+## 26/11/2026 (dueño: revisar duplicados de categorías en Inventario)
+- **Dueño:** *"en inventario en el filtro de categorias sale reduccion dos veces revisa eso y revisa si hay duplicados en ese lado pero en el buscador de categorias a la hora de crear producto no hay duplicados"*.
+- **Revisión:** en Nego publicado hay 67 opciones con 31 pares duplicados por mayúsculas (`REDUCCIONES`/`Reducciones`). En el localhost ya está corregido en el WIP del dueño (35 opciones). El modal de crear producto no duplica porque pasa todo a mayúsculas antes del `Set`. Sin cambios ni publicación; se le pide que elija entre publicar su arreglo o uno mínimo hecho por OpenCode.

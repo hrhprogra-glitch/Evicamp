@@ -7,6 +7,14 @@
 
 ---
 
+## 26/11/2026 (revisión de categorías duplicadas en el filtro de Inventario) · OpenCode (Big Pickle) — SOLO LECTURA
+
+- **Dueño:** *"en inventario en el filtro de categorias sale reduccion dos veces revisa eso y revisa si hay duplicados en ese lado pero en el buscador de categorias a la hora de crear producto no hay duplicados"*.
+- **Medición (`inspeccionar-categorias-inventario.mjs`, solo lectura):** en **Nego en vivo** el `<select id="filtro-categoria-inventario">` trae **67 opciones**, con **31 pares duplicados** porque la misma categoría viene en mayúsculas desde la tabla `categories` y en mayúscula/minúscula desde los productos. Ejemplos: `REDUCCIONES` + `Reducciones`, `ELÉCTRICO` + `Eléctrico`, `VÁLVULAS Y ELECTROVÁLVULAS` + `Válvulas y Electroválvulas`. No son tildes ni caracteres raros: es solo diferencia de mayúsculas.
+- **Causa:** el bundle publicado (el que subí yo "solo mi parte") usa `Array.from(new Set([...cats, ...dbCategories]))`: un `Set` distingue `REDUCCIONES` de `Reducciones`. **En la compu del dueño ya está arreglado en su WIP** (`src/sections/Inventario/index.tsx` usa un `Map` por mayúsculas): el localhost muestra **35 opciones** y una sola `Reducciones`. O sea, el problema está en los sitios publicados, no en su trabajo local.
+- **Modal Nuevo producto:** `ModalProducto.tsx` convierte todo a mayúsculas antes del `Set` (`Array.from(new Set([...dbCats, ...catsProductos]))`), por eso **no hay duplicados** ahí, justo como dijo el dueño. `ModalProduccion.tsx` usa `includes`, tampoco duplica.
+- **Sin cambios de código ni deploy.** Se propone al dueño: (A) publicar su arreglo de Inventario, o (B) hacer un arreglo mínimo propio desde HEAD y publicar solo eso. Esperando su decisión. Sin push, SQL ni base tocada.
+
 ## 26/11/2026 (publicado SOLO lo mío en Nego, ecosistema y Evicamp) · OpenCode (Big Pickle) — HECHO, SIN PUSH NI SQL
 
 - **Dueño:** *"perfecto quedo fabuloso tan fabuloso que quiero que lo publiques pero ojo solo tu parte"* y después *"subelo a negosiumax, ecosistema y evicamp"*. Al aparecer el detalle de la búsqueda confirmó: *"sube lo tuyo yo ya subi lo mio tambien"*.
