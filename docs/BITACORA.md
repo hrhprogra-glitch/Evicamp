@@ -7,6 +7,11 @@
 
 ---
 
+## 26/11/2026 (regla para futuras subidas) · OpenCode (Big Pickle) — SOLO DOCUMENTACIÓN
+
+- **Dueño:** *"si te digo alguna vez que subas, haz solo tu parte para no afectar lo demás; o me propones subirlo todo si te digo que termine mi parte"*.
+- **Regla guardada:** si el dueño pide subir, OpenCode publica **únicamente sus propios cambios** (Caja/Salidas/POS y documentación), sin tocar el trabajo en paralelo del dueño. Si el dueño dice que **termine su parte**, OpenCode primero **propone subir todo** y espera confirmación explícita. Nunca asumir “subir todo” por defecto.
+
 ## 26/11/2026 (el dueño hará el push y la publicación él) · OpenCode (Big Pickle) — SOLO AVISO, SIN PUSH NI DEPLOY
 
 - **Dueño:** *"yo hare el push y subire todo a ecosistema, evicamp y negosiumax para que todo este actualizado"*.

@@ -1768,3 +1768,7 @@
 ## 26/11/2026 (aclaración sobre los cambios en paralelo)
 - **Dueño:** *"a tranquilo eso es mio mientras trabajabas yo trabajaba aparte"*.
 - **Hecho:** se corrigió la nota: esos cambios sin commitear son **suyos**, no de otra IA. OpenCode no los modificó ni los incluyó en sus commits (`29fcac5`, `828fef2`). Él decide qué subir.
+
+## 26/11/2026 (regla para cuando pida subir)
+- **Dueño:** *"siempre ten cuidado; si te digo alguna vez que subas, haz solo tu parte para no afectar lo demás, o me propones de subirlo todo si te digo que termine mi parte"*.
+- **Acuerdo:** por defecto, subir solo los cambios propios de OpenCode. Si el dueño pide terminar su parte, OpenCode propone subir todo y espera confirmación antes de hacerlo.

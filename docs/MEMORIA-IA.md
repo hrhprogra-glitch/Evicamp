@@ -1353,3 +1353,8 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 ## 78. Publicación la hace el dueño (26/11/2026)
 - El dueño dijo que él hará el push y subirá a ecosistema, Evicamp y negosiumax. No insistir en hacerlo por él ni tocar esos destinos.
 - El dueño aclaró que ese WIP sin commitear es **suyo** (trabajó en paralelo). **No tratarlo como ajeno ni tocarlo.** Nuestros cambios propios están en `29fcac5`, `828fef2` y `af9f83b`; él decide si incluye los suyos en el push.
+
+## 79. Regla de despliegue con trabajo en paralelo (26/11/2026)
+- El dueño trabajó en paralelo mientras yo hacía Caja/Salidas/POS. Sus cambios sin commitear son suyos.
+- Si en el futuro dice **«sube»**, publicar **solo mis cambios** (commits/archivos míos), nunca `git add .` ni un deploy que arrastre su WIP.
+- Si dice **«termina mi parte»**, no subir directo: primero **proponer subir todo** y esperar un OK explícito. Ante duda, preguntar. Nunca asumir permiso para publicar el trabajo del dueño.
