@@ -1321,3 +1321,11 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 
 
   
+
+## 74. Adaptación de todo el sistema a cualquier pantalla (26/11/2026)
+- El dueño quiere que **todo se vea completo y ordenado** en celular, tablet, laptop y PC grande/mediano/pequeño. No basta con que "cabe": no puede haber texto cortado ni desplazamiento horizontal.
+- Este modelo **no puede ver imágenes** que adjunta el dueño. En vez de adivinar, medir la página real con `herramientas-pruebas/medir-adaptacion.mjs` (12 sesiones × 1920/1366/1024/768/390) y usar `diag-overflow.mjs` / `diag-celda.mjs` para encontrar el elemento exacto que se sale.
+- Causa del "apretado": tablas con `min-width` de 980/1547 px, `min-w-full`, celdas con `truncate` y columnas `<th class="w-[90px]">`. Con `table-layout: fixed`, **anular solo `min-width` no basta**: los `w-[…]` de los `<th>` suman el ancho mínimo de la tabla (390 px en Finanzas). Hay que poner `width: auto !important` en esos `<th>` para pantallas ≤480 px.
+- La solución global va **al final de `src/index.css`** (después de todas las reglas y de las capas de Tailwind): `max-width: 100%`, `table-layout: fixed`, `overflow-wrap: anywhere`, `white-space: normal` y `box-sizing: border-box` en tablas/celdas/textos; sin tocar `.tsx`, ids, atajos, colores ni `rounded-none` (SiuMax Sobrio).
+- Verificar siempre dos cosas: (1) `document.documentElement.scrollWidth === clientWidth` en los 5 tamaños, y (2) que las ventanas emergentes (`[role="dialog"]`, `.ventana-sobria`) queden dentro del viewport en 390 y 1366. En celular, una regla `main div[class*="overflow-x-auto"]` puede confundirse con el menú lateral: filtrar por `role="dialog"` antes de medir.
+- `graphify update .` sigue rechazando el grafo por la guarda de encogimiento (4659 nodos nuevos vs 5346 actuales). **No usar `--force`** sin revisar primero qué chunkes faltan.

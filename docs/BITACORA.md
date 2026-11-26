@@ -7,6 +7,17 @@
 
 ---
 
+## 26/11/2026 (pantallas: todo completo y ordenado en las 12 sesiones) · OpenCode (Big Pickle) — HECHO, SOLO LOCAL, SIN PUSH NI DEPLOY
+
+- **Dueño:** *"lo primero si te das cuenta no está bien acomodado se ve como apretado no adaptado a este tipo de pantalla hasta más pequeña arreglar eso en todas las sesiones"*; confirmó *"si tiene que adaptarse bien a celular, tablet, laptop y pc pero en pc a diferentes tipos de tamaños de pantalla grande mediano y pequeño"* y remató: *"siempre tiene que verse completo y ordenado"*.
+- **No pude ver la captura** que adjuntó (este modelo no lee imágenes), así que medí la página real con el navegador: tablas con `min-width` de 980/1547 px, columnas fijas de 90/110/95 px y textos con `truncate` se salían o se cortaban en 390/768/1024/1366.
+- **Cambio:** solo `src/index.css` (sección nueva al final, ~80 líneas). Ancho máximo 100 %, tablas al 100 % con `table-layout: fixed`, celdas y textos que se ajustan en vez de cortarse, columnas con ancho fijo automáticas en celular, menos relleno y letra 11/10 px según la pantalla. **No se tocó** ningún `.tsx`, id, atajo de teclado, color, borde ni esquina: sigue siendo SiuMax Sobrio.
+- **Medición:** `herramientas-pruebas/medir-adaptacion.mjs` recorre las 12 sesiones en **1920, 1366, 1024, 768 y 390 px**. Resultado final: `doc+0` y **ningún elemento desbordado** en los 5 tamaños. El último caso (Finanzas, 10 px de más) se corrigió quitando el ancho fijo de las columnas en celular.
+- **Teclado y ventanas:** `probar-teclado-adaptacion.mjs` confirma que **Tab abre el menú**, **Enter entra a la sesión**, la ficha del cliente cabe entera en 1366 (16…1350 px) y en 390 (8…382 px), y **Escape la cierra**. Sin errores de desborde del documento.
+- **Build:** `npm run build` OK. Bundle local **`index-BiDsK2Il.js` / `index-CCuLyq-b.css`** (antes `index-C7Sz-l91.js` / `index-DRCSlWbD.css`). **No se publicó**: Nego sigue sirviendo el bundle viejo.
+- **`graphify update .`** volvió a negarse por la guarda de encogimiento (4659 nodos nuevos contra 5346 del grafo actual). No se usó `--force`; la caché quedó intacta.
+- **Siguiente paso:** que el dueño mire `http://localhost:5173/` con **Ctrl+F5** en celular/tablet/laptop/PC y diga si autoriza llevar este CSS a Nego (y desde ahí a los demás sitios/GitHub). Sin SQL, sin Evicamp, sin push.
+
 ## 26/11/2026 (revisión completa del VPS y localhost apuntando a Nego) · OpenCode (Big Pickle) — HECHO, SOLO LECTURA EN PRODUCCIÓN
 
 - **Dueño:** pidió *"revisa mi vps para que veas la organización ya que ahí está toda mi base de datos"*, *"recopila la información para tener todo"* y dio permiso explícito para entrar. También preguntó la "contraseña del localhost".

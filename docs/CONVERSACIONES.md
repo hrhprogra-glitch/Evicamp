@@ -1735,3 +1735,9 @@
 - **Explicación del localhost:** no tiene contraseña propia; se abre directo en `http://localhost:5173/`. El login que aparece es el de la base `siumax`.
 - **Decisión del dueño (previa):** usar la URL del VPS Nego en `.env` en vez de Evicamp. Se aplicó y se reinició Vite.
 - **Hallazgo:** Evicamp apunta a la base `postgres` (puerto 3000) y Nego a `siumax` (puerto 3001); eso explica el 406 en `fn_login`. Queda pendiente que el dueño pruebe el login y diga si quiere que se investigue la RPC.
+
+## 26/11/2026 (pantallas apretadas: arreglo en todas las sesiones)
+- **Dueño:** *"lo primero si te das cuenta no está bien acomodado se ve como apretado no adaptado a este tipo de pantalla hasta más pequeña arreglar eso en todas las sesiones"*.
+- **Aclaró el alcance:** *"si tiene que adaptarse bien a celular, tablet, laptop y pc pero en pc a diferentes tipos de tamaños de pantalla grande mediano y pequeño diferentes tipo de muchos modelos"*.
+- **Regla que repitió:** *"siempre tiene que verse completo y ordenado"* (sin cortes ni barras laterales).
+- **Hecho:** arreglo global en `src/index.css` para las 12 sesiones; medido en 1920/1366/1024/768/390, sin desbordes y con teclado intacto. Quedó **solo en local**: falta que el dueño lo revise con **Ctrl+F5** y autorice publicarlo. No se subió a Evicamp/ecosistema/clientes ni a GitHub.
