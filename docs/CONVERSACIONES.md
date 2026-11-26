@@ -1754,3 +1754,8 @@
 - **Hecho con visión:** se confirmó que el círculo rojo de Caja encerraba ID, hora, CLIENTE (F3), Por cobrar, Cotizaciones y Pedidos; el título «Punto de Venta» estaba fuera. Se dejó el título aparte y esos cinco elementos en una fila desde 1280 px.
 - **Salidas:** primero se amplió el rango de tabla compacta para que no se corte a 1437 px; como el dueño siguió viéndola mal, se mejoró el acomodo: direcciones completas, encabezados separados y botones con margen derecho.
 - **Decisión:** solo se tocó Caja, la tabla de Salidas y los scripts de verificación. Inventario y las demás sesiones se dejaron igual. Todo queda en local, sin deploy, push ni base tocada. Siguiente: que el dueño revise con **Ctrl+F5** y autorice llevarlo a Nego.
+
+## 26/11/2026 (el dueño quiere el título también en la fila)
+- **Dueño:** *"perfecto pero me gustaria tambien que todo este en una fila junto con el titulo punto de venta o mejor pon le POS mas corto y lo pones todo en una fila"*.
+- **Hecho:** se cambió «Punto de Venta» por **POS** y se puso en el mismo renglón que ID, hora, cliente y los tres avisos desde 1280 px. En 1280–1679 px se acortan Cobrar/Cotiz/Pedidos y se compactan rellenos; desde 1680 px se ven completos. El ID se había quedado en 0 px a 1280 y luego se iba a la izquierda y tapaba el título; se ajustaron ancho mínimo, gaps y rellenos hasta 1679 px.
+- **Medido:** POS e ID visibles en 1280/1366/1437/1536/1920, todo en una fila, `doc+0`. Salidas sigue bien. Sin deploy, push ni base tocada. Falta el **Ctrl+F5** del dueño y su OK para Nego.

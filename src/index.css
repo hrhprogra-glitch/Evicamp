@@ -1467,3 +1467,22 @@ html.sitio-ecosistema[data-theme="dark"] .paginacion-sobria__boton:focus-visible
   }
   main table[data-tabla-movil="true"] tbody td button { max-width: 100%; }
 }
+
+/* ===== POS: TODO EN UNA FILA CON EL TÍTULO CORTO (26/11/2026) =====
+   Solo el encabezado de Caja. En laptops de 1280–1399 px se usan las palabras cortas
+   (Cobrar / Cotiz / Pedidos) para que POS + ID + hora + cliente + avisos quepan juntos.
+   Desde 1400 px se vuelven a las palabras completas. No toca otras sesiones ni teclado. */
+#avisos-caja .aviso-largo { display: none !important; }
+#avisos-caja .aviso-corto { display: inline !important; }
+@media (min-width: 1680px) {
+  #avisos-caja .aviso-largo { display: inline !important; }
+  #avisos-caja .aviso-corto { display: none !important; }
+}
+@media (min-width: 1280px) and (max-width: 1679px) {
+  #id-pos-caja { min-width: 88px !important; padding-left: 6px !important; padding-right: 6px !important; }
+  #id-pos-caja > div:first-child { width: 6px !important; height: 6px !important; margin-right: 5px !important; }
+  #id-pos-caja span { font-size: 11px !important; letter-spacing: 0 !important; }
+  #hora-pos-caja { padding-left: 6px !important; padding-right: 6px !important; font-size: 11px !important; letter-spacing: 0 !important; }
+  #btn-pos-header-cliente { padding-left: 6px !important; padding-right: 6px !important; }
+  #avisos-caja button { font-size: 11px !important; letter-spacing: 0 !important; }
+}
