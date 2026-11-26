@@ -1352,4 +1352,4 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 
 ## 78. Publicación la hace el dueño (26/11/2026)
 - El dueño dijo que él hará el push y subirá a ecosistema, Evicamp y negosiumax. No insistir en hacerlo por él ni tocar esos destinos.
-- Antes de que él haga `git add .`, avisar: hay WIP ajeno sin commitear en Clientes, Conteos, Cotizaciones, Encargos, Finanzas, Inventario, Proveedores, modales de Punto de Venta, Salidas y Tienda Web. Nuestros cambios propios ya están en `29fcac5` y `828fef2`.
+- El dueño aclaró que ese WIP sin commitear es **suyo** (trabajó en paralelo). **No tratarlo como ajeno ni tocarlo.** Nuestros cambios propios están en `29fcac5`, `828fef2` y `af9f83b`; él decide si incluye los suyos en el push.

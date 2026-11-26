@@ -1764,3 +1764,7 @@
 - **Dueño:** *"yo hare el push y subire todo a ecosistema, evicamp y negosiumax para que todo este actualizado"*.
 - **Acuerdo:** OpenCode no hace push ni deploy. Deja los dos commits locales (`29fcac5` y `828fef2`) y el bundle `index-CvNtUv95.css` / `index-CEotxO_n.js`.
 - **Aviso:** hay cambios sin commitear de otra IA en varias secciones; antes de `git add .` conviene revisar `git status` para no subir trabajo a medias.
+
+## 26/11/2026 (aclaración sobre los cambios en paralelo)
+- **Dueño:** *"a tranquilo eso es mio mientras trabajabas yo trabajaba aparte"*.
+- **Hecho:** se corrigió la nota: esos cambios sin commitear son **suyos**, no de otra IA. OpenCode no los modificó ni los incluyó en sus commits (`29fcac5`, `828fef2`). Él decide qué subir.
