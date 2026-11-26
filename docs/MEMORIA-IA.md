@@ -1,4 +1,4 @@
-# Memoria del proyecto para cualquier IA
+﻿# Memoria del proyecto para cualquier IA
 
 > Esto es lo que Claude aprendió trabajando con el dueño desde octubre de 2026: cómo es él, cómo está armado todo,
 > cómo se trabaja, cómo se prueba y **los errores que ya se cometieron, para no repetirlos**.
@@ -1383,3 +1383,8 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 ## 84. Para medir una cabecera fija, busca el contenedor que realmente scrollea (26/11/2026)
 - En Salidas `window.scrollY` queda en 0: la página scrollea dentro de un `<section class="overflow-y-auto">`. Para verificar el `position: sticky` hay que subir `scrollTop` de ese `<section>` y comparar `getBoundingClientRect().top` del `<thead>` antes (235 px) y después (0 px). Media 600 px y la cabecera sigue visible con 50 filas.
 - El dueño le dio valor a este detalle. Es el molde compartido (`tabla-cabecera sticky top-0 z-10` + fondo `var(--color-ink)`), no código propio de Salidas; se puede reutilizar en otras tablas si lo pide, sin inventar otro estilo.
+
+## 85. Regla única para cabecera fija sin tocar archivos de cada tabla (26/11/2026)
+- En vez de editar 14 componentes con WIP ajeno, basta una regla en `src/index.css`: `main .tabla-marco table thead, main .tabla-marco .tabla-cabecera { position: sticky; top: 0; z-index: 10; }`. Cubre tanto `<thead>` como las cabeceras-grid (Activos, Conteos) y respeta las que ya tenían `sticky` (Tailwind). No cambia colores ni fuentes.
+- Ojo: las vistas que no tienen scroll propio (Finanzas/Historial, Ajustes/Tiendas en la medición) no se puede comprobar que la cabecera "se quede arriba"; no es fallo. Las pestañas de servicios (Rentabilidad, Técnicos, Materiales, Cobranzas) no se ven en Nego porque el tipo de negocio es comercio, pero entran en el mismo selector.
+- Para verificar sin publicar: inyectar la regla con `page.addStyleTag` en el sitio vivo y medir `getComputedStyle(...).position` + `getBoundingClientRect().top` antes/después de subir el `<section overflow-y-auto>`. Así se prueba el CSS real sin desplegar.

@@ -1807,3 +1807,7 @@
 ## 26/11/2026 (dueño: ¿se puede poner la cabecera fija en todas las sesiones con tablas?)
 - **Dueño:** *"entiendo puedes hacer eso en todas las sesiones que tienen tablas ?"*.
 - **Respuesta/propuesta:** sí. Se contaron 15 cabeceras que ya son sticky y unas 14 de sesión que faltan. Propuesta: una regla en `src/index.css` para `.tabla-marco`, sin tocar colores, fuentes, modales ni impresión, desde copia limpia y sin publicar hasta su OK. Queda esperando su decisión.
+
+## 26/11/2026 (dueño autoriza: cabecera fija en todas las tablas de sesión)
+- **Dueño:** eligió *"Sí, en todas las de sesión (Recommended)"*.
+- **Hecho:** una regla en `src/index.css` para `.tabla-marco`, sin tocar colores, fuentes, ventanas ni impresión, desde copia limpia. Quedó en local con build propio; **no publicado**. Pruebas: 13/13 cabeceras con scroll, teclado, 20/20 responsive y sin internet 3/4 (Salidas no cargó datos offline, ajeno al cambio).

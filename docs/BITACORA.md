@@ -7,12 +7,24 @@
 
 ---
 
-## 26/11/2026 (dueño pregunta si la cabecera fija se puede poner en todas las sesiones con tablas) · OpenCode (Big Pickle) — PROPUESTA PENDIENTE DE SU OK
+## 26/11/2026 (cabecera fija en todas las tablas de sesión — HECHO EN LOCAL, SIN PUBLICAR) · OpenCode (Big Pickle)
 
-- **Dueño:** *"entiendo puedes hacer eso en todas las sesiones que tienen tablas ?"*, después de que le explicara el *sticky header* de Salidas.
-- **Inventario hecho solo para decidir (sin tocar código):** de 50 `<thead>` encontrados, 15 ya tienen `sticky` (Clientes, Cotizaciones, Finanzas > Movimientos, Contratos > Contratos, Salidas, Taller, Configuraciones > Usuarios, Inventario > Productos/Compras, Utilidades > Análisis). Unas **14 cabeceras de sesión** no lo tienen: Configuraciones > Tiendas; Contratos > Cobros y Visitas; Finanzas > Historial; Utilidades > Ganancias, Cobranzas, Materiales, Rentabilidad y Técnicos; Inventario > Compras (2) y Activos > Vehículos/Herramientas; Conteos. El resto son ventanas, tickets o comprobantes de impresión.
-- **Propuesta:** una sola regla nueva en `src/index.css` para las cabeceras de `.tabla-marco` (`<thead>` y las cabeceras-grid tipo Activos/Conteos): `position: sticky; top: 0; z-index: 10`, **sin cambiar colores ni fuentes**. No tocar modales, tickets, comprobantes ni impresión. Se haría desde una copia limpia para no pisar su WIP; se probaría con teclado, sin internet y en varios anchos; **no se publicaría hasta que él lo pida**.
-- Esperando su decisión. Sin cambios de código ni deploy.
+- **Dueño:** *"entiendo puedes hacer eso en todas las sesiones que tienen tablas ?"*; eligió la opción **«Sí, en todas las de sesión»** (una regla en `src/index.css`, sin tocar ventanas ni impresión, sin publicar hasta que lo pida).
+- **Cambio:** rama temporal `cabecera-fija-tablas` desde `66ead43`, una sola regla nueva en `src/index.css`, justo después de `.tabla-cabecera`:
+
+  ```css
+  main .tabla-marco table thead,
+  main .tabla-marco .tabla-cabecera { position: sticky; top: 0; z-index: 10; }
+  ```
+
+  No cambia colores ni fuentes; no toca modales, tickets, comprobantes ni impresión. Como en la publicación anterior, en la copia limpia se dejó la búsqueda del POS como en el bundle ya publicado para que compile (su `busqueda.ts` sigue intacto en la carpeta principal).
+- **Build:** `tsc -b` + `vite build` OK con `node_modules/.bin` y `@babel/runtime` ya preparados. Bundle local **`index-qBhesmLh.js` / `index-BWAJjGGt.css`**. No se subió a ningún sitio.
+- **Pruebas (regla inyectada en el navegador sobre Nego en vivo, sin tocar producción):**
+  - **13/13 cabeceras con scroll** quedaron en `top=0 px` al bajar 500 px, en Salidas, Contratos, Taller, Inventario (Productos, Compras, Activos, Herramientas, Vehículos), Conteos, Finanzas/Caja, Utilidades/Productos, Clientes y Encargos. Finanzas/Historial y Ajustes/Tiendas no tienen scroll en esa vista, por eso no aplica. Rentabilidad/Técnicos/Materiales/Cobranzas no se muestran en Nego (son de tipo servicios) pero entran en el mismo selector. 0 errores JS.
+  - Navegación hecha con **teclado** (foco + Enter en el sidebar y en las pestañas).
+  - **Responsive 20/20** vistas OK en 390/768/1366/1920: `doc=0` y cabeceras visibles con `position: sticky`.
+  - **Sin internet (SPA, regla inyectada): 3/4** sesiones con tabla OK; Salidas no mostró cabeceras porque la copia offline de esa vista no cargó datos, ajeno a este cambio. 0 errores JS.
+- Sin push, deploy, SQL ni cambios en el WIP del dueño. Falta que él pida subirlo; trabajo temporal en `C:/Users/ADMIN/AppData/Local/Temp/opencode/siumax-cabeceras` (rama local `cabecera-fija-tablas`).
 
 ## 26/11/2026 (pregunta del dueño: la cabecera de Salidas se queda arriba al bajar) · OpenCode (Big Pickle) — SOLO EXPLICACIÓN
 
