@@ -17,6 +17,7 @@
   - Textos: título «Editar Salida (código)», subtítulo «Cambias esta misma salida: al guardar no se crea otra», botón «Guardar Cambios (F10)» y aviso «actualizada. No se creó otra salida.».
   - `salidaArmada` de la vista previa ya no marca `salida_raiz_id`.
 - **Pruebas (RPC falsas interceptadas, NADA escrito en la base, bundle local `index-DR58drUy.js`):** en ecosistema, «Continuar» sobre SAL-0027 → **solo `fn_editar_salida`**, 12 materiales con id, sin etiqueta «Continuación de SAL-0027» nueva, 0 errores JS. Quitar un material (12→11) → `fn_editar_salida` + `fn_quitar_material_salida`, sin `fn_registrar_salida`. Regresiones: dirección limpia en ecosistema, doble guardado **1 sola llamada** con F10×2 + clic×2, 0 errores JS.
+- **Nota para publicar sin pisar el WIP:** el parche limpio solo choca en dos imports (el dueño ya tiene `puntajeBusqueda` en los modales de Salidas); se dejan `coincideBusqueda, puntajeBusqueda, direccionLegible` juntos. El cambio de `TerminalBusqueda.tsx` era solo para compilar el HEAD limpio y **no** se aplica al WIP.
 - **Pendiente:** que el dueño pida publicar todo junto. Sin push, SQL de escritura, borrado de duplicados ni despliegue.
 
 ## 26/11/2026 (dirección arreglada + causa de los duplicados explicada por el dueño) · OpenCode (Big Pickle) — HECHO EN COPIA LIMPIA, SIN PUBLICAR
@@ -4219,3 +4220,4 @@ ejemplos para copiar). Por cada sección: graphify antes de leer → cambios →
 - **Encuestas (28/10):** las opciones ahora son encuestas para marcar. Probado en la PC el descifrado de un voto simulado y la conversación con Gemini. Subido al VPS. Falta que el dueño lo pruebe en el celular.
 - **Ajustes (28/10, noche):** presentación corta en el primer mensaje; solo cuenta el primer voto de cada encuesta (sin mensajes repetidos). Se descubrió que el cupo gratis de Gemini 2.5 Flash es de 20 al día: ahora el bot usa flash-lite y, si falla, pasa al otro modelo. Probado y subido al VPS. **Pendiente del dueño:** decidir si activa la facturación de Gemini.
 - **Cupo medido:** flash-lite gratis también es de 20 al día (40 en total con los 2 modelos). Se renueva a las 02:00 de Lima (03:00 desde el 1/11). Se agotó a propósito para medirlo, a pedido del dueño.
+

@@ -1405,3 +1405,8 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - La RPC devuelve `{success,id,codigo}`, así que la vista previa sigue teniendo código/id aunque no se creó una salida nueva.
 - Al abrir para editar, conservar fecha y observaciones; solo quitar las etiquetas `CLIENTE:`/`ATIENDE:` para que `obsFinal` las arme una vez. No escribir una nueva etiqueta «Continuación de…».
 - Prueba: interceptar `fn_editar_salida` y `fn_registrar_salida` y comprobar que solo se llama la primera. Si se recarga la página dentro de la prueba con intercepción activa, el bundle local puede dejar de aplicar en el segundo intento; para reabrir, cerrar con Escape en vez de recargar.
+
+## 88. Publicar el arreglo sin pisar el WIP del dueño (26/11/2026)
+- El vivo sirve `index-BWnLCr2a.js` (bundle del WIP del dueño), mientras la copia limpia compila `index-DR58drUy.js`. Si se publica la copia limpia tal cual se pierden sus cambios; hay que llevar los hunks nuevos **encima del WIP**.
+- `git apply --check` del parche limpio sobre el WIP falla solo en dos líneas de import: el dueño agregó `puntajeBusqueda` en `ModalNuevaSalida.tsx` y `ModalDetalleSalida.tsx`. Resolución: dejar `coincideBusqueda, puntajeBusqueda, direccionLegible` juntos. El resto del parche aplica.
+- **NO aplicar en el WIP el hunk de `TerminalBusqueda.tsx`**: ese cambio solo existía para que compilara el HEAD limpio (donde `puntajeBusqueda` no estaba exportado). En el WIP del dueño ya está exportado y su orden por puntaje debe conservarse.
