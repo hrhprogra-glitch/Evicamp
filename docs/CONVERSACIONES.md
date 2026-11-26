@@ -1759,3 +1759,8 @@
 - **Dueño:** *"perfecto pero me gustaria tambien que todo este en una fila junto con el titulo punto de venta o mejor pon le POS mas corto y lo pones todo en una fila"*.
 - **Hecho:** se cambió «Punto de Venta» por **POS** y se puso en el mismo renglón que ID, hora, cliente y los tres avisos desde 1280 px. En 1280–1679 px se acortan Cobrar/Cotiz/Pedidos y se compactan rellenos; desde 1680 px se ven completos. El ID se había quedado en 0 px a 1280 y luego se iba a la izquierda y tapaba el título; se ajustaron ancho mínimo, gaps y rellenos hasta 1679 px.
 - **Medido:** POS e ID visibles en 1280/1366/1437/1536/1920, todo en una fila, `doc+0`. Salidas sigue bien. Sin deploy, push ni base tocada. Falta el **Ctrl+F5** del dueño y su OK para Nego.
+
+## 26/11/2026 (el dueño se encarga de publicar)
+- **Dueño:** *"yo hare el push y subire todo a ecosistema, evicamp y negosiumax para que todo este actualizado"*.
+- **Acuerdo:** OpenCode no hace push ni deploy. Deja los dos commits locales (`29fcac5` y `828fef2`) y el bundle `index-CvNtUv95.css` / `index-CEotxO_n.js`.
+- **Aviso:** hay cambios sin commitear de otra IA en varias secciones; antes de `git add .` conviene revisar `git status` para no subir trabajo a medias.

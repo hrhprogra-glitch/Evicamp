@@ -7,6 +7,13 @@
 
 ---
 
+## 26/11/2026 (el dueño hará el push y la publicación él) · OpenCode (Big Pickle) — SOLO AVISO, SIN PUSH NI DEPLOY
+
+- **Dueño:** *"yo hare el push y subire todo a ecosistema, evicamp y negosiumax para que todo este actualizado"*.
+- **Estado:** los arreglos de Caja/Salidas (`29fcac5`) y del título POS (`828fef2`) quedan **commiteados en local, sin push**. OpenCode **no** sube ni despliega nada.
+- **Aviso importante:** hay cambios sin commitear de otra IA en Clientes, Conteos, Cotizaciones, Encargos, Finanzas, Inventario, Proveedores, Punto de Venta (Modales), Salidas y Tienda Web. Si el dueño hace `git add .`, meterá ese trabajo en curso. Conviene revisar `git status` y confirmar solo lo que quiera publicar.
+- **Bundle local final:** `index-CvNtUv95.css` / `index-CEotxO_n.js`. Si publica Nego, ese es el que debe verse tras Ctrl+F5.
+
 ## 26/11/2026 (Caja en una fila y tabla de Salidas acomodada, revisado con visión) · OpenCode (Big Pickle) — HECHO, SOLO LOCAL, SIN PUSH NI DEPLOY
 
 - **Dueño:** *"en caja lo que seleccione con rojo tiene que estar en una fila todo y la foto de salidas las tablas no aparecen completo..."*, y después: *"sigue viéndose mal la tabla en las salidas si puedes acomodalo mejor"*. Aclaró que **el resto de las sesiones están bien**.
