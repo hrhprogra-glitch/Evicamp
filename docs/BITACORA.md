@@ -7,13 +7,22 @@
 
 ---
 
+## 26/11/2026 (arreglado y publicado: categorías duplicadas en el filtro de Inventario) · OpenCode (Big Pickle) — SIN PUSH NI SQL
+
+- **Dueño:** eligió *«Arreglo mínimo mío y subirlo»* entre las opciones que se le dieron (la otra era publicar su WIP completo de Inventario).
+- **Arreglo mínimo:** rama temporal `fix-categorias-inventario` desde `7269b32`, con un solo cambio propio en `src/sections/Inventario/index.tsx`: `categoriasUnicas` usa ahora un `Map` por mayúsculas y conserva la primera escritura. No se tocó el WIP del dueño en la carpeta principal. En la copia de publicación se dejó la búsqueda del POS como en el bundle ya publicado (`puntajeBusqueda` no entró).
+- **Compilación:** hacía falta `@babel/runtime` en `node_modules` (lo instalé con `--no-save`, sin tocar `package.json` ni el lock) y crear los shims `.bin/tsc.cmd` y `.bin/vite.cmd` porque la junction de `node_modules` no los traía. Build OK: **`index-B3J9UcDR.js` / `index-CaDpoNPS.css`**.
+- **Publicación (destino explícito, uno por uno):** `deploy.cjs siumax`, `deploy.cjs ecosistema` + `restaurar-iconos-ecosistema.cjs` (MD5 `c159d216…` confirmado) y `deploy.cjs evicamp`: **22 archivos por sitio**, sin panel de clientes. Los tres sirven en vivo el bundle nuevo (comprobado por HTTP en los 3 dominios).
+- **Verificación:** en Nego en vivo el `<select id="filtro-categoria-inventario">` pasó de **67 opciones / 31 pares duplicados** a **35 opciones / 0 duplicados**; `REDUCCIONES` y `Reducciones` se unieron en una sola **«Reducciones»**. Con teclado se llega al filtro desde «Nuevo Producto» con ArrowDown (`foco: filtro-categoria-inventario`), sin errores JS. Prueba sin internet `prueba-sin-internet-web.mjs`: pasó 3/4; el cuarto («Caja busca AUTOTEST con copia local») dio 0 productos, igual que el comportamiento del bundle publicado anterior, ajeno a este cambio.
+- Sin push, sin SQL de escritura, sin reinicio de API y sin tocar Clientes/Cotizaciones/Encargos/Finanzas ni los otros WIP del dueño. Falta que el dueño revise con **Ctrl+F5**. `graphify update .` sigue bloqueado por el aviso de 4669 nodos nuevos contra 5346 del grafo guardado; no se usó `--force` sin revisión.
+
 ## 26/11/2026 (revisión de categorías duplicadas en el filtro de Inventario) · OpenCode (Big Pickle) — SOLO LECTURA
 
 - **Dueño:** *"en inventario en el filtro de categorias sale reduccion dos veces revisa eso y revisa si hay duplicados en ese lado pero en el buscador de categorias a la hora de crear producto no hay duplicados"*.
 - **Medición (`inspeccionar-categorias-inventario.mjs`, solo lectura):** en **Nego en vivo** el `<select id="filtro-categoria-inventario">` trae **67 opciones**, con **31 pares duplicados** porque la misma categoría viene en mayúsculas desde la tabla `categories` y en mayúscula/minúscula desde los productos. Ejemplos: `REDUCCIONES` + `Reducciones`, `ELÉCTRICO` + `Eléctrico`, `VÁLVULAS Y ELECTROVÁLVULAS` + `Válvulas y Electroválvulas`. No son tildes ni caracteres raros: es solo diferencia de mayúsculas.
 - **Causa:** el bundle publicado (el que subí yo "solo mi parte") usa `Array.from(new Set([...cats, ...dbCategories]))`: un `Set` distingue `REDUCCIONES` de `Reducciones`. **En la compu del dueño ya está arreglado en su WIP** (`src/sections/Inventario/index.tsx` usa un `Map` por mayúsculas): el localhost muestra **35 opciones** y una sola `Reducciones`. O sea, el problema está en los sitios publicados, no en su trabajo local.
 - **Modal Nuevo producto:** `ModalProducto.tsx` convierte todo a mayúsculas antes del `Set` (`Array.from(new Set([...dbCats, ...catsProductos]))`), por eso **no hay duplicados** ahí, justo como dijo el dueño. `ModalProduccion.tsx` usa `includes`, tampoco duplica.
-- **Sin cambios de código ni deploy.** Se propone al dueño: (A) publicar su arreglo de Inventario, o (B) hacer un arreglo mínimo propio desde HEAD y publicar solo eso. Esperando su decisión. Sin push, SQL ni base tocada.
+- **En ese momento no había cambios de código ni deploy.** Se propuso al dueño: (A) publicar su arreglo de Inventario, o (B) hacer un arreglo mínimo propio desde HEAD y publicar solo eso. **Eligió la opción (B); ver la entrada de arriba.** Sin push, SQL ni base tocada.
 
 ## 26/11/2026 (publicado SOLO lo mío en Nego, ecosistema y Evicamp) · OpenCode (Big Pickle) — HECHO, SIN PUSH NI SQL
 

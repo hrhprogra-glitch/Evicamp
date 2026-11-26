@@ -1795,3 +1795,7 @@
 ## 26/11/2026 (dueño: revisar duplicados de categorías en Inventario)
 - **Dueño:** *"en inventario en el filtro de categorias sale reduccion dos veces revisa eso y revisa si hay duplicados en ese lado pero en el buscador de categorias a la hora de crear producto no hay duplicados"*.
 - **Revisión:** en Nego publicado hay 67 opciones con 31 pares duplicados por mayúsculas (`REDUCCIONES`/`Reducciones`). En el localhost ya está corregido en el WIP del dueño (35 opciones). El modal de crear producto no duplica porque pasa todo a mayúsculas antes del `Set`. Sin cambios ni publicación; se le pide que elija entre publicar su arreglo o uno mínimo hecho por OpenCode.
+
+## 26/11/2026 (dueño elige arreglo mínimo para los duplicados de Inventario)
+- **Dueño:** eligió *"Arreglo mínimo mío y subirlo (Recommended)"* para quitar los duplicados del filtro de categorías, en vez de publicar su WIP completo de Inventario.
+- **Hecho:** arreglo mínimo desde HEAD en una rama limpia (`fix-categorias-inventario`); solo `categoriasUnicas` en `src/sections/Inventario/index.tsx`. Publicado con destino explícito en Nego, ecosistema (iconos repuestos) y Evicamp. En vivo 35 opciones y una sola «Reducciones». Sin push ni SQL.
