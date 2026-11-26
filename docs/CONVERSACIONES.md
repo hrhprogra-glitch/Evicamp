@@ -1777,3 +1777,8 @@
 - **Dueño:** *"revisa también en pantallas porque te enviaré una imagen de salida proceso o finalizado sale mal"*. Envió una captura de 1431x850.
 - **Hecho:** con visión se vio una casilla amarilla alta con "EN PROCESO" y un "0" debajo. El DOM y la geometría demostraron que no era un número: era la O final de "PROCESO" partida en otra línea (badge a 15 px en columna de 6 %).
 - **Arreglo propuesto y aplicado de forma puntual:** badge del estado a 10 px en una línea y columna ESTADO de 8 % en 1101–1679 px. Verificado con visión y mediciones; build OK. Sin publicar ni tocar otras sesiones.
+
+## 26/11/2026 (corrección: NO achicar la letra de Salidas)
+- **Dueño:** *"está bien pero no me entendiste, no te dije que lo hagas más pequeño, sino que acomodes bien el tamaño pero mantuvieras el tamaño grande; no me gustó como quedó porque también arriba las tablas lo hiciste pequeño; que se adapte bien, arréglalo bien"* y aclaró: *"pero hablo de salidas"*.
+- **Corrección:** se descartó el arreglo de 10 px en el badge y 11 px en encabezados. Se restauraron **14 px en encabezados y 15 px en datos** y se cambió el reparto de columnas (ESTADO de 6 % a 12 %, relleno 0.35rem, sin partir palabras). Dueño quiere tamaño grande y bien acomodado, nunca letra chica como salida fácil.
+- **Verificado:** estado en una línea de 24 px en 390/768/1024/1101/1280/1366/1437/1679/1920, sin desbordes; build **`index-6NxNFk5J.css` / `index-BWnLCr2a.js`**. Sin publicar.

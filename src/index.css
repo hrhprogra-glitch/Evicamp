@@ -1248,38 +1248,43 @@ main [data-row="true"] [class*="text-xs"],
   main #tabla-salidas-lista { width: 100%; min-width: 0 !important; }
   main #tabla-salidas-lista table { table-layout: fixed; width: 100% !important; }
   main #tabla-salidas-lista th,
-  main #tabla-salidas-lista td { padding: 0.5rem 0.45rem !important; vertical-align: top; }
-  main #tabla-salidas-lista th { white-space: normal !important; line-height: 1.15; font-size: 11px !important; letter-spacing: 0.04em !important; overflow-wrap: break-word; }
+  main #tabla-salidas-lista td { padding: 0.5rem 0.35rem !important; vertical-align: top; }
+  /* La letra se mantiene grande (14 px en cabeceras, 15 px en datos). Se gana espacio
+     repartiendo columnas y partiendo el texto en palabras, nunca bajando el tamaño. */
+  main #tabla-salidas-lista th { white-space: normal !important; line-height: 1.15 !important; font-size: var(--text-tabla-cabecera) !important; letter-spacing: 0.02em !important; overflow-wrap: normal !important; word-break: normal !important; }
   main #tabla-salidas-lista [data-row="true"] { height: auto !important; min-height: 84px !important; }
-  main #tabla-salidas-lista th:nth-child(1), main #tabla-salidas-lista td:nth-child(1) { width: 12%; }
-  main #tabla-salidas-lista th:nth-child(2), main #tabla-salidas-lista td:nth-child(2) { width: 8%; }
-  main #tabla-salidas-lista th:nth-child(3), main #tabla-salidas-lista td:nth-child(3) { width: 24%; }
-  main #tabla-salidas-lista th:nth-child(4), main #tabla-salidas-lista td:nth-child(4) { width: 16%; }
-  main #tabla-salidas-lista th:nth-child(5), main #tabla-salidas-lista td:nth-child(5) { width: 12%; }
-  main #tabla-salidas-lista th:nth-child(6), main #tabla-salidas-lista td:nth-child(6) { width: 4%; }
-  main #tabla-salidas-lista th:nth-child(7), main #tabla-salidas-lista td:nth-child(7) { width: 7%; }
-  main #tabla-salidas-lista th:nth-child(8), main #tabla-salidas-lista td:nth-child(8) { width: 8%; }
-  main #tabla-salidas-lista th:nth-child(9), main #tabla-salidas-lista td:nth-child(9) { width: 9%; }
+  main #tabla-salidas-lista th:nth-child(1), main #tabla-salidas-lista td:nth-child(1) { width: 9%; }
+  main #tabla-salidas-lista th:nth-child(2), main #tabla-salidas-lista td:nth-child(2) { width: 9%; }
+  main #tabla-salidas-lista th:nth-child(3), main #tabla-salidas-lista td:nth-child(3) { width: 23%; }
+  main #tabla-salidas-lista th:nth-child(4), main #tabla-salidas-lista td:nth-child(4) { width: 11%; }
+  main #tabla-salidas-lista th:nth-child(5), main #tabla-salidas-lista td:nth-child(5) { width: 9%; }
+  main #tabla-salidas-lista th:nth-child(6), main #tabla-salidas-lista td:nth-child(6) { width: 5%; }
+  main #tabla-salidas-lista th:nth-child(7), main #tabla-salidas-lista td:nth-child(7) { width: 11%; }
+  main #tabla-salidas-lista th:nth-child(8), main #tabla-salidas-lista td:nth-child(8) { width: 12%; }
+  main #tabla-salidas-lista th:nth-child(9), main #tabla-salidas-lista td:nth-child(9) { width: 11%; }
   main #tabla-salidas-lista td > span,
   main #tabla-salidas-lista td > div { min-width: 0; max-width: 100%; }
   main #tabla-salidas-lista td:nth-child(2) { white-space: normal !important; }
   main #tabla-salidas-lista td:nth-child(3) span,
   main #tabla-salidas-lista td:nth-child(4) span,
   main #tabla-salidas-lista td:nth-child(5) span,
-  main #tabla-salidas-lista td:nth-child(8) span { display: block; overflow: visible !important; text-overflow: clip !important; white-space: normal !important; overflow-wrap: break-word; word-break: normal; max-width: 100%; }
+  main #tabla-salidas-lista td:nth-child(8) span { display: block; overflow: visible !important; text-overflow: clip !important; white-space: normal !important; overflow-wrap: normal !important; word-break: normal !important; max-width: 100%; }
   main #tabla-salidas-lista th:last-child,
   main #tabla-salidas-lista td:last-child { padding-right: 1.5rem !important; }
   main #tabla-salidas-lista [id^="btn-ver-salida-"] { padding-left: 0.4rem; padding-right: 0.4rem; }
   main #tabla-salidas-lista [id^="btn-ver-general-fusion-"] { padding-left: 0.35rem; padding-right: 0.35rem; }
 }
 
-/* El badge de ESTADO no debe partirse: si "PROCESO" se corta, la O final queda sola
-   en otra línea y se lee como un 0 debajo del estado. Se aplica a todas las tablas
-   de Salidas (no solo a la compacta), sin tocar ids, teclado ni lógica. */
+/* El badge de ESTADO mantiene el tamaño grande de la tabla (15 px). La columna tiene
+   ancho suficiente para "EN PROCESO" y "FINALIZADO" en una línea; si algún día falta
+   espacio, se parte en palabras completas, nunca dejando una letra suelta que parezca
+   un 0. No toca ids, teclado, colores ni lógica. */
 main #tabla-salidas-lista td[data-etiqueta="Estado"] span {
-  font-size: 10px !important;
+  font-size: var(--text-tabla-dato) !important;
   line-height: 1.2 !important;
-  white-space: nowrap !important;
+  white-space: normal !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
 }
 
 @media (max-width: 1100px) {
