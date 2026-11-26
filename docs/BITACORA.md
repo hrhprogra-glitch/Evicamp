@@ -7,6 +7,12 @@
 
 ---
 
+## 26/11/2026 (revisión de los 9 encabezados de Salidas en PC) · OpenCode (Big Pickle) — SOLO LECTURA
+
+- **Dueño:** *"perfecto pero te faltó Código / Tipo, Fecha, Cliente / Destino, Lo que se atiende, Personal Asignado, Items, Devoluciones, Estado, Acciones"*. Preguntado dónde, respondió: *"En la PC"*.
+- **Revisión (`inspeccionar-cabeceras-salidas.mjs`, solo lectura):** en 1101, 1280, 1366, 1437, 1679 y 1920 px los **9 encabezados están presentes**, con `display: table-header-group`, altura 48–53 px, fuente 14 px y `scrollWidth = clientWidth` (ninguno cortado ni superpuesto). Visión confirmó los 9 en los recortes de 1101 y 1437; en 1101 algunos se parten en dos líneas (“CÓDIGO /” + “TIPO”, “LO QUE SE” + “ATIENDE”), pero ninguno falta. En 390/768/1024 la fila se oculta porque la tabla pasa a tarjetas con etiqueta por dato.
+- **Conclusión:** no se hizo cambio de código. Si el dueño no los ve en su PC, lo más probable es el bundle viejo sin Ctrl+F5; se le pidió que confirme cuál no aparece. Sin push ni deploy.
+
 ## 26/11/2026 (Salidas: se quitó el “0” debajo de EN PROCESO sin achicar la letra) · OpenCode (Big Pickle) — HECHO, SOLO LOCAL, SIN PUSH NI DEPLOY
 
 - **Dueño:** envió una captura y avisó: *"revisa también en pantallas porque te enviaré una imagen de salida proceso o finalizado sale mal"*. Después corrigió: *"no me entendiste, no te dije que lo hagas más pequeño, sino que acomodes bien el tamaño pero mantengas el tamaño grande... arriba las tablas lo hiciste pequeño, arreglalo bien"*.

@@ -1782,3 +1782,7 @@
 - **Dueño:** *"está bien pero no me entendiste, no te dije que lo hagas más pequeño, sino que acomodes bien el tamaño pero mantuvieras el tamaño grande; no me gustó como quedó porque también arriba las tablas lo hiciste pequeño; que se adapte bien, arréglalo bien"* y aclaró: *"pero hablo de salidas"*.
 - **Corrección:** se descartó el arreglo de 10 px en el badge y 11 px en encabezados. Se restauraron **14 px en encabezados y 15 px en datos** y se cambió el reparto de columnas (ESTADO de 6 % a 12 %, relleno 0.35rem, sin partir palabras). Dueño quiere tamaño grande y bien acomodado, nunca letra chica como salida fácil.
 - **Verificado:** estado en una línea de 24 px en 390/768/1024/1101/1280/1366/1437/1679/1920, sin desbordes; build **`index-6NxNFk5J.css` / `index-BWnLCr2a.js`**. Sin publicar.
+
+## 26/11/2026 (dueño: le faltan encabezados en PC)
+- **Dueño:** *"perfecto pero te falto Código / Tipo Fecha Cliente / Destino Lo que se atiende Personal Asignado Items Devoluciones Estado Acciones"*. Al preguntar dónde, dijo: *"En la PC"*.
+- **Revisión:** los 9 encabezados están visibles en 1101/1280/1366/1437/1679/1920 px, con letra de 14 px y sin cortes. En tablet/celular la fila se oculta y cada dato lleva su etiqueta. No se cambió código: se pidió al dueño que confirme cuál encabezado no ve y que haga Ctrl+F5 por si mira el bundle viejo.
