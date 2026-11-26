@@ -7,6 +7,16 @@
 
 ---
 
+## 26/11/2026 (continuación en la compu nueva: clon, credenciales y build) · OpenCode (Big Pickle) — HECHO, SIN PUSH NI DEPLOY
+
+- **Dueño:** *"aquí en este rar y en esta dirección te envío … tiene que exportar mi trabajo para avanzarlo desde esta computadora"*. Eligió **clonar en `E:\Programacion\siumax`** y pidió *"ponlo todo dentro de la carpeta siuamax pero ponlo en un .env y .env.vps"*.
+- **Verificación de entrada:** los 8 archivos de `CREDENCIALES-COMPU-ABAJO` pasan tamaño + SHA256 según `CHECKSUMS.txt`. Bundles en vivo: Nego **`index-C7Sz-l91.js` / `index-DRCSlWbD.css`**; Evicamp y ecosistema **`index-D-gYUBB1.js` / `index-DRCSlWbD.css`** (igual que en el parte). Remoto: `fase-11-sunat` y `pase-todos` en `a2b9258`.
+- **Preparación:** clon de `Evicamp.git` en `E:\Programacion\siumax`, checkout `fase-11-sunat` (`a2b9258`). `npm install` OK; `herramientas-pruebas` con `puppeteer-core` instalado y Edge presente en la ruta indicada. `npm run build` OK: **`index-C7Sz-l91.js` / `index-DRCSlWbD.css`**, el mismo bundle que sirve Nego.
+- **Credenciales:** `.env.vps` copiado tal cual desde `env.vps-VPS-FUNCIONA.txt` (hash idéntico; **no** se usó el viejo). Todo lo demás se unió en un solo `.env` en la raíz: comercio + ecosistema + bot de WhatsApp + servicios. Como `comercio.env` y `servicios.env` tenían la misma clave `VITE_SUPABASE_URL` con valores distintos, la de servicios se dejó como `SERVICIOS_VITE_SUPABASE_URL` / `SERVICIOS_VITE_SUPABASE_ANON_KEY` para no sobrescribir ni perder nada. No se pegaron secretos en el chat ni en docs.
+- **Diferencias reportadas:** en esta compu no hay unidad `D:` (hay C, E y F), así que las rutas del instructivo se adaptaron a `E:\Programacion\siumax`. `CLAUDE.md` y `AGENTS.md` **sí vinieron en el clon** de la rama, aunque el parte dijera lo contrario.
+- **Cuidado con `.env`:** el repo ya traía `.env` versionado con las claves de Supabase de comercio. Para que los secretos añadidos no entren en un commit se marcó **`git update-index --skip-worktree .env`** y se agregó `herramientas-pruebas/` a `.git/info/exclude`. `git status` queda limpio; `package-lock.json` se restauró después de que `npm install` lo modificara. Sin push, sin deploy y sin tocar código de la app ni la base.
+- **Siguiente paso (esperando OK del dueño):** revisión con **Ctrl+F5** en los tres sitios y decidir qué se trabaja. Antes de cualquier cambio de código, deploy o push se pedirá confirmación.
+
 ## 26/11/2026 (entrega completa a memoria/GitHub para seguir en otra compu) · OpenCode (Big Pickle) — HECHO
 
 - **Dueño:** *"quiero que todo lo subas a la memoria y a mi github voy a continuar en otra compu y voy exportar todo en esa compu y trabajar ahora ahí"*. Autorizó **push a GitHub** en este momento.

@@ -8,6 +8,15 @@
 
 ---
 
+## 26/11/2026 — Ya en la compu nueva: rutas, credenciales y el `.env` versionado
+- Esta compu **no tiene unidad `D:`** (solo C, E y F). El instructivo de mudanza usa `D:/Programación/siumax/...`, pero el trabajo real quedó en **`E:\Programacion\siumax`**. Si un script trae esa ruta por defecto, pasar la ruta como argumento en vez de crear `D:`.
+- `CLAUDE.md` y `AGENTS.md` **sí están en la rama `fase-11-sunat`** del repo (el parte de entrega decía que había que copiarlos aparte). No hace falta buscarlos en la compu vieja.
+- El repo **ya trae `.env` versionado** con las claves de Supabase de comercio: `.gitignore` solo ignora `.env.vps`. Si se piden credenciales en un solo `.env`, **no dejarlo modificado para git**: usar `git update-index --skip-worktree .env` (local) y no hacer commit de ese archivo. Para crear `.env.vps`, copiar solo `env.vps-VPS-FUNCIONA.txt`; el `VIEJO-NO-USAR` falla SSH.
+- `comercio.env` y `servicios.env` comparten `VITE_SUPABASE_ANON_KEY` pero tienen **URLs de Supabase distintas**. Al unirlos en un solo archivo, conservar la de comercio como `VITE_SUPABASE_URL` y renombrar la otra a `SERVICIOS_VITE_SUPABASE_URL` (+ `SERVICIOS_VITE_SUPABASE_ANON_KEY`); nunca sobrescribir una con la otra sin avisar.
+- `npm install` con npm 11 **modifica `package-lock.json`** en esta compu: restaurarlo (`git restore package-lock.json`) si no se quiere tocar dependencias. `node_modules`, `dist`, `herramientas-pruebas` y `.env` quedan fuera del commit (los dos últimos, vía `.git/info/exclude`).
+- `npm run build` en `fase-11-sunat` (`a2b9258`) reproduce exactamente **`index-C7Sz-l91.js` / `index-DRCSlWbD.css`**, el bundle que sirve Nego. Si el build da otro hash, no desplegar: primero investigar.
+- `graphify update .` en esta compu **falló por la guarda de encogimiento**: el grafo nuevo salió con 4609 nodos y el existente tiene 5346, así que se negó a sobrescribirlo (no se perdió el grafo). Además borró 726 archivos de caché versionados y creó `graphify-out/cache/ast/v0.9.17/`. Si vuelve a pasar, restaurar con **`git restore graphify-out`** y borrar la carpeta nueva antes de commitear. No usar `--force` sin revisar por qué el grafo es más chico.
+
 ## 26/11/2026 — Mudanza a otra compu: qué se puede subir y qué no
 - Con OK del dueño se puede hacer push a GitHub, pero **nunca a `main`, panel ni carpetas de clientes** sin que lo diga en ese momento. La rama de trabajo es `fase-11-sunat`; dejar `pase-todos` apuntando al mismo commit y subir las ramas con trabajo propio (por ejemplo `salidas-6-cambios`) para no perder nada.
 - Antes de empujar, revisar `git log --all --not <rama>`: puede haber commits nuevos de otra sesión en worktrees (`salidas-pantalla-pc`, `fusion-nego-final`). Integrarlos con `git merge --no-ff` y compilar; el bundle generado debe coincidir con lo que ya está en vivo.
