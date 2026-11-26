@@ -1410,3 +1410,9 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - El vivo sirve `index-BWnLCr2a.js` (bundle del WIP del dueño), mientras la copia limpia compila `index-DR58drUy.js`. Si se publica la copia limpia tal cual se pierden sus cambios; hay que llevar los hunks nuevos **encima del WIP**.
 - `git apply --check` del parche limpio sobre el WIP falla solo en dos líneas de import: el dueño agregó `puntajeBusqueda` en `ModalNuevaSalida.tsx` y `ModalDetalleSalida.tsx`. Resolución: dejar `coincideBusqueda, puntajeBusqueda, direccionLegible` juntos. El resto del parche aplica.
 - **NO aplicar en el WIP el hunk de `TerminalBusqueda.tsx`**: ese cambio solo existía para que compilara el HEAD limpio (donde `puntajeBusqueda` no estaba exportado). En el WIP del dueño ya está exportado y su orden por puntaje debe conservarse.
+
+## 89. Publicación final del 26/11/2026 (dirección + continuar + doble guardado)
+- El dueño autorizó «subelo todo» para Nego, ecosistema y Evicamp. Bundle publicado: **`index-DyKoTZi1.js` / `index-DeRs4Lda.css`**, 22 archivos por sitio.
+- Para no perder su WIP se compiló en una copia temporal: se copiaron sus archivos (incluido `puntajeBusqueda`) y solo los 3 archivos nuevos nuestros. En los imports de los modales quedaron `coincideBusqueda, puntajeBusqueda, direccionLegible`. El hunk de `TerminalBusqueda.tsx` NO se aplicó.
+- `ai-scripts/publicar-bundle-combinado.cjs` sube un `dist` ya compilado sin volver a compilar desde `main`; es la forma correcta cuando el dueño tiene trabajo sin commitear. No toca SQL ni reinicia la API; solo recarga nginx.
+- Verificación en vivo: Nego y ecosistema con login real y 0 errores JS. Evicamp: usuario `evi`, clave no disponible; no inventarla ni tocar la base. Comprobar allí el bundle servido y buscar las cadenas `Editar Salida` / `fn_editar_salida` en el JS.

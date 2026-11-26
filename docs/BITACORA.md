@@ -7,6 +7,14 @@
 
 ---
 
+## 26/11/2026 (PUBLICADO en Nego, ecosistema y Evicamp) · OpenCode (Big Pickle) — TODO JUNTO
+
+- **Dueño:** «perfecto subelo todo» y, al confirmar destinos, «a negosiumax, ecosistema y evicamp».
+- **Para no quitarle su trabajo:** se compiló en una copia temporal que tiene **su WIP + los arreglos nuevos**. En los dos modales de Salidas se dejaron juntos `coincideBusqueda`, `puntajeBusqueda` y `direccionLegible`. **No** se aplicó el cambio de `TerminalBusqueda.tsx` (era solo para compilar el HEAD limpio). Su working copy quedó intacta.
+- **Bundle publicado:** **`index-DyKoTZi1.js` / `index-DeRs4Lda.css`**, 22 archivos por sitio. Se subió solo `dist` con `ai-scripts/publicar-bundle-combinado.cjs`; `nginx` recargado. Sin compilar desde `main`, sin SQL de escritura, sin reiniciar la API y sin push.
+- **Verificación:** los tres sitios sirven el bundle nuevo. En vivo, Nego y ecosistema muestran «Editar Salida (…)» y «Guardar Cambios (F10)» con **0 errores JS**. Evicamp no tiene clave de administrador disponible (usuario `evi`); se comprobó el JS servido: mismo bundle, con «Editar Salida» y `fn_editar_salida`. Antes de publicar, pruebas con RPC falsas: dirección limpia, no reaparece al borrar, 1 sola llamada con F10×2+clic×2, edita sin crear copia y devuelve el material quitado.
+- El dueño revisa con **Ctrl+F5**. No se borró ninguna salida repetida.
+
 ## 26/11/2026 («Continuar salida» edita la original —Dueño eligió «Editar la original»—) · OpenCode (Big Pickle) — HECHO EN COPIA LIMPIA, SIN PUBLICAR
 
 - **Decisión del dueño:** al continuar y guardar debe editarse la salida que ya estaba (mismo código), no crearse otra. Además eligió **esperar y publicar todo junto** (dirección + continuar) cuando él lo autorice.
