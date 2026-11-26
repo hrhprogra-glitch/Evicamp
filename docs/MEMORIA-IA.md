@@ -1358,3 +1358,9 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - El dueño trabajó en paralelo mientras yo hacía Caja/Salidas/POS. Sus cambios sin commitear son suyos.
 - Si en el futuro dice **«sube»**, publicar **solo mis cambios** (commits/archivos míos), nunca `git add .` ni un deploy que arrastre su WIP.
 - Si dice **«termina mi parte»**, no subir directo: primero **proponer subir todo** y esperar un OK explícito. Ante duda, preguntar. Nunca asumir permiso para publicar el trabajo del dueño.
+
+## 80. El "0" debajo de EN PROCESO en Salidas era una O partida (26/11/2026)
+- Una imagen puede engañar: lo que parecía un contador "0" dentro del badge amarillo era la **O final de "PROCESO"** en una tercera línea (`EN / PROCES / O`). Confirmar siempre con DOM + `getBoundingClientRect` antes de buscar un dato inexistente.
+- Causa: `src/index.css` fuerza `font-size: var(--text-tabla-dato) !important` (15 px) a todo `[class*="text-[9px]"]` dentro de `[data-row="true"]`. El badge `text-[9px]` de `TablaSalidas.tsx` se dibujaba a 15 px; con la columna al 6 % y `white-space: normal`, la palabra se partía.
+- Arreglo puntual que funcionó: en `main #tabla-salidas-lista td[data-etiqueta="Estado"] span` poner `font-size: 10px !important; line-height: 1.2 !important; white-space: nowrap !important;` y dar 8 % a la columna ESTADO en 1101–1679 px (quitándoselo a "Lo que se atiende"). Badge pasó de 74 px a 18 px de alto.
+- Los modelos de visión devuelven imágenes cacheadas si se reutiliza la misma ruta: usar nombres nuevos para cada recorte.

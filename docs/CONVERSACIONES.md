@@ -1772,3 +1772,8 @@
 ## 26/11/2026 (regla para cuando pida subir)
 - **Dueño:** *"siempre ten cuidado; si te digo alguna vez que subas, haz solo tu parte para no afectar lo demás, o me propones de subirlo todo si te digo que termine mi parte"*.
 - **Acuerdo:** por defecto, subir solo los cambios propios de OpenCode. Si el dueño pide terminar su parte, OpenCode propone subir todo y espera confirmación antes de hacerlo.
+
+## 26/11/2026 (Salidas: captura del estado EN PROCESO / FINALIZADO)
+- **Dueño:** *"revisa también en pantallas porque te enviaré una imagen de salida proceso o finalizado sale mal"*. Envió una captura de 1431x850.
+- **Hecho:** con visión se vio una casilla amarilla alta con "EN PROCESO" y un "0" debajo. El DOM y la geometría demostraron que no era un número: era la O final de "PROCESO" partida en otra línea (badge a 15 px en columna de 6 %).
+- **Arreglo propuesto y aplicado de forma puntual:** badge del estado a 10 px en una línea y columna ESTADO de 8 % en 1101–1679 px. Verificado con visión y mediciones; build OK. Sin publicar ni tocar otras sesiones.

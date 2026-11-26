@@ -1254,11 +1254,11 @@ main [data-row="true"] [class*="text-xs"],
   main #tabla-salidas-lista th:nth-child(1), main #tabla-salidas-lista td:nth-child(1) { width: 12%; }
   main #tabla-salidas-lista th:nth-child(2), main #tabla-salidas-lista td:nth-child(2) { width: 8%; }
   main #tabla-salidas-lista th:nth-child(3), main #tabla-salidas-lista td:nth-child(3) { width: 24%; }
-  main #tabla-salidas-lista th:nth-child(4), main #tabla-salidas-lista td:nth-child(4) { width: 18%; }
+  main #tabla-salidas-lista th:nth-child(4), main #tabla-salidas-lista td:nth-child(4) { width: 16%; }
   main #tabla-salidas-lista th:nth-child(5), main #tabla-salidas-lista td:nth-child(5) { width: 12%; }
   main #tabla-salidas-lista th:nth-child(6), main #tabla-salidas-lista td:nth-child(6) { width: 4%; }
   main #tabla-salidas-lista th:nth-child(7), main #tabla-salidas-lista td:nth-child(7) { width: 7%; }
-  main #tabla-salidas-lista th:nth-child(8), main #tabla-salidas-lista td:nth-child(8) { width: 6%; }
+  main #tabla-salidas-lista th:nth-child(8), main #tabla-salidas-lista td:nth-child(8) { width: 8%; }
   main #tabla-salidas-lista th:nth-child(9), main #tabla-salidas-lista td:nth-child(9) { width: 9%; }
   main #tabla-salidas-lista td > span,
   main #tabla-salidas-lista td > div { min-width: 0; max-width: 100%; }
@@ -1271,6 +1271,15 @@ main [data-row="true"] [class*="text-xs"],
   main #tabla-salidas-lista td:last-child { padding-right: 1.5rem !important; }
   main #tabla-salidas-lista [id^="btn-ver-salida-"] { padding-left: 0.4rem; padding-right: 0.4rem; }
   main #tabla-salidas-lista [id^="btn-ver-general-fusion-"] { padding-left: 0.35rem; padding-right: 0.35rem; }
+}
+
+/* El badge de ESTADO no debe partirse: si "PROCESO" se corta, la O final queda sola
+   en otra línea y se lee como un 0 debajo del estado. Se aplica a todas las tablas
+   de Salidas (no solo a la compacta), sin tocar ids, teclado ni lógica. */
+main #tabla-salidas-lista td[data-etiqueta="Estado"] span {
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
 }
 
 @media (max-width: 1100px) {

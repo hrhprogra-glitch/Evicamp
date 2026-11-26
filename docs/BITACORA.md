@@ -7,6 +7,14 @@
 
 ---
 
+## 26/11/2026 (Salidas: se quitó el “0” debajo de EN PROCESO) · OpenCode (Big Pickle) — HECHO, SOLO LOCAL, SIN PUSH NI DEPLOY
+
+- **Dueño:** envió una captura y avisó: *"revisa también en pantallas porque te enviaré una imagen de salida proceso o finalizado sale mal"*.
+- **Diagnóstico con visión y DOM:** el supuesto “0” **no era un número**: era la **“O” final de “PROCESO”** partida sola en una tercera línea (`EN / PROCES / O`). La columna ESTADO tenía 6 % de ancho y el badge se dibujaba a 15 px por la regla global de letra nueva, así que la palabra no cabía. La casilla amarilla medía **74 px de alto**; el DOM confirmó que no había `::after` ni contador, solo el texto “En Proceso”.
+- **Arreglo (solo `src/index.css`):** el badge de ESTADO va a **10 px, `line-height: 1.2` y `white-space: nowrap`**, y en 1101–1679 px la columna ESTADO pasa de 6 % a **8 %** (se quita 2 % a “Lo que se atiende”, que va de 18 % a 16 %). No se tocaron ids, teclado, colores, orden de columnas ni lógica de salidas/devoluciones.
+- **Verificado:** badge **18 px en una línea**, sin “0” ni letras sueltas, en 1101/1280/1366/1437/1679/1920; visión **OK, confianza 0.95** (también se ve `FINALIZADO` en verde y los botones alineados). `verificar-caja-salidas.mjs`: Caja `unaFila:true` y `doc:0` en 5 tamaños; Salidas `scrollWidth = clientWidth` en 5 tamaños. `npm run build` OK: bundle **`index-qJQ9_3ti.css` / `index-DJNEZUMh.js`** (el JS cambió respecto al anterior porque el build incluye el trabajo en paralelo del dueño).
+- **Importante:** no se publicó nada. Sin push, deploy, SQL ni cambios en Evicamp/ecosistema/clientes. Commit local solo de `src/index.css` y documentación.
+
 ## 26/11/2026 (regla para futuras subidas) · OpenCode (Big Pickle) — SOLO DOCUMENTACIÓN
 
 - **Dueño:** *"si te digo alguna vez que subas, haz solo tu parte para no afectar lo demás; o me propones subirlo todo si te digo que termine mi parte"*.
