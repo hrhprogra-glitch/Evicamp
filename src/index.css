@@ -932,6 +932,16 @@ main .tabla-marco .tabla-cabecera {
   top: 0;
   z-index: 10;
 }
+/* Algunas tablas tienen un contenedor con scroll horizontal por encima de la cabecera;
+   eso impide que `sticky` se pegue al contenedor que baja de verdad. En pantallas grandes
+   (1366px o más) las columnas caben, así que ese scroll horizontal no hace falta y se quita.
+   En pantallas más pequeñas se deja, para no cortar columnas. */
+@media (min-width: 1366px) {
+  main .tabla-marco .overflow-x-auto {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+}
 .tabla-fila {
   border-bottom: 1px solid var(--color-border);
   transition: background-color 0.15s;

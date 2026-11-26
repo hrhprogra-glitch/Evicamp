@@ -7,6 +7,15 @@
 
 ---
 
+## 26/11/2026 (CORRECCIÓN: el dueño no veía cambio; la primera regla no bastaba) · OpenCode (Big Pickle) — SIN PUBLICAR
+
+- **Dueño:** *"no veo un cambio lo veo igual en todas las tablas"*. **Tenía razón.** La medición anterior (13/13) fue engañosa: medía `top<=2` en vistas que ya tenían `sticky` desde antes, y en las que no, el `sticky` no surtía efecto.
+- **Causa encontrada con diagnóstico del DOM:** en Compras, Herramientas, Vehículos, Conteos, Tiendas, Cobros, Visitas e Historial hay un `<div class="... overflow-x-auto custom-scrollbar">` **entre** la cabecera y el `<section>` que baja. Ese contenedor intercepta el `sticky` y la cabecera se iba con el scroll (`top=-150`, `-152`, `-107`) aunque `getComputedStyle` dijera `sticky`.
+- **Corrección en `src/index.css`** (solo localhost, aún sin publicar): dentro de `@media (min-width: 1366px)`, cambiar `overflow-x: auto` por `overflow-x: clip; overflow-y: visible` en `main .tabla-marco .overflow-x-auto`. En pantallas grandes las columnas caben (medido: 0/6 contenedores cortados en 1366 y 1920), y en pantallas pequeñas se deja `auto` para no cortar columnas (medido: en 390/768/1024 sí había cortes con `clip`).
+- **Verificado de nuevo en el localhost sin inyectar nada:** 11/11 cabeceras con scroll se quedan arriba (Salidas, Productos, Compras, Herramientas, Vehículos, Contratos, Conteos, Finanzas, Utilidades, Clientes, Encargos), 0 errores JS. Finanzas se queda en `top=30` por la barra fija de pestañas; Contratos tiene un contenedor de scroll anidado y ya era `sticky` antes, sin regresión. Navegación con teclado.
+- **Lección:** no basta con mirar `getComputedStyle().position === 'sticky'`: hay que comparar el `top` antes y después de scrollear **el contenedor que realmente baja**, y revisar los ancestros con `overflow`. Quedó en `docs/MEMORIA-IA.md`.
+- Sin deploy, push ni SQL. Falta que el dueño pida subirlo.
+
 ## 26/11/2026 (cabecera fija también en el localhost del dueño) · OpenCode (Big Pickle) — SIN PUBLICAR
 
 - **Dueño:** *"perfecto entonces en el localhost lo voy a ver ??"*. Se le explicó que el cambio estaba en una copia aparte y preguntó si lo poníamos en su carpeta; eligió **«Sí, ponlo en el localhost»**.

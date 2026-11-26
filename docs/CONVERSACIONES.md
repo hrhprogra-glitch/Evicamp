@@ -1811,3 +1811,7 @@
 ## 26/11/2026 (dueño autoriza: cabecera fija en todas las tablas de sesión)
 - **Dueño:** eligió *"Sí, en todas las de sesión (Recommended)"*.
 - **Hecho:** una regla en `src/index.css` para `.tabla-marco`, sin tocar colores, fuentes, ventanas ni impresión, desde copia limpia. Quedó en local con build propio; **no publicado**. Pruebas: 13/13 cabeceras con scroll, teclado, 20/20 responsive y sin internet 3/4 (Salidas no cargó datos offline, ajeno al cambio).
+
+## 26/11/2026 (dueño: no veo cambio, las tablas se ven igual)
+- **Dueño:** *"no veo un cambio lo veo igual en todas las tablas"*.
+- **Respuesta:** confirmé que tenía razón. La primera regla no surtía efecto en las tablas con un `div.overflow-x-auto` entre la cabecera y el contenedor que baja. Se corrigió con `overflow-x: clip` solo desde 1366px (en pantallas pequeñas se conserva el scroll horizontal). Verificado 11/11 cabeceras con scroll en el localhost. Sigue sin publicar.
