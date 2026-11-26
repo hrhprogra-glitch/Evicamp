@@ -7,6 +7,13 @@
 
 ---
 
+## 26/11/2026 (cabecera fija también en el localhost del dueño) · OpenCode (Big Pickle) — SIN PUBLICAR
+
+- **Dueño:** *"perfecto entonces en el localhost lo voy a ver ??"*. Se le explicó que el cambio estaba en una copia aparte y preguntó si lo poníamos en su carpeta; eligió **«Sí, ponlo en el localhost»**.
+- **Hecho:** se copió la misma regla de `src/index.css` a la carpeta principal (`E:\Programacion\siumax`). Ese archivo estaba limpio (sin WIP suyo), así que **no se tocó ningún otro archivo suyo**. El servidor de Vite en `http://localhost:5173` ya sirve el CSS nuevo (comprobado por HTTP) y el navegador lo recarga solo, sin reiniciar.
+- **Verificado en el localhost:** 4/4 sesiones (Salidas, Inventario, Contratos, Conteos) muestran la cabecera en `top=0` al bajar, con `position: sticky` y 0 errores JS. Navegación con teclado.
+- Sin deploy, push ni SQL. Los sitios siguen con el bundle anterior hasta que el dueño pida subirlo.
+
 ## 26/11/2026 (cabecera fija en todas las tablas de sesión — HECHO EN LOCAL, SIN PUBLICAR) · OpenCode (Big Pickle)
 
 - **Dueño:** *"entiendo puedes hacer eso en todas las sesiones que tienen tablas ?"*; eligió la opción **«Sí, en todas las de sesión»** (una regla en `src/index.css`, sin tocar ventanas ni impresión, sin publicar hasta que lo pida).

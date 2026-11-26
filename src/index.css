@@ -923,6 +923,15 @@ nav button {
   font-size: 0.875rem;
   border: 0;
 }
+/* Cabecera fija en las tablas de las sesiones (26/11/2026, pedido del dueño).
+   Igual que Salidas: la cabecera se queda arriba al bajar. Solo se aplica al molde
+   .tabla-marco; no toca ventanas, tickets, comprobantes de impresión ni colores/fuentes. */
+main .tabla-marco table thead,
+main .tabla-marco .tabla-cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
 .tabla-fila {
   border-bottom: 1px solid var(--color-border);
   transition: background-color 0.15s;
