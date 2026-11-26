@@ -8,6 +8,14 @@
 
 ---
 
+## 26/11/2026 — Entrar al VPS sí se puede; lo que no se puede es mostrar claves
+- La regla 8 dice **no compartir** el contenido de `.env.vps`; **no prohíbe usarlo**. Si el dueño da permiso, entrar por SSH con `require('./vps.cjs')` y `NodeSSH`, como hacen todos los scripts de `ai-scripts`. No hace falta que vuelva a pegar contraseñas en el chat (y si lo hace, no repetirlas).
+- Para inspeccionar sin romper nada: `ai-scripts/inventario-vps.cjs` genera `docs/INVENTARIO-VPS.md` (solo lectura). `ai-scripts/revisar-api.cjs` muestra el mapeo dominio → puerto → base.
+- **Mapeo real de API (26/11):** `nego`, `siuhub` y `siumax` → puerto **3001** → base **`siumax`** (`/etc/postgrest_siuhub.conf`). `evicamp` → **3000** → base **`postgres`** (`/etc/postgrest.conf`). `ecosistema123` → **3200** → `ecosistema`. `siudemo` → 3199. `servic` → 3002. Evidiary y su prueba son contenedores Docker propios.
+- Por eso un bundle de Nego compilado con `VITE_SUPABASE_URL=https://evicamp.duckdns.org` llama a `fn_login` en la base equivocada y da **406**. El localhost debe apuntar a `https://nego.siumax.duckdns.org`.
+- **Cuidado al inspeccionar configs:** `grep` de `/etc/postgrest*.conf` muestra la URI completa con clave. Extraer solo el nombre de la base con `grep -oE '5432/[A-Za-z0-9_]+' | cut -d/ -f2`; nunca imprimir la URI ni variables de entorno de Docker.
+- Vite lee `.env` **al arrancar**: después de cambiarlo hay que reiniciar el servidor. Ojo con los comandos en segundo plano: si se lanzan con `timeout` corto (15 s) el proceso muere al expirar; usar 60 s para que pase a segundo plano y siga vivo.
+
 ## 26/11/2026 — Ya en la compu nueva: rutas, credenciales y el `.env` versionado
 - Esta compu **no tiene unidad `D:`** (solo C, E y F). El instructivo de mudanza usa `D:/Programación/siumax/...`, pero el trabajo real quedó en **`E:\Programacion\siumax`**. Si un script trae esa ruta por defecto, pasar la ruta como argumento en vez de crear `D:`.
 - `CLAUDE.md` y `AGENTS.md` **sí están en la rama `fase-11-sunat`** del repo (el parte de entrega decía que había que copiarlos aparte). No hace falta buscarlos en la compu vieja.

@@ -1728,3 +1728,10 @@
 - **Se cumplió:** clon en `E:\Programacion\siumax` en `fase-11-sunat` (`a2b9258`), `.env.vps` desde el que funciona (no el viejo) y un único `.env` con comercio + ecosistema + bot + servicios; los dos `VITE_SUPABASE_URL` distintos se conservaron con prefijo `SERVICIOS_` para no perder ninguno. Checksums 8/8, build OK y bundles en vivo iguales a los del parte. `herramientas-pruebas` listo con puppeteer-core.
 - **Se reportó:** esta compu no tiene unidad `D:`; el instructivo se adaptó a `E:`. El `.env` del repo estaba versionado: se marcó `skip-worktree` para no commitear secretos. `CLAUDE.md` y `AGENTS.md` sí vinieron en el clon (el parte decía que no).
 - **Queda:** el dueño debe revisar con **Ctrl+F5** los tres sitios y pedir la siguiente tanda. Cualquier cambio de código, deploy o push necesita su OK en ese momento.
+
+## 26/11/2026 (revisión del VPS: "quiero que revises todo y recopiles la información")
+- **Dueño:** *"perfecto hazlo tu revisa todo y recopila la información para tener todo y asi pedirte información cuando lo necesite"*, y se quejó con razón de que se le dijera varias veces que no se podía. Aclaró que **él da permiso para entrar a su VPS**. También preguntó por la "contraseña del localhost".
+- **Se hizo:** entrar por SSH con `ai-scripts/vps.cjs` (usa `.env.vps` local, nada de claves en el chat). Se crearon `inventario-vps.cjs` y `revisar-api.cjs` y se generó `docs/INVENTARIO-VPS.md`. Solo lectura: ni un `scp`, ni `systemctl restart`, ni SQL de escritura, ni deploy, ni push.
+- **Explicación del localhost:** no tiene contraseña propia; se abre directo en `http://localhost:5173/`. El login que aparece es el de la base `siumax`.
+- **Decisión del dueño (previa):** usar la URL del VPS Nego en `.env` en vez de Evicamp. Se aplicó y se reinició Vite.
+- **Hallazgo:** Evicamp apunta a la base `postgres` (puerto 3000) y Nego a `siumax` (puerto 3001); eso explica el 406 en `fn_login`. Queda pendiente que el dueño pruebe el login y diga si quiere que se investigue la RPC.

@@ -7,6 +7,16 @@
 
 ---
 
+## 26/11/2026 (revisión completa del VPS y localhost apuntando a Nego) · OpenCode (Big Pickle) — HECHO, SOLO LECTURA EN PRODUCCIÓN
+
+- **Dueño:** pidió *"revisa mi vps para que veas la organización ya que ahí está toda mi base de datos"*, *"recopila la información para tener todo"* y dio permiso explícito para entrar. También preguntó la "contraseña del localhost".
+- **Acceso:** se usó el script local `ai-scripts/vps.cjs`, que lee las credenciales de `.env.vps` **sin mostrarlas en el chat**. No se pegaron ni se guardaron claves en los docs.
+- **Inventario:** creado `ai-scripts/inventario-vps.cjs` (solo lectura) y el informe `docs/INVENTARIO-VPS.md`. Contiene sistema (Ubuntu 24.04.4, 40 días uptime, disco 26%, RAM 3.8 Gi), servicios activos (nginx, PostgreSQL 16, PostgREST, Docker, panel, facturador SUNAT, Fail2Ban), 3 contenedores, carpetas de `/var/www`, bundles activos por sitio, certificados SSL, 8 bases con tamaño/tablas/filas, roles (sin contraseñas) y respaldos.
+- **Bases:** `postgres` 63 MB/55 tablas, `creditaltoque` 38 MB/43, `ecosistema` 30 MB/74, `siumax` 16 MB/58, `servic` 12 MB/55, `siudemo` 11 MB/36, `evidiary` 10 MB/7, `evidiary_prueba` 8.4 MB/8. Respaldos automáticos diarios 03:00 y manuales en `/root/backups`.
+- **Hallazgo clave del 406:** creado `ai-scripts/revisar-api.cjs` (solo lectura) para ver a qué base apunta cada dominio. `nego.siumax.duckdns.org` y `siuhub` → puerto 3001 → base **`siumax`**; `ecosistema123` → 3200 → `ecosistema`; `evicamp.duckdns.org` → 3000 → base **`postgres`**. Por eso el login desde el bundle de Nego contra `evicamp` daba 406: la RPC `fn_login` no está en esa base. Se corrigió `.env` a `https://nego.siumax.duckdns.org` y se reinició Vite: **localhost:5173 ya apunta a la base correcta**.
+- **No hecho a propósito:** ni un solo `scp`, `systemctl restart`, SQL de escritura, deploy, push ni cambio de código de la app. El localhost no tiene contraseña propia: se abre directo; el login es el de la base `siumax`.
+- **Siguiente paso:** que el dueño entre a `http://localhost:5173/`, haga Ctrl+F5 y pruebe el login. Si sigue fallando, revisar la RPC `fn_login` en `siumax` (sin tocar nada sin su OK).
+
 ## 26/11/2026 (continuación en la compu nueva: clon, credenciales y build) · OpenCode (Big Pickle) — HECHO, SIN PUSH NI DEPLOY
 
 - **Dueño:** *"aquí en este rar y en esta dirección te envío … tiene que exportar mi trabajo para avanzarlo desde esta computadora"*. Eligió **clonar en `E:\Programacion\siumax`** y pidió *"ponlo todo dentro de la carpeta siuamax pero ponlo en un .env y .env.vps"*.
