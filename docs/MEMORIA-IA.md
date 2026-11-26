@@ -1398,3 +1398,10 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - El sitio vivo servía `index-BWnLCr2a.js` mientras mi compilación local era `index-DzpAI1YO.js`. La primera versión de la prueba interceptaba solo si el nombre del asset existía en `dist/`, así que **no sustituía nada** y estaba midiendo el código del sitio, no mi arreglo.
 - Regla: en las pruebas con `page.setRequestInterception`, tomar el primer `index-*.js` y `index-*.css` del `dist/` local y responder con él para **todo** request `assets/index-*.js|css`, sin importar el hash que pida el HTML. Imprimir al inicio qué bundle local se está sirviendo.
 - Lección extra: para probar el bloqueo anti doble guardado, la respuesta falsa de la RPC debe tardar ~800 ms; si responde al instante, el primer guardado termina antes del segundo F10 y la prueba da un falso fallo.
+
+## 87. «Continuar salida»: editar, no crear copia (26/11/2026)
+- El dueño confirmó que los duplicados venían de «Continuar salida». Su decisión: **editar la salida original (mismo código)** y publicar todo junto después. No borrar registros repetidos sin su OK exacto.
+- `fn_editar_salida(p_salida_id, p_datos, p_usuario)` ya está en las 3 bases y con permisos. Para que actualice (no inserte) hay que enviar `id` en cada ítem; la RPC ajusta stock por **diferencia** de cantidad, no descuenta dos veces. Los materiales que se quitan con la X se devuelven aparte con `fn_quitar_material_salida` **después** de que la edición termine bien.
+- La RPC devuelve `{success,id,codigo}`, así que la vista previa sigue teniendo código/id aunque no se creó una salida nueva.
+- Al abrir para editar, conservar fecha y observaciones; solo quitar las etiquetas `CLIENTE:`/`ATIENDE:` para que `obsFinal` las arme una vez. No escribir una nueva etiqueta «Continuación de…».
+- Prueba: interceptar `fn_editar_salida` y `fn_registrar_salida` y comprobar que solo se llama la primera. Si se recarga la página dentro de la prueba con intercepción activa, el bundle local puede dejar de aplicar en el segundo intento; para reabrir, cerrar con Escape en vez de recargar.

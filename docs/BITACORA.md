@@ -7,6 +7,18 @@
 
 ---
 
+## 26/11/2026 («Continuar salida» edita la original —Dueño eligió «Editar la original»—) · OpenCode (Big Pickle) — HECHO EN COPIA LIMPIA, SIN PUBLICAR
+
+- **Decisión del dueño:** al continuar y guardar debe editarse la salida que ya estaba (mismo código), no crearse otra. Además eligió **esperar y publicar todo junto** (dirección + continuar) cuando él lo autorice.
+- **Comprobación previa (solo lectura, `ai-scripts/inspeccionar-fn-editar-salida.cjs`, `lock_timeout=3s`):** `fn_editar_salida(bigint,jsonb,text)`, `fn_quitar_material_salida(bigint,bigint,text)` y `fn_descontar_stock_salida` existen **en `siumax`, `ecosistema` y `postgres` (Evicamp)** con EXECUTE para `anon`/`web_anon`, y `fn_permisos_servicios` ya incluye `/rpc/fn_editar_salida`. **No hace falta tocar SQL ni la base.**
+- **Cambio (rama `arreglar-direccion-salidas`, commit `4610d6b`, worktree limpio):**
+  - `ModalNuevaSalida.tsx`: al abrir desde «Continuar salida» ahora se conserva la fecha y las observaciones originales (se limpian solo las etiquetas `CLIENTE:`/`ATIENDE:` para volver a armarlas una vez); **ya no se escribe «Continuación de…» nueva**. Los materiales traen `id` y `batch_id` para que `fn_editar_salida` actualice las filas existentes y ajuste stock por diferencia.
+  - Guardado: si hay `salidaRaiz`, llama a **`fn_editar_salida`** (`p_salida_id`, `p_datos`, `p_usuario`); si no, sigue llamando a `fn_registrar_salida`. Los materiales que se quitan con la X se devuelven con `fn_quitar_material_salida` **después** de editar con éxito.
+  - Textos: título «Editar Salida (código)», subtítulo «Cambias esta misma salida: al guardar no se crea otra», botón «Guardar Cambios (F10)» y aviso «actualizada. No se creó otra salida.».
+  - `salidaArmada` de la vista previa ya no marca `salida_raiz_id`.
+- **Pruebas (RPC falsas interceptadas, NADA escrito en la base, bundle local `index-DR58drUy.js`):** en ecosistema, «Continuar» sobre SAL-0027 → **solo `fn_editar_salida`**, 12 materiales con id, sin etiqueta «Continuación de SAL-0027» nueva, 0 errores JS. Quitar un material (12→11) → `fn_editar_salida` + `fn_quitar_material_salida`, sin `fn_registrar_salida`. Regresiones: dirección limpia en ecosistema, doble guardado **1 sola llamada** con F10×2 + clic×2, 0 errores JS.
+- **Pendiente:** que el dueño pida publicar todo junto. Sin push, SQL de escritura, borrado de duplicados ni despliegue.
+
 ## 26/11/2026 (dirección arreglada + causa de los duplicados explicada por el dueño) · OpenCode (Big Pickle) — HECHO EN COPIA LIMPIA, SIN PUBLICAR
 
 - **Dueño (mensaje nuevo):** «encontre un error y explicación de las duplicaciones cuando continuo la salida se y guardo se crea otra no es que edita la que ya estaba crea otra y la otra la deja haciendo duplicado que confunden». O sea: la causa de los duplicados no es un doble clic, sino que **«Continuar salida» crea una salida nueva** (`fn_registrar_salida` con `salida_raiz_id`) en vez de editar la original.
