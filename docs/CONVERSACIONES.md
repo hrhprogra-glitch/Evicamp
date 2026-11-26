@@ -1741,3 +1741,10 @@
 - **Aclaró el alcance:** *"si tiene que adaptarse bien a celular, tablet, laptop y pc pero en pc a diferentes tipos de tamaños de pantalla grande mediano y pequeño diferentes tipo de muchos modelos"*.
 - **Regla que repitió:** *"siempre tiene que verse completo y ordenado"* (sin cortes ni barras laterales).
 - **Hecho:** arreglo global en `src/index.css` para las 12 sesiones; medido en 1920/1366/1024/768/390, sin desbordes y con teclado intacto. Quedó **solo en local**: falta que el dueño lo revise con **Ctrl+F5** y autorice publicarlo. No se subió a Evicamp/ecosistema/clientes ni a GitHub.
+
+## 26/11/2026 (visión artificial y "no toques lo que ya estaba bien")
+- **Dueño:** *"opencode-vision opencode-image-proxy instala o usa eso"* y después: *"si también modificastes muchas cosas que ya estaban bien por favor arregla eso inventario estaba perfecto y muchas sesiones también"*.
+- **Hecho:** se instalaron los dos plugins de OpenCode. El modelo con visión que sí está disponible es **Nemotron 3.5 Super VL Free**; quedó guardado para futuras sesiones. Con capturas reales se revisaron las pantallas.
+- **Lo que encontró la visión:** el arreglo global anterior partía palabras en Clientes y superponía texto en Finanzas en celular, aunque las mediciones de ancho dieran cero desbordes.
+- **Decisión por el aviso del dueño:** se deshizo ese arreglo global y se volvió al estado anterior (`ecafca1`). Ahora solo Clientes y Finanzas se convierten en fichas ordenadas en celular; **Inventario y todas las demás sesiones quedaron como estaba**.
+- **Queda solo en local**, sin deploy, push ni base tocada. Siguiente: que el dueño revise con **Ctrl+F5** y autorice llevarlo a Nego.

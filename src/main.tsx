@@ -7,6 +7,7 @@ import { iniciarAppInstalable } from './utils/instalarApp'
 import { vigilarSuspension } from './db/supabase'
 import { iniciarSubidaAutomatica } from './utils/sinInternet'
 import { instalarDialogos } from './utils/dialogos'
+import { instalarTablasMovil } from './utils/tablasMovil'
 import { iniciarCacheFotos } from './utils/cacheFotos'
 
 // App instalable (PWA): service worker + aviso "Instalar app"
@@ -19,6 +20,9 @@ vigilarSuspension()
 iniciarSubidaAutomatica()
 // Avisos y confirmaciones dentro del sistema (no ventanas de Windows): el selector de teclado no se pierde
 instalarDialogos()
+
+// Solo Clientes y Finanzas: fichas ordenadas en celular, sin tocar las demás sesiones
+instalarTablasMovil()
 
 // Caja de fotos local: carga las fotos guardadas en el disco de la PC a la memoria (0 ms)
 void iniciarCacheFotos()

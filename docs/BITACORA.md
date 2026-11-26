@@ -7,6 +7,16 @@
 
 ---
 
+## 26/11/2026 (visión artificial: arreglo puntual de Clientes y Finanzas, sin tocar Inventario) · OpenCode (Big Pickle) — HECHO, SOLO LOCAL, SIN PUSH NI DEPLOY
+
+- **Dueño:** pidió *"instala o usa"* `opencode-vision` / `opencode-image-proxy` y avisó: *"si también modificaste muchas cosas que ya estaban bien, por favor arregla eso; Inventario estaba perfecto y muchas sesiones también"*.
+- **Herramientas:** instalados los plugins globales `opencode-vision` y `@sami7786/opencode-image-proxy`. Como el modelo elegido primero (`gemini-4-neon`) no está habilitado en este OpenCode, se guardó **Nemotron 3.5 Super VL Free** (`opencode/nemotron-3.5-super-vl-free`) como modelo de visión. El proxy quedó configurado para el modelo actual (`opencode/big-pickle`). No se pegaron claves ni secretos.
+- **Revisión visual real:** con capturas de la página en 390/1366/1920 px, el modelo con visión detectó que el arreglo global anterior partía palabras en **Clientes** y superponía texto en **Finanzas** en celular. Las mediciones de ancho no lo veían: `doc+0`, pero el texto estaba roto por dentro.
+- **Corrección:** se **deshizo el CSS global** anterior y se volvió al estado `ecafca1`. Ahora solo se marcan dos tablas (`#tabla-movimientos-caja` y la de filas `data-fila-cliente`) con etiquetas tomadas de sus `<th>`, y un bloque CSS **solo para esas dos tablas** las convierte en fichas ordenadas en celular. `src/main.tsx` llama al nuevo `src/utils/tablasMovil.ts`. **Inventario, Pos, Encargos, Agenda, Salidas, Contratos, Taller, Conteos, Utilidades y Configuraciones quedan como estaban.**
+- **Verificación:** la revisión con visión ahora dice **_clientes y finanzas bien en 390 px, sin palabras partidas ni superposición_, confianza 0.95**. `medir-adaptacion.mjs`: `doc+0` en los 5 tamaños; en 390 Clientes, Inventario y Finanzas ya no tienen desbordes internos. `npm run build` OK: bundle local **`index-DWt3OQK1.js` / `index-xCG7cGWS.css`** (solo en esta compu). Teclado y lógica intactos.
+- **Importante:** el commit anterior `14e7a73` metía el arreglo global; este trabajo lo revierte y deja solo el arreglo puntual. **No se publicó**: Nego sigue con el bundle viejo. Sin push, deploy, SQL ni cambios en Evicamp/ecosistema/clientes.
+- **Siguiente paso:** que el dueño mire `http://localhost:5173/` con **Ctrl+F5** en celular (Clientes y Finanzas) y confirme que Inventario y las demás sesiones siguen igual. Con su OK se lleva a Nego primero; los demás sitios y GitHub esperan otra autorización.
+
 ## 26/11/2026 (pantallas: todo completo y ordenado en las 12 sesiones) · OpenCode (Big Pickle) — HECHO, SOLO LOCAL, SIN PUSH NI DEPLOY
 
 - **Dueño:** *"lo primero si te das cuenta no está bien acomodado se ve como apretado no adaptado a este tipo de pantalla hasta más pequeña arreglar eso en todas las sesiones"*; confirmó *"si tiene que adaptarse bien a celular, tablet, laptop y pc pero en pc a diferentes tipos de tamaños de pantalla grande mediano y pequeño"* y remató: *"siempre tiene que verse completo y ordenado"*.

@@ -1399,84 +1399,66 @@ html.sitio-ecosistema[data-theme="dark"] .paginacion-sobria__boton:focus-visible
   box-shadow: 0 0 0 2px #0EA5E9, 0 0 8px rgba(14, 165, 233, 0.35) !important;
 }
 
-/* ==========================================================================
-   ADAPTACIÓN TOTAL (26/11/2026): "siempre tiene que verse completo y ordenado".
-   Válido para celular, tablet, laptop y PC grande/mediana/pequeña.
-   La página nunca se ensancha: las tablas caben en el ancho disponible y el
-   texto se ajusta en vez de cortarse. No toca ids, colores, atajos ni el
-   estilo SiuMax Sobrio (sin esquinas redondeadas).
-   ========================================================================== */
-html, body, #root { max-width: 100%; }
-main, main section, main .tabla-marco { max-width: 100%; overflow-x: hidden; }
-
-/* Ancho fijo de tablas (980px, 1547px...) solo en pantallas muy anchas: se aplica en TODOS los tamaños */
-main table { width: 100% !important; min-width: 0 !important; max-width: 100% !important; table-layout: fixed; }
-main [class*="min-w-"] { min-width: 0 !important; }
-main button, main input, main select { min-width: 0 !important; }
-main th, main td, main span, main p {
-  min-width: 0 !important;
-  max-width: 100%;
-  box-sizing: border-box !important;
-  white-space: normal !important;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-main th > *, main td > *, main .tabla-fila > *,
-main .grid > *, main .flex > *, main [data-row="true"] > * { min-width: 0; max-width: 100%; }
-main button { max-width: 100%; }
-main .truncate { overflow: visible !important; text-overflow: clip !important; white-space: normal !important; }
-
-/* Laptop pequeña y tablet: menos relleno, todo sigue en su lugar */
-@media (max-width: 1700px) {
-  main th, main td { padding: 0.4rem 0.35rem !important; }
-}
-@media (max-width: 1200px) {
-  main th, main td { font-size: 11px !important; }
-  main .pestanas-sobrias, main .pestanas-filtro { flex-wrap: wrap !important; }
-}
-
-/* Celular y tablet en vertical */
+/* --------------------------------------------------------------------------
+   CELULAR — SOLO Clientes y Finanzas (26/11/2026).
+   El resto de las sesiones, incluido Inventario, queda como estaba.
+   Estas dos tablas se muestran como fichas con etiqueta para que nada se
+   parta letra por letra ni se superponga. No cambia ids ni atajos.
+   -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
-  main section { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
-  main th, main td { padding: 0.25rem 0.15rem !important; font-size: 10px !important; }
-  main .boton-cabecera,
-  main .pestanas-sobrias > button,
-  main .pestanas-filtro > button {
-    padding-left: 0.4rem !important;
-    padding-right: 0.4rem !important;
-    font-size: 10px !important;
+  main table[data-tabla-movil="true"] {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+  }
+  main table[data-tabla-movil="true"] thead { display: none !important; }
+  main table[data-tabla-movil="true"] tbody { display: block; width: 100%; }
+  main table[data-tabla-movil="true"] tbody tr {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--color-border);
+    border-bottom-width: 2px;
+    padding: 0.25rem 0.35rem;
+    margin-bottom: 0.5rem;
+  }
+  main table[data-tabla-movil="true"] tbody td {
+    display: grid !important;
+    grid-template-columns: minmax(78px, 34%) minmax(0, 1fr);
+    align-items: start;
+    gap: 0.35rem;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 0.22rem 0.15rem !important;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left !important;
+    font-size: 11px !important;
+    line-height: 1.25;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
     white-space: normal !important;
   }
-}
-
-/* Celular angosto (hasta 480px): último ajuste para que ni una celda se salga */
-@media (max-width: 480px) {
-  main section { padding-left: 0.25rem !important; padding-right: 0.25rem !important; }
-  main table, main th, main td { font-size: 10px !important; padding: 0.15rem 0.1rem !important; }
-  main .grid, main .tabla-cabecera.grid { gap: 0 !important; grid-template-columns: repeat(12, minmax(0, 1fr)) !important; }
-  main .tabla-cabecera.grid > *, main .grid.grid-cols-12 > * {
-    white-space: normal !important;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    font-size: 10px !important;
+  main table[data-tabla-movil="true"] tbody td:last-child { border-bottom: 0; }
+  main table[data-tabla-movil="true"] tbody td::before {
+    content: attr(data-etiqueta-movil);
+    display: block;
+    font-size: 9px !important;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
   }
-  main td { padding: 0.1rem 0.05rem !important; }
-  main td button { padding: 0 !important; gap: 0 !important; }
-  main td svg { width: 14px !important; height: 14px !important; }
-}
-
-/* Finanzas: la tabla con min-w-full era 10px más ancha que su marco en celular */
-@media (max-width: 480px) {
-  main table.min-w-full { font-size: 9px !important; letter-spacing: 0 !important; }
-  main table.min-w-full th, main table.min-w-full td { padding: 0 !important; }
-}
-
-/* Asegurar que ninguna tabla dentro de un marco con scroll supere el marco */
-main div[class*="overflow-x-auto"] > table,
-main div[class*="overflow-x-auto"] > div > table { width: 100% !important; min-width: 0 !important; max-width: 100% !important; }
-
-@media (max-width: 480px) {
-  /* Las columnas con ancho fijo (w-[90px], w-[110px]...) sumaban 390px y forzaban la tabla a salirse */
-  main th[class*="w-["] { width: auto !important; }
-  main table { width: 100% !important; max-width: 100% !important; }
+  main table[data-tabla-movil="true"] tbody td[colspan]::before { display: none !important; }
+  main table[data-tabla-movil="true"] tbody td span,
+  main table[data-tabla-movil="true"] tbody td p,
+  main table[data-tabla-movil="true"] tbody td div {
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+  }
+  main table[data-tabla-movil="true"] tbody td button { max-width: 100%; }
 }
