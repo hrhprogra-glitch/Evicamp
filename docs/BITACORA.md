@@ -7,6 +7,13 @@
 
 ---
 
+## 26/11/2026 (dueño pregunta si la cabecera fija se puede poner en todas las sesiones con tablas) · OpenCode (Big Pickle) — PROPUESTA PENDIENTE DE SU OK
+
+- **Dueño:** *"entiendo puedes hacer eso en todas las sesiones que tienen tablas ?"*, después de que le explicara el *sticky header* de Salidas.
+- **Inventario hecho solo para decidir (sin tocar código):** de 50 `<thead>` encontrados, 15 ya tienen `sticky` (Clientes, Cotizaciones, Finanzas > Movimientos, Contratos > Contratos, Salidas, Taller, Configuraciones > Usuarios, Inventario > Productos/Compras, Utilidades > Análisis). Unas **14 cabeceras de sesión** no lo tienen: Configuraciones > Tiendas; Contratos > Cobros y Visitas; Finanzas > Historial; Utilidades > Ganancias, Cobranzas, Materiales, Rentabilidad y Técnicos; Inventario > Compras (2) y Activos > Vehículos/Herramientas; Conteos. El resto son ventanas, tickets o comprobantes de impresión.
+- **Propuesta:** una sola regla nueva en `src/index.css` para las cabeceras de `.tabla-marco` (`<thead>` y las cabeceras-grid tipo Activos/Conteos): `position: sticky; top: 0; z-index: 10`, **sin cambiar colores ni fuentes**. No tocar modales, tickets, comprobantes ni impresión. Se haría desde una copia limpia para no pisar su WIP; se probaría con teclado, sin internet y en varios anchos; **no se publicaría hasta que él lo pida**.
+- Esperando su decisión. Sin cambios de código ni deploy.
+
 ## 26/11/2026 (pregunta del dueño: la cabecera de Salidas se queda arriba al bajar) · OpenCode (Big Pickle) — SOLO EXPLICACIÓN
 
 - **Dueño:** *"cuando bajo salida [...] se mantiene en su posición y baja conmigo haciendo que lo visualice como se llama eso y como lo hicistes porque me gusto"*.

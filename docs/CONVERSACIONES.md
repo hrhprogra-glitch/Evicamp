@@ -1803,3 +1803,7 @@
 ## 26/11/2026 (dueño: le gustó la cabecera fija de Salidas)
 - **Dueño:** preguntó cómo se llama y cómo se hizo que los títulos de la tabla de Salidas se queden arriba al bajar, porque le gustó.
 - **Respuesta:** se llama cabecera fija / *sticky header*; es `position: sticky; top: 0; z-index: 10` en el `<thead>` más el fondo oscuro de `.tabla-cabecera`. Viene del molde compartido de tablas. Sin cambios ni deploy; si quiere, se puede poner en más tablas.
+
+## 26/11/2026 (dueño: ¿se puede poner la cabecera fija en todas las sesiones con tablas?)
+- **Dueño:** *"entiendo puedes hacer eso en todas las sesiones que tienen tablas ?"*.
+- **Respuesta/propuesta:** sí. Se contaron 15 cabeceras que ya son sticky y unas 14 de sesión que faltan. Propuesta: una regla en `src/index.css` para `.tabla-marco`, sin tocar colores, fuentes, modales ni impresión, desde copia limpia y sin publicar hasta su OK. Queda esperando su decisión.
