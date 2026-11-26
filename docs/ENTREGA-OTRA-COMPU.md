@@ -7,7 +7,7 @@
 
 - Repo: `https://github.com/hrhprogra-glitch/Evicamp.git`
 - Rama con todo integrado: **`fase-11-sunat`**. La rama `pase-todos` queda apuntando al mismo commit (por si se quiere ver el historial de integración).
-- Commit de la entrega: `f3f17a768e955c234c2b0940f12cea1fc27bc6bb` (`f3f17a7`). Si `git log -1` en `fase-11-sunat` no muestra ese hash, bajar de nuevo antes de trabajar.
+- Commit de la entrega: `b8b67ad6f928eb9caca42c4b18d2a0ad8849e9e4` (`b8b67ad`). Puede haber un commit posterior solo de docs; revisa que `git log` en `fase-11-sunat` incluya ese hash antes de trabajar.
 - En la compu nueva:
 
 ```bash

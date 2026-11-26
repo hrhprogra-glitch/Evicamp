@@ -12,7 +12,7 @@
 - **Dueño:** *"quiero que todo lo subas a la memoria y a mi github voy a continuar en otra compu y voy exportar todo en esa compu y trabajar ahora ahí"*. Autorizó **push a GitHub** en este momento.
 - **Integración previa al push:** se fusionó `salidas-pantalla-pc` (`2663d7f`) en `pase-todos`, con los commits ajenos `62a0533` (republicar Nego con «Fusionar») y `98ac48e` (seleccionar cantidad de arriba al elegir producto o clic). Fusión limpia, sin tocar el modal de impresión. `npm run build` OK: bundle `index-C7Sz-l91.js`, el mismo que sirve Nego. Pruebas en vivo: impresión **47/47**, cantidad **32 OK / 0 fallos**.
 - **Memoria:** se creó `docs/ENTREGA-OTRA-COMPU.md` con qué bajar, la rama a usar, lo que **no** va en GitHub (`.env.vps`, carpeta `herramientas-pruebas` con puppeteer, worktrees, WIP del repo principal), estado de los tres sitios, comandos de prueba, pendientes y reglas del dueño. Se actualizaron bitácora, plan, conversaciones y memoria de errores.
-- **Push:** `fase-11-sunat` y `pase-todos` quedan en GitHub con todo integrado en el commit `f3f17a7`; también se sube `salidas-6-cambios` tal cual (experimento no fusionado). **No se hizo push a `main`, panel ni carpetas de clientes**, y no se desplegó nada nuevo a producción en esta tanda.
+- **Push:** `fase-11-sunat` y `pase-todos` quedan en GitHub con todo integrado en el commit `b8b67ad`; también se sube `salidas-6-cambios` tal cual (experimento no fusionado). **No se hizo push a `main`, panel ni carpetas de clientes**, y no se desplegó nada nuevo a producción en esta tanda.
 
 ## 25/11/2026 (seleccionar la cantidad **de arriba** al elegir producto o hacer clic) · OpenCode (Big Pickle) — HECHO SOLO EN NEGO, SIN PUSH
 
