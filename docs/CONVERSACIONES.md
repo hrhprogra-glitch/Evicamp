@@ -1799,3 +1799,7 @@
 ## 26/11/2026 (dueño elige arreglo mínimo para los duplicados de Inventario)
 - **Dueño:** eligió *"Arreglo mínimo mío y subirlo (Recommended)"* para quitar los duplicados del filtro de categorías, en vez de publicar su WIP completo de Inventario.
 - **Hecho:** arreglo mínimo desde HEAD en una rama limpia (`fix-categorias-inventario`); solo `categoriasUnicas` en `src/sections/Inventario/index.tsx`. Publicado con destino explícito en Nego, ecosistema (iconos repuestos) y Evicamp. En vivo 35 opciones y una sola «Reducciones». Sin push ni SQL.
+
+## 26/11/2026 (dueño: le gustó la cabecera fija de Salidas)
+- **Dueño:** preguntó cómo se llama y cómo se hizo que los títulos de la tabla de Salidas se queden arriba al bajar, porque le gustó.
+- **Respuesta:** se llama cabecera fija / *sticky header*; es `position: sticky; top: 0; z-index: 10` en el `<thead>` más el fondo oscuro de `.tabla-cabecera`. Viene del molde compartido de tablas. Sin cambios ni deploy; si quiere, se puede poner en más tablas.

@@ -7,6 +7,13 @@
 
 ---
 
+## 26/11/2026 (pregunta del dueño: la cabecera de Salidas se queda arriba al bajar) · OpenCode (Big Pickle) — SOLO EXPLICACIÓN
+
+- **Dueño:** *"cuando bajo salida [...] se mantiene en su posición y baja conmigo haciendo que lo visualice como se llama eso y como lo hicistes porque me gusto"*.
+- **Respuesta:** se llama **cabecera fija** o **encabezado pegajoso** (*sticky header*). No es un truco de Salidas: es el molde compartido «SiuMax Sobrio» (el mismo de Inventario > Productos). En `src/sections/Salidas/components/TablaSalidas.tsx` el `<thead>` lleva `className="tabla-cabecera sticky top-0 z-10"`; eso es `position: sticky; top: 0; z-index: 10`. La clase `.tabla-cabecera` de `src/index.css` le da fondo `var(--color-ink)` y letra clara para que las filas no se vean detrás.
+- **Medido en vivo en Nego:** `position: sticky`, `top: 0px`, `z-index: 10`. El contenedor que scrollea es un `<section class="overflow-y-auto">`, no la ventana: al bajar 600 px, la cabecera pasó de `top=235px` a `top=0px` y siguió visible con las 50 filas. En celular `thead` se oculta y cada celda lleva su etiqueta, por eso ahí no se aplica.
+- Sin cambios de código ni deploy. Queda la observación de que al dueño le gustó; si quiere, se puede extender el mismo molde a otras tablas.
+
 ## 26/11/2026 (arreglado y publicado: categorías duplicadas en el filtro de Inventario) · OpenCode (Big Pickle) — SIN PUSH NI SQL
 
 - **Dueño:** eligió *«Arreglo mínimo mío y subirlo»* entre las opciones que se le dieron (la otra era publicar su WIP completo de Inventario).
