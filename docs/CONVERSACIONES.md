@@ -1823,3 +1823,7 @@
 ## 26/11/2026 (URGENTE: dirección en Salidas y posibles copias en ecosistema)
 - **Dueño:** reportó que al ingresar una salida con cliente que tiene dirección aparece el JSON crudo y «Ubicación —», que al borrar se mantiene, y que se generaron varias copias de la misma salida; pidió revisar la base de ecosistema.
 - **Hecho:** inspección SOLO de lectura. La dirección es JSON en `customers.direccion`; la salida SAL-0026 está vacía en BD, pero el detalle vuelve a mostrar la del cliente por un fallback. No hay copias del cliente 300016; hay continuaciones explícitas y dos parejas del 25/11 con materiales iguales. Queda propuesto el arreglo, esperando su OK. No se borró ni modificó nada.
+
+## 26/11/2026 (causa de los duplicados, explicada por el dueño)
+- **Dueño:** «encontre un error y explicación de las duplicaciones cuando continuo la salida se y guardo se crea otra no es que edita la que ya estaba crea otra y la otra la deja haciendo duplicado que confunden».
+- **Hecho:** se anotó que «Continuar salida» crea una salida nueva en vez de editar la original; es la causa real de los duplicados, no los dobles clics. Queda propuesta: editar la original (misma código, stock por diferencia) o marcar la anterior como continuada. No se borra nada; se sigue esperando su decisión. La corrección de dirección y el bloqueo anti doble guardado ya están hechos y probados en copia limpia, sin publicar.

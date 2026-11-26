@@ -7,6 +7,18 @@
 
 ---
 
+## 26/11/2026 (dirección arreglada + causa de los duplicados explicada por el dueño) · OpenCode (Big Pickle) — HECHO EN COPIA LIMPIA, SIN PUBLICAR
+
+- **Dueño (mensaje nuevo):** «encontre un error y explicación de las duplicaciones cuando continuo la salida se y guardo se crea otra no es que edita la que ya estaba crea otra y la otra la deja haciendo duplicado que confunden». O sea: la causa de los duplicados no es un doble clic, sino que **«Continuar salida» crea una salida nueva** (`fn_registrar_salida` con `salida_raiz_id`) en vez de editar la original.
+- **Arreglo de dirección (OK del dueño, rama `arreglar-direccion-salidas` desde HEAD, worktree `C:/Users/ADMIN/AppData/Local/Temp/opencode/siumax-direccion`, commit `6eadebc`):**
+  - Nuevo `src/utils/direccion.ts` con `direccionLegible()`: convierte el JSON migratorio (`{"calle":"MZ A LT 9…","distrito":""…}`) a texto simple (`MZ A LT 9 …`), sin corchetes; deja intacto el texto normal.
+  - `ModalNuevaSalida.tsx`: usa `direccionLegible` al traer dirección de cliente, bien, borrador, salida raíz y datos iniciales; nuevo `direccionTocadaRef` para que la carga tardía del bien **no rellene un campo que el trabajador borró**.
+  - `ModalDetalleSalida.tsx`: muestra **solo la dirección guardada en la salida** (`direccionLegible(salida.direccion) || '—'`); se quitó el respaldo a `customer.direccion` que hacía reaparecer el JSON aunque la salida estuviera vacía.
+  - Doble guardado: `guardandoRef` (ref, no solo estado) + `if (guardandoRef.current) return` antes de validar; se activa justo antes de la RPC y se libera en `finally`. Así F10 dos veces o doble clic no llaman dos veces a `fn_registrar_salida`.
+  - `TerminalBusqueda.tsx` se tuvo que dejar con un orden local mínimo porque **HEAD no compila**: `puntajeBusqueda` solo existe en el WIP del dueño (`src/utils/busqueda.ts` sin commitear). Es solo habilitador de build; no se tocó su WIP.
+- **Pruebas (sin escribir en la base, sin publicar):** build local **`index-DzpAI1YO.js` / `index-tRYieeQy.css`**. Se interceptó el bundle del sitio vivo con el bundle local (importante: el vivo sirve `index-BWnLCr2a.js`, otro hash; la primera versión de la prueba no lo sustituía y medía el código equivocado). En **ecosistema con el bundle local**: Dirección `MZ A LT 9 ASOC. VIVI.NUEVA GALES - CIENEGUILLA`, 0 corchetes, borrar y esperar la carga tardía deja el campo vacío, 0 errores JS. Doble guardado: con RPC falsa con 800 ms de retardo, **F10 × 2 + clic × 2 = 1 sola llamada** a `fn_registrar_salida`, 0 errores JS.
+- **Pendiente de decisión del dueño:** qué hacer con «Continuar salida». Ya existe `fn_editar_salida` en `servidor/sql/detalle-salida-edicion.sql` (edita campos, trabajadores e ítems y ajusta stock por diferencia); habría que comprobar que esté aplicada en ecosistema antes de proponer usarla. **No se borró nada de la base** (el dueño eligió «No borrar nada»). Sin push, SQL de escritura ni publicación.
+
 ## 26/11/2026 (URGENTE, dueño: dirección en Salidas + posibles copias en ecosistema) · OpenCode (Big Pickle) — DIAGNOSTICO, SIN CAMBIOS
 
 - **Dueño:** al ingresar una salida con un cliente que tiene dirección, sale el JSON crudo `{"zip":"","pais":"","calle":"MZ A LT 9 ASOC. VIVI.NUEVA GALES - CIENEGUILLA",...}` y «Ubicación —»; aunque la borra, se mantiene. Además dice que se generaron varias copias de la misma salida en ecosistema y pide revisar la base.
