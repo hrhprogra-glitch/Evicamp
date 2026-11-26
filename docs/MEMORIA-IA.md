@@ -8,10 +8,17 @@
 
 ---
 
+## 26/11/2026 — Mudanza a otra compu: qué se puede subir y qué no
+- Con OK del dueño se puede hacer push a GitHub, pero **nunca a `main`, panel ni carpetas de clientes** sin que lo diga en ese momento. La rama de trabajo es `fase-11-sunat`; dejar `pase-todos` apuntando al mismo commit y subir las ramas con trabajo propio (por ejemplo `salidas-6-cambios`) para no perder nada.
+- Antes de empujar, revisar `git log --all --not <rama>`: puede haber commits nuevos de otra sesión en worktrees (`salidas-pantalla-pc`, `fusion-nego-final`). Integrarlos con `git merge --no-ff` y compilar; el bundle generado debe coincidir con lo que ya está en vivo.
+- GitHub **no** incluye `.env.vps` (credenciales, ignorado), la carpeta `herramientas-pruebas` (puppeteer-core), los worktrees temporales ni las reglas que viven en `D:/Programación/siumax/CLAUDE.md` / `AGENTS.md`. Todo eso se dejó explicado en `docs/ENTREGA-OTRA-COMPU.md`; no copied credenciales a docs ni commits.
+- El WIP sin commitear del repo principal ya estaba integrado en la rama (`TablaProductos.tsx`, `Inventario/index.tsx`); los reportes de diagnóstico sin commitear no son código del sistema y se documentaron, no se subieron.
+
 ## 25/11/2026 — Pase a tres sitios: verificar cada uno y no pisar el avance que aparece mientras tanto
 - Desplegar siempre con destino explícito (`deploy.cjs siumax|evicamp|ecosistema`); tras ecosistema reponer iconos con `restaurar-iconos-ecosistema.cjs` y confirmar el MD5. Un mismo bundle en los tres sitios no implica que las pruebas den igual: Nego y ecosistema se probaron con login real (47/47 cada uno), Evicamp no tenía clave de administrador disponible.
 - **Evicamp usa la base `evidiary`, tabla `usuarios` (`usuario`, `clave_hash`), con un solo usuario `evi`.** No hay clave en `.env.vps`: no inventarla, no cambiarla y no tocar la base para «poder probar». Si no se puede entrar, verificar al menos el JS servido (`btn-imprimir-productos-utilidades`, `Por pedir`, `tr.bajo td:not(.pedido)`, `logo-CDQ`, `currentTarget.select`) y decir claramente que la prueba funcional quedó pendiente. La prueba acepta `EVICAMP_ADMIN_USUARIO`/`EVICAMP_ADMIN_CLAVE` si el dueño las entrega.
 - Si mientras se verifica aparece un bundle más nuevo en Nego, **no redeployar para «igualar» los tres sitios**: ese bundle puede ser el avance de otra sesión. Comprobar que conserva lo propio (markers + prueba 47/47) y dejarlo. Si el commit nuevo está solo en un worktree sin rama (`git branch -a --contains <hash>` sale vacío), fusionarlo en la rama de integración para que no se pierda, sin llevarlo a los otros sitios si era trabajo «solo Nego».
+
 
 ## 25/11/2026 — «Fusionar» de verdad: grupo completo, desmarcar uno y bundles que cambian a mitad de prueba
 - Al marcar una salida ya fusionada hay que marcar **todas** las del mismo `FUS-…` (se compara `fusion.id` y `fusion.codigo` por si algún grupo se recargó con otro id). Al desmarcar, se llama a `fn_desvincular_salida_fusion` en ese instante y se recalcula el grupo con el `general_borrado`/`quedan` que devuelve la RPC; si queda una sola, la base borra el grupo.
@@ -1289,6 +1296,11 @@ worktrees adentro. Si `git status` falla con una ruta de `worktrees/`, revisar `
 - El CSS pone los textos en mayúsculas: comparar el subtítulo con `.toLowerCase().includes('1 salida(s)')`, no con el texto en minúsculas.
 - Escape del GENERAL vuelve a la lista de Salidas (ya no hay formulario debajo). ← de «Nueva salida» y → de «Fusionar salidas» se devuelven el foco entre los dos botones de la cabecera.
 - Otra vez el sitio fue sobrescrito durante la tanda (`index-CyFtSW6H.js` sin marcadores, `index-Cy7XoMwt.js` con botón pero sin X); la regresión falló antes en `#input-login-usuario` por ese bundle ajeno. **Verificar marcadores dentro del JS servido inmediatamente antes de dar el parte**, no solo el nombre del bundle. Bundle final **`index-CdbIQmqK.js`**; pruebas **142/142** y **66/66**.
+
+## 73. Selección rápida en los dos campos de cantidad y despliegues en paralelo (25/11/2026)
+- `select()` en `onFocus` **y** `onClick` aplica igual al input de la fila y al de arriba (`#input-cant-item-salida`). En el de arriba ya existía `focus()+select()` al elegir sugerencia/Enter; el clic manual necesitaba los dos manejadores (el foco llega en `mousedown` y el navegador puede recolocar el cursor en `click`). Probarlo de forma funcional: escribir `25`, clic, escribir `7`; si da `257`, no seleccionó. `selectionStart` es `null` en `input type="number"`, así que no sirve para medirlo.
+- Si una prueba falla de forma intermitente, **leer el `<script src>` que el navegador cargó** (`[...document.scripts].map(s => s.src)`) o las props de React del nodo (`__reactProps$…` → `onFocus`/`onClick`). Aquí el bundle local ya tenía el handler pero el sitio servía otro JS: otra sesión había redeployado `3Px-CiPa` a mitad de la tanda. No culpar al código ni seguir probando: esperar a que el otro worktree commite, hacer fast-forward a su HEAD y desplegar una versión que lleve **su cambio + el propio**.
+- Regla de oro con el dueño trabajando en paralelo: **nunca desplegar desde una base que no incluya su último commit**. Si su worktree tiene WIP, no compilar desde ahí ni sobrescribir su bundle; esperar al commit o integrarlo en la rama aislada. En esta tanda el commit ajeno fue `62a0533` y el bundle final `index-C7Sz-l91.js`, con cantidad **32/32**.
 
 
   

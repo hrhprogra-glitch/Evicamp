@@ -2004,27 +2004,27 @@
     "semantic_hash": "27350d4d28f3b5f0e975beb9f3a27ec8"
   },
   "docs/BITACORA.md": {
-    "mtime": 1795643100.8788488,
-    "seen": 1795643170.7194026,
-    "ast_hash": "2a8fb10568b9577cc534201430a9fe73",
+    "mtime": 1795697549.2562592,
+    "seen": 1795697593.350511,
+    "ast_hash": "95f70510a751af4667d74b21d2a2af88",
     "semantic_hash": ""
   },
   "docs/CONVERSACIONES.md": {
-    "mtime": 1795643123.8841293,
-    "seen": 1795643170.719403,
-    "ast_hash": "62f720941c353c9a1653142e3576c9fd",
+    "mtime": 1795697564.4796233,
+    "seen": 1795697593.350512,
+    "ast_hash": "5db58007938dff93e68c37ee4fab2f55",
     "semantic_hash": ""
   },
   "docs/MEMORIA-IA.md": {
-    "mtime": 1795643153.8864448,
-    "seen": 1795643170.719404,
-    "ast_hash": "82af656eac6839285a01a73bc3d73564",
+    "mtime": 1795697570.8470595,
+    "seen": 1795697593.350514,
+    "ast_hash": "ad8f0a16b513198092b0721fc92bba64",
     "semantic_hash": ""
   },
   "docs/PLAN-SIUMAX-COMERC.md": {
-    "mtime": 1795643133.469565,
-    "seen": 1795643170.719406,
-    "ast_hash": "b12e7c17c406832d5411caa99bbfcc01",
+    "mtime": 1795697575.8172228,
+    "seen": 1795697593.3505156,
+    "ast_hash": "378635fa74929411c15efa50d8349396",
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/prueba-clientes-detalle.mjs": {
@@ -2946,9 +2946,9 @@
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/ModalNuevaSalida.tsx": {
-    "mtime": 1795641414.0129344,
-    "seen": 1795641771.212213,
-    "ast_hash": "4b24b94b48f91d3ef5522bced29e1f2a",
+    "mtime": 1795697447.296322,
+    "seen": 1795697593.3504338,
+    "ast_hash": "db1b70d53530b5837c02c1346cec623a",
     "semantic_hash": ""
   },
   "src/sections/Salidas/components/TablaSalidas.tsx": {
@@ -3948,9 +3948,9 @@
     "semantic_hash": ""
   },
   "ai-scripts/pruebas/verificar-cantidad-salida.mjs": {
-    "mtime": 1795641414.0027971,
-    "seen": 1795641771.2117057,
-    "ast_hash": "ee175819f3f3fd6871e706695b549996",
+    "mtime": 1795697447.2497501,
+    "seen": 1795697593.3502238,
+    "ast_hash": "8d56f78ea2beb1882dc6dee7d0fe7dca",
     "semantic_hash": ""
   },
   "ai-scripts/aplicar-fusiones-salidas.cjs": {
@@ -3975,6 +3975,12 @@
     "mtime": 1795643062.733153,
     "seen": 1795643170.7191226,
     "ast_hash": "6d6d27e5ba1172bbc5ac4fa6ba33cfbb",
+    "semantic_hash": ""
+  },
+  "docs/ENTREGA-OTRA-COMPU.md": {
+    "mtime": 1795697525.8259525,
+    "seen": 1795697593.3505132,
+    "ast_hash": "eb26563dc89e980e7df7940cbc4b31b6",
     "semantic_hash": ""
   }
 }
