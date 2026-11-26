@@ -1236,36 +1236,41 @@ main [data-row="true"] [class*="text-xs"],
   main #tabla-salidas-lista [data-row="true"] { height: auto !important; min-height: 79px !important; }
 }
 
-/* ===== SALIDAS EN PC PEQUEÑA (25/11/2026) =====
-   La lista tiene 9 columnas y medía 1547 px: en 1366 o 1024 el botón «VER» quedaba
-   fuera de la pantalla. Esto solo acomoda la lista; no toca ids, teclado, colores,
-   orden de columnas ni la lógica de salidas/devoluciones.
-   · 1101–1366 px: tabla compacta que cabe entera, sin arrastre horizontal.
+/* ===== SALIDAS EN PC PEQUEÑA Y MEDIANA (25/11/2026, ampliado 26/11) =====
+   La lista tiene 9 columnas y medía 1547 px: hasta 1679 px el botón «VER» y el estado
+   quedaban fuera de la pantalla (también en 1437 px, que es donde lo vio el dueño).
+   Esto solo acomoda la lista; no toca ids, teclado, colores, orden de columnas ni la
+   lógica de salidas/devoluciones.
+   · 1101–1679 px: tabla compacta que cabe entera, sin arrastre horizontal.
    · hasta 1100 px: cada salida se apila como tarjeta con su etiqueta delante. */
-@media (min-width: 1101px) and (max-width: 1366px) {
+@media (min-width: 1101px) and (max-width: 1679px) {
   main .tabla-salidas-scroll { overflow-x: visible !important; }
   main #tabla-salidas-lista { width: 100%; min-width: 0 !important; }
   main #tabla-salidas-lista table { table-layout: fixed; width: 100% !important; }
   main #tabla-salidas-lista th,
-  main #tabla-salidas-lista td { padding: 0.35rem 0.35rem !important; }
-  main #tabla-salidas-lista th { white-space: normal !important; }
-  main #tabla-salidas-lista [data-row="true"] { min-height: 68px !important; }
-  main #tabla-salidas-lista th:nth-child(1), main #tabla-salidas-lista td:nth-child(1) { width: 13%; }
-  main #tabla-salidas-lista th:nth-child(2), main #tabla-salidas-lista td:nth-child(2) { width: 9%; }
+  main #tabla-salidas-lista td { padding: 0.5rem 0.45rem !important; vertical-align: top; }
+  main #tabla-salidas-lista th { white-space: normal !important; line-height: 1.15; font-size: 11px !important; letter-spacing: 0.04em !important; overflow-wrap: break-word; }
+  main #tabla-salidas-lista [data-row="true"] { height: auto !important; min-height: 84px !important; }
+  main #tabla-salidas-lista th:nth-child(1), main #tabla-salidas-lista td:nth-child(1) { width: 12%; }
+  main #tabla-salidas-lista th:nth-child(2), main #tabla-salidas-lista td:nth-child(2) { width: 8%; }
   main #tabla-salidas-lista th:nth-child(3), main #tabla-salidas-lista td:nth-child(3) { width: 24%; }
-  main #tabla-salidas-lista th:nth-child(4), main #tabla-salidas-lista td:nth-child(4) { width: 17%; }
+  main #tabla-salidas-lista th:nth-child(4), main #tabla-salidas-lista td:nth-child(4) { width: 18%; }
   main #tabla-salidas-lista th:nth-child(5), main #tabla-salidas-lista td:nth-child(5) { width: 12%; }
-  main #tabla-salidas-lista th:nth-child(6), main #tabla-salidas-lista td:nth-child(6) { width: 5%; }
+  main #tabla-salidas-lista th:nth-child(6), main #tabla-salidas-lista td:nth-child(6) { width: 4%; }
   main #tabla-salidas-lista th:nth-child(7), main #tabla-salidas-lista td:nth-child(7) { width: 7%; }
-  main #tabla-salidas-lista th:nth-child(8), main #tabla-salidas-lista td:nth-child(8) { width: 7%; }
-  main #tabla-salidas-lista th:nth-child(9), main #tabla-salidas-lista td:nth-child(9) { width: 6%; }
+  main #tabla-salidas-lista th:nth-child(8), main #tabla-salidas-lista td:nth-child(8) { width: 6%; }
+  main #tabla-salidas-lista th:nth-child(9), main #tabla-salidas-lista td:nth-child(9) { width: 9%; }
   main #tabla-salidas-lista td > span,
   main #tabla-salidas-lista td > div { min-width: 0; max-width: 100%; }
   main #tabla-salidas-lista td:nth-child(2) { white-space: normal !important; }
   main #tabla-salidas-lista td:nth-child(3) span,
   main #tabla-salidas-lista td:nth-child(4) span,
-  main #tabla-salidas-lista td:nth-child(5) span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-  main #tabla-salidas-lista [id^="btn-ver-salida-"] { padding-left: 0.35rem; padding-right: 0.35rem; }
+  main #tabla-salidas-lista td:nth-child(5) span,
+  main #tabla-salidas-lista td:nth-child(8) span { display: block; overflow: visible !important; text-overflow: clip !important; white-space: normal !important; overflow-wrap: break-word; word-break: normal; max-width: 100%; }
+  main #tabla-salidas-lista th:last-child,
+  main #tabla-salidas-lista td:last-child { padding-right: 1.5rem !important; }
+  main #tabla-salidas-lista [id^="btn-ver-salida-"] { padding-left: 0.4rem; padding-right: 0.4rem; }
+  main #tabla-salidas-lista [id^="btn-ver-general-fusion-"] { padding-left: 0.35rem; padding-right: 0.35rem; }
 }
 
 @media (max-width: 1100px) {

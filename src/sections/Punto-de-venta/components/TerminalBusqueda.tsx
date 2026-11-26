@@ -1,4 +1,4 @@
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import { flechasCaja, irA } from '../tecladoCaja';
@@ -86,11 +86,10 @@ export const TerminalBusqueda: React.FC<Props> = ({
     : productos.filter(p => {
         return coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], searchQuery);
       })
-      // El código exacto primero (lector de barras / etiquetas de la fase 2.5): "SKU-12" no debe agregar "SKU-123"
+      // El más parecido primero; código/barras exacto gana por el puntaje del motor.
       .sort((a, b) => {
-        const q = searchQuery.trim().toUpperCase();
-        const exacto = (p: typeof a) => [p.code, p.barcode].some((c) => c && String(c).trim().toUpperCase() === q);
-        return Number(exacto(b)) - Number(exacto(a));
+        const campos = (p: typeof a) => [p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion];
+        return puntajeBusqueda(campos(b), searchQuery) - puntajeBusqueda(campos(a), searchQuery);
       })
       .slice(0, 48);
 
@@ -272,17 +271,17 @@ export const TerminalBusqueda: React.FC<Props> = ({
 
       {/* HEADER DE BÚSQUEDA TIPO TERMINAL */}
       <div className="bg-[var(--color-surface)] px-3 py-2 sm:px-4 border-b border-[var(--color-border)] shrink-0 rounded-none">
-        {/* Fila 1: título, usuario, hora y Cliente. Fila 2: avisos (Por cobrar, Cotizaciones, Pedidos): en el celular
-            tres botones iguales; desde tablet en línea a la derecha; en PC grande (2xl) todo en UNA fila. */}
-        <div className="flex flex-col 2xl:flex-row 2xl:items-center 2xl:justify-between gap-2 mb-2">
-        <div className="flex flex-wrap items-center justify-between gap-2 min-w-0 2xl:flex-1">
-          <div className="shrink-0">
+        {/* El dueño marcó con rojo ID, hora, cliente y los tres avisos: quedan juntos en UNA fila.
+            El título "Punto de Venta" va aparte (estaba fuera del círculo); en 2xl vuelve al mismo renglón. */}
+        <div className="flex flex-col gap-2 mb-2 2xl:flex-row 2xl:items-center 2xl:justify-between">
+          <div className="flex items-center min-w-0 shrink-0">
             <h1 className="text-sm sm:text-base font-black text-[var(--color-ink)] uppercase tracking-widest flex items-center gap-2 whitespace-nowrap">
               <ScanLine className="text-[var(--color-ink)]" size={18} /> Punto de Venta
             </h1>
           </div>
-          
-          <div className="flex flex-wrap items-center justify-end gap-2 lg:gap-3 min-w-0">
+
+          <div className="flex flex-wrap items-center justify-between gap-2 min-w-0 xl:flex-nowrap 2xl:flex-1">
+            <div className="flex flex-wrap items-center justify-end gap-2 lg:gap-3 min-w-0 xl:flex-nowrap">
             <div className="hidden md:flex items-center min-w-0 border border-[var(--color-border)] pl-2 pr-3 py-1 bg-white">
               <div className="h-2 w-2 bg-[var(--color-accent)] animate-pulse mr-2"></div>
               <span className="text-xs font-black text-[var(--color-ink)] uppercase tracking-[0.1em] truncate">
@@ -340,11 +339,10 @@ export const TerminalBusqueda: React.FC<Props> = ({
                 )}
               </div>
             )}
-          </div>
-        </div>
+            </div>
 
-          {(puedeVerFiados || puedeVerEncargos) && (
-          <div id="avisos-caja" className="grid grid-flow-col auto-cols-fr gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end 2xl:shrink-0">
+            {(puedeVerFiados || puedeVerEncargos) && (
+          <div id="avisos-caja" className="grid grid-flow-col auto-cols-fr gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end xl:shrink-0 xl:flex-nowrap">
             {puedeVerFiados && (
               <button
                 // "Por cobrar" abre la sección Clientes directo en la pestaña Créditos
@@ -371,8 +369,9 @@ export const TerminalBusqueda: React.FC<Props> = ({
                 onAbrir={(p) => { try { sessionStorage.setItem('encargos_pestana', p); } catch { /* sin almacenamiento */ } onNavigate?.('encargos'); }}
               />
             )}
+            </div>
+            )}
           </div>
-          )}
         </div>
 
         <div className="flex gap-3">

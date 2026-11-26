@@ -1748,3 +1748,9 @@
 - **Lo que encontró la visión:** el arreglo global anterior partía palabras en Clientes y superponía texto en Finanzas en celular, aunque las mediciones de ancho dieran cero desbordes.
 - **Decisión por el aviso del dueño:** se deshizo ese arreglo global y se volvió al estado anterior (`ecafca1`). Ahora solo Clientes y Finanzas se convierten en fichas ordenadas en celular; **Inventario y todas las demás sesiones quedaron como estaba**.
 - **Queda solo en local**, sin deploy, push ni base tocada. Siguiente: que el dueño revise con **Ctrl+F5** y autorice llevarlo a Nego.
+
+## 26/11/2026 (Caja en una fila y Salidas mejor acomodada)
+- **Dueño:** *"en caja lo que seleccione con rojo tiene que estar en una fila todo y la foto de salidas las tablas no aparecen completo... el resto de las sesiones estan bien"*. Después, al ver el primer arreglo: *"sigue viendoce mal la tabla en las salidas si puedes acomodalo mejor"*.
+- **Hecho con visión:** se confirmó que el círculo rojo de Caja encerraba ID, hora, CLIENTE (F3), Por cobrar, Cotizaciones y Pedidos; el título «Punto de Venta» estaba fuera. Se dejó el título aparte y esos cinco elementos en una fila desde 1280 px.
+- **Salidas:** primero se amplió el rango de tabla compacta para que no se corte a 1437 px; como el dueño siguió viéndola mal, se mejoró el acomodo: direcciones completas, encabezados separados y botones con margen derecho.
+- **Decisión:** solo se tocó Caja, la tabla de Salidas y los scripts de verificación. Inventario y las demás sesiones se dejaron igual. Todo queda en local, sin deploy, push ni base tocada. Siguiente: que el dueño revise con **Ctrl+F5** y autorice llevarlo a Nego.
