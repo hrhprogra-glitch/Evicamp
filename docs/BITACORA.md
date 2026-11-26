@@ -7,6 +7,18 @@
 
 ---
 
+## 26/11/2026 (URGENTE, dueño: dirección en Salidas + posibles copias en ecosistema) · OpenCode (Big Pickle) — DIAGNOSTICO, SIN CAMBIOS
+
+- **Dueño:** al ingresar una salida con un cliente que tiene dirección, sale el JSON crudo `{"zip":"","pais":"","calle":"MZ A LT 9 ASOC. VIVI.NUEVA GALES - CIENEGUILLA",...}` y «Ubicación —»; aunque la borra, se mantiene. Además dice que se generaron varias copias de la misma salida en ecosistema y pide revisar la base.
+- **Base ecosistema (solo lectura, `ai-scripts/inspeccionar-salidas-ecosistema.cjs`, `lock_timeout=3s`, sin respaldo porque no se escribió nada):**
+  - Cliente `300016 BILLY RODRIGUEZ HUARCAYA` tiene exactamente esa dirección en `customers.direccion` como JSON (muchos clientes de la carga migratoria igual).
+  - Salida `1000421 / SAL-0026` (26/11 17:15, cliente 300016, "Continuación de SAL-0019") tiene `salidas.direccion` **vacía**: el borrado del dueño sí se guardó.
+  - `ModalDetalleSalida.tsx:307` usa `texto(salida.direccion) || texto(salida.customer?.direccion) || ...` y `texto` hace `String(v)`: por eso el detalle vuelve a mostrar el JSON del cliente aunque la salida esté vacía. `Ubicación` cae a `salida.bien?.ubicacion || '—'` y los bienes no tienen ubicación.
+  - `ModalNuevaSalida.tsx:463-466` copia `cli.direccion` tal cual al input; `458-459` hace lo mismo con el bien (y puede llegar tarde, después de que el dueño borre).
+  - Copias: el cliente 300016 solo tiene SAL-0026. Grupos con materiales iguales: SAL-0011/0012 y SAL-0007/0008 (25/11) y SAL-0010/0015 (mismo cliente, horas 14:24 y 21:27). SAL-0016→0017, SAL-0021→0024 y SAL-0019→0026 son **continuaciones** explícitas (observación "Continuación de..."), no bug. Falta SAL-0025 (id 1000420) en la secuencia; no se sabe quién la borró.
+- **Causa probable del doble guardado:** `handleGuardarSalida` no tiene `if (guardando) return` y el atajo F10/Ctrl+Enter llama directo; el botón solo usa `disabled={guardando}`, que no bloquea dos eventos seguidos antes del render.
+- **Propuesta (esperando OK):** 1) convertir la dirección JSON del cliente/bien a texto legible (`calle` + ciudad/distrito) al copiarla al formulario; 2) no mostrar la dirección del cliente en el detalle de la salida si la salida la dejó vacía; 3) evitar que la carga tardía de bienes rellene un campo ya borrado; 4) bloquear doble envío con `if (guardando) return`. Sin tocar datos ni publicar hasta que el dueño lo pida. Si quiere limpiar salidas repetidas, antes respaldo y confirmación exacta de cuáles.
+
 ## 26/11/2026 (PUBLICADO en Nego, Evicamp y ecosistema: categorías + cabecera fija) · OpenCode (Big Pickle)
 
 - **Dueño:** *"perfecto ya quedo ya lo vi ahora subelo esta perfecto"* y confirmó destinos: **negosiumax, Evicamp y ecosistema**. No pidió panel de clientes, ni push, ni SQL.
