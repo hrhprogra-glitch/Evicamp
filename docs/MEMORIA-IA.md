@@ -8,6 +8,16 @@
 
 ---
 
+## 27/11/2026 — Devoluciones: cómo probar sin ensuciar la base y trampas del teclado
+- En localhost (`5173`) el front apunta a **Nego**, no a ecosistema. Para probar devoluciones sin escribir en la base se interceptan las RPC con respuestas falsas y se arma un estado falso (`SAL-PRUEBA-IA`). Ver `herramientas-pruebas/verificar-devoluciones-entradas-localhost.mjs`. Nunca hace falta reiniciar la API.
+- El límite de devolución se valida con el `max` nativo del `<input>`: escribir `9` con `max=4` deja el campo inválido, el navegador no envía el formulario y **no se llama a la RPC**. No hace falta un mensaje especial ni tocar el estado.
+- Trampa de teclado: el botón «Confirmar devolución» queda **fuera del `<form>`**; con `page.keyboard.press('Enter')` sobre el botón, Chromium no dispara el submit. Hay que ayudarse con una pulsación de `Enter` dentro del campo (o `Space` en el botón) y esperar la cola de avisos (`aceptarDialogos()`).
+- Otra trampa: en el buscador de productos de Nueva salida, escribir el texto **no basta**. Hay que esperar `#sugerencia-salida-0` y pulsar `Enter` en el propio input: eso elige el producto y baja a Cantidad; luego `Enter` en Cantidad agrega el material. Las reglas globales de Enter/foco pueden devolver el selector al campo de origen, así que conviene verificar el foco y no asumirlo.
+- Para cambiar de opinión en un diálogo, `Space` activa el botón enfocado sin que la regla de Enter de los campos mueva el foco.
+- La prueba de la función real en ecosistema se hace dentro de `BEGIN ... ROLLBACK` (`ai-scripts/pruebas/verificar-arreglo-devolucion-ecosistema.cjs`); imprime `NOTICE` por stderr en PowerShell, pero `exit=0` y no deja datos. El estado final se confirma con `ai-scripts/pruebas/verificar-estado-final-devolucion-ecosistema.cjs` (solo lectura).
+- Anti patrón: no dejar `console.log('DEBUG ...')` en el script de pruebas entregado; se quitan después de entender el fallo.
+- **Precaución documental:** hay entradas del 26/11 que dicen que «Continuar salida edita la original» y está publicado, pero la prueba de hoy sobre el localhost ejerce `fn_registrar_salida` con `salida_raiz_id`. Antes de cambiar ese flujo, preguntar al dueño cuál versión quiere.
+
 ## 26/11/2026 — Entrar al VPS sí se puede; lo que no se puede es mostrar claves
 - La regla 8 dice **no compartir** el contenido de `.env.vps`; **no prohíbe usarlo**. Si el dueño da permiso, entrar por SSH con `require('./vps.cjs')` y `NodeSSH`, como hacen todos los scripts de `ai-scripts`. No hace falta que vuelva a pegar contraseñas en el chat (y si lo hace, no repetirlas).
 - Para inspeccionar sin romper nada: `ai-scripts/inventario-vps.cjs` genera `docs/INVENTARIO-VPS.md` (solo lectura). `ai-scripts/revisar-api.cjs` muestra el mapeo dominio → puerto → base.

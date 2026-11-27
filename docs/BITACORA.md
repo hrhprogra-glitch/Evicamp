@@ -7,6 +7,18 @@
 
 ---
 
+## 27/11/2026 - Devoluciones: arreglo en ecosistema + muchas pruebas en localhost — OpenCode (Big Pickle) — HECHO, SIN PUBLICAR NI PUSH
+- El dueño pidió: *«eso paso en ecosistema arreglalo ahi primero luego as las pruebas»* y luego *«ahora harás pruebas en localhost muchas pruebas de salida cuando devuelvas productos y cuando ingreses productos todo tiene que funcionar bien»*. Autorizó: *«Sí, arregla y prueba»*.
+- **Causa del desajuste (SAL-0018, ítem 2003006):** una devolución (`DEVOLUCION 1`) se contabilizó en `inventory_movements` pero no sumó `cantidad_devuelta`; después un ajuste interno (`DEVOLUCION 4`) más dos `ANULACION -1` por la X dejaron `Devuelto=3` con `4` unidades realmente devueltas. La función `fn_devolver_stock_salida` mezclaba ajustes internos (editar cantidad, quitar material, borrar salida) con devoluciones reales.
+- **Arreglo aplicado en ecosistema** (con respaldo y `lock_timeout='5s'`): `cantidad_devuelta` de `3` a `4` en el ítem 2003006 y la función ya NO escribe en `salida_devoluciones` en ajustes internos; solo sigue escribiendo movimientos. Respaldos: `/var/lib/postgresql/respaldo-ecosistema-antes-devolucion-ajuste-20261127150130.dump` y `...20261127150216.dump`.
+- Verificación final solo lectura: `CASO SAL-0018: cantidad=5.000 devuelto=4.000 historial=4.000` y `DESINCRONIZADOS: 0`. Sin tocar stock ni lotes, sin reiniciar la API.
+- Prueba SQL repetida dentro de transacción con `ROLLBACK`: ajuste interno no crea historial, devolución real sí suma, exceso rechazado, X resta y borra la fila. Las 4 bien.
+- Prueba UI nueva: `herramientas-pruebas/verificar-devoluciones-entradas-localhost.mjs`. Usa RPC y estado falsos (localhost apunta a Nego, no a ecosistema), navegación por teclado, sin internet.
+- Casos probados 3 veces seguidas: estado inicial, exceso bloqueado por `max` (sin RPC), devolución parcial, X, devolver todo, sin pendiente, continuar salida y agregar material, nueva salida. Resultado: `TODO BIEN: true`, `escrituras directas a la BD: 0`, `errores JS: ninguno`.
+- Durante la prueba se vio que, en la corriente que ejerce el script sobre el localhost, «Continuar salida» llama a `fn_registrar_salida` con `salida_raiz_id` (crea otra apuntando a la raíz). El script ahora comprueba ese payload. **Ojo:** los docs de los días 13 y 14 de este mes dicen que se publicó «Continuar edita la original» con `fn_editar_salida`; conviene confirmar con el dueño qué versión debe quedar antes de tocar ese flujo. No se cambió nada de ese comportamiento.
+- Commit local en `fase-11-sunat` (sin push): SQL, scripts de arreglo/prueba y estos docs. El script de UI `herramientas-pruebas/verificar-devoluciones-entradas-localhost.mjs` sigue fuera de git por la exclusión local de `herramientas-pruebas`, pero queda en disco y es el que se debe volver a correr. El WIP del dueño en otros archivos `src/` no se tocó ni se metió en el commit. Sin publicar.
+- Siguiente paso: si el dueño quiere, decidir qué hacer con el duplicado de «Continuar salida» (propuesta abajo en el plan). No se tocó el bundle publicado `index-Cm7GRPLM.js` / `index-B6juBlGS.css`.
+
 ## 27/11/2026 - PUBLICADO el cambio de unidades en Nueva salida (Nego, ecosistema y Evicamp)
 - Con OK explícito del dueño («Sí, a los tres») se subió el bundle combinado probado **`index-Cm7GRPLM.js` / `index-B6juBlGS.css`** a los 3 sitios (22 archivos por sitio) y se recargó nginx. Verificado: ecosistema y Evicamp sirven esos hashes; en Nego el archivo servido `/var/www/siuhub/html/index.html` también los referencia (el `curl` local desde Windows falla por TLS, no por la publicación).
 - Sin SQL, sin reinicio de API, sin push. Queda la revisión visual del dueño con Ctrl+F5.

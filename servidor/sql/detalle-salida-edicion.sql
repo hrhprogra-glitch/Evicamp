@@ -186,7 +186,7 @@ BEGIN
 END;
 $function$;
 
--- Devolver stock al producto/último lote, dejando constancia en salida_devoluciones.
+-- Devolver stock al producto/último lote, dejando constancia en inventory_movements.
 CREATE OR REPLACE FUNCTION public.fn_devolver_stock_salida(
   p_salida_id bigint,
   p_item_id bigint,
@@ -234,11 +234,11 @@ BEGIN
     );
   END IF;
 
-  INSERT INTO public.salida_devoluciones (
-    salida_id, salida_item_id, product_id, batch_id, cantidad, motivo, usuario
-  ) VALUES (
-    p_salida_id, p_item_id, v_item.product_id, v_item.batch_id, p_cantidad, p_motivo, p_usuario
-  );
+  -- 27/11/2026: aquí NO se escribe en salida_devoluciones. Esta función la usan
+  -- los ajustes internos (editar cantidad, quitar material, borrar salida): el
+  -- stock ya queda constatado en inventory_movements. Si se escribiera aquí,
+  -- la X de "Devoluciones registradas" restaría cantidad_devuelta de una fila
+  -- que nunca la sumó y la tabla quedaría desincronizada (SAL-0018: 3 vs 4).
 END;
 $function$;
 
@@ -411,8 +411,9 @@ END;
 $function$;
 
 -- Quitar un material del detalle y devolver al almacén lo que aún no se devolvió.
--- La fila de devolución que deja fn_devolver_stock_salida se borra en cascada con el item;
--- el movimiento de stock queda registrado igualmente.
+-- Desde 27/11/2026 fn_devolver_stock_salida NO crea fila en salida_devoluciones:
+-- el movimiento de stock queda registrado en inventory_movements y el historial
+-- de "Devoluciones registradas" sigue igual (solo devoluciones reales).
 CREATE OR REPLACE FUNCTION public.fn_quitar_material_salida(
   p_salida_id bigint,
   p_item_id bigint,
