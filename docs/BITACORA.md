@@ -7,6 +7,13 @@
 
 ---
 
+## 27/11/2026 - PUBLICADO Importar en Nueva lista, cartel de adjuntado y reemplazo en los 3 sitios
+- El dueño preguntó si el botón estaba dentro de la ventana «Nueva lista»; se confirmó que está en su barra de abajo, junto a «Guardar lista». Eligió **«Publicar así (Recommended)»**.
+- Se compiló en worktree limpio (`siumax-importar`, HEAD `6c1e651`) con los **39 archivos del WIP ajeno de `src/`** copiados encima, sin tocar ni commitear ese trabajo. Bundle **`index-BSZAgvGG.js` / `index-Di8Dfc2n.css`**.
+- `publicar-bundle-combinado.cjs` subió **22 archivos por sitio** a Nego (`siumax`), ecosistema y Evicamp, con `chown www-data` y `systemctl reload nginx`. Iconos de ecosistema repuestos (logo `c159d216…`).
+- Verificación HTTP: **21 OK / 0 fallos**; los tres sirven el mismo hash y el JS trae `btn-importar-compra`, `estado-adjuntos` e `Importar de nuevo`, además de los marcadores anteriores.
+- Sin SQL, push, clientes/panel ni reinicio de API. Falta la revisión visual del dueño con **Ctrl+F5**.
+
 ## 27/11/2026 - Importar factura en «Nueva lista», cartel de ya adjuntada y reemplazo — HECHO EN LOCALHOST, SIN PUBLICAR
 - El dueño pidió: *«en nueva lista puedes agregar un opción para adjuntarlo … cuando ya lo adjunte tiene que mostrarme en el detalle que ya esta adjuntado y una opción para volver hacerlo si me equivoque y puedes cambiar adjuntar por importar»*. Se mostró la propuesta y eligió **«Reemplazarla (Recommended)»**.
 - **`PanelCompras.tsx`:** en «Nueva lista» (y al editar) hay un botón **«Importar PDF o foto»** en el pie; el archivo se guarda en `compras.archivos` junto con la lista. Si ya hay archivo, el botón dice **«Importar de nuevo»**, pide confirmación y **reemplaza** el anterior; también hay **«Quitar»**. En el detalle aparece **`✅ Archivo importado: nombre`** (azul/verde sobrio); si es un PDF viejo de la migración dice **«Archivo antiguo (puede no estar disponible)»** para no afirmar que está. Se cambió «Adjuntar» por **«Importar»** en avisos y botones. Todo por teclado y sin internet; límite de 4 MB.

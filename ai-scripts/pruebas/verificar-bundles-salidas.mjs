@@ -29,6 +29,8 @@ for (const sitio of sitios) {
   comprobar(`${sitio}: ya no está el ancho fijo de 1080 px`, !jsTxt.includes('min-w-\\[1080px\\]'));
   comprobar(`${sitio}: el JS trae el botón TUBO/M del buscador`, jsTxt.includes('btn-unidad-busqueda-salida'));
   comprobar(`${sitio}: el JS trae Descargar y el visor de Compras`, jsTxt.includes('btn-detalle-descargar-') && jsTxt.includes('btn-visor-cerrar'));
+  comprobar(`${sitio}: el JS trae Importar en Nueva lista y el cartel de adjuntado`,
+    jsTxt.includes('btn-importar-compra') && jsTxt.includes('estado-adjuntos') && jsTxt.includes('Importar de nuevo'));
 }
 
 console.log(`\nRESULTADO: ${ok} OK, ${fallos} fallos`);
