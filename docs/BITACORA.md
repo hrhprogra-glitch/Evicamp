@@ -7,6 +7,15 @@
 
 ---
 
+## 27/11/2026 - Ticket 80mm Epson TM-T20IV en .exe (.v1.2.24/.v1.2.25, PUBLICADO en Ecosistema y SiuMax)
+- **Problema:** en la impresora física Epson TM-T20IV-L del dueño, el ticket 80mm del `.exe` salía con blanco arriba, luego desplazado/cortado a la derecha, y al final con la franja izquierda borrosa/cortada. La prueba mínima HTML también salía mal, así que la causa era el pipeline de impresión de Electron/driver, no el contenido del ticket.
+- **Boceto final (NO cambiar sin pedido):** en `escritorio/main.js` se mide el alto real solo del `body` (no `documentElement.scrollHeight`), se inyecta CSS `@page{margin:0!important;size:auto}` y `body{padding:0 0 0 4mm!important;box-sizing:border-box!important}`, y se imprime con `margins:{marginType:'none'}`, `pageRanges:[{from:0,to:0}]`, `scaleFactor:100`, **sin** `preferCSSPageSize` y **sin** `pageSize` custom en micras. El `4mm` compensa el área no imprimible izquierda de la Epson; no usar `transform:scale` porque desacomodó el encabezado.
+- **Versiones publicadas con OK del dueño:** 1.2.20 quitó el blanco arriba; 1.2.21/1.2.22 probaron scale (mal para encabezado); 1.2.23 volvió a la base y puso `padding-left:3mm`; 1.2.24 ajustó a `4mm` (dueño confirmó "perfecto"); 1.2.25 republicado para refrescar canales.
+- **Canales verificados:** Ecosistema `https://ecosistema123.duckdns.org/actualizaciones/latest.yml` → `Ecosistema-Setup.exe` v1.2.25. SiuMax `https://siumax.duckdns.org/actualizaciones/latest.yml` → `SiuMax-Setup.exe` v1.2.25. También se copió `Ecosistema-Setup.exe` como `SiuMax-Setup.exe` en descargas de Ecosistema por seguridad.
+- **Regla crítica:** si un `.exe` vuelve a decir "SiuMax"/logo SiuMax, **no** usar "Buscar actualizaciones" desde ese .exe; reinstalar desde `https://ecosistema123.duckdns.org/descargas/Ecosistema-Setup.exe`. "Buscar actualizaciones" solo es seguro cuando la ventana ya dice ECO SISTEMAS URH.
+- **Afecta a todos los tickets 80mm impresos por el .exe** porque pasan por `ipcMain.handle('imprimir')`: Caja/venta (`ticketVentaHtml.ts`), Nota de crédito (`TicketNotaCredito.tsx`), Salidas (`VistaPreviaSalida.tsx` ticket), Compras (`PanelCompras.tsx` ticket), Taller (`TicketTaller.tsx`), etc. La web/PWA usa `imprimirTicket80mm` iframe y no este motor.
+- **Pendiente:** alinear CSS/HTML 80mm de los tickets web/preview al mismo boceto visual donde haga falta (lista dada al dueño); no se cambió CSS de tickets en esta pasada. Falta revisión del dueño con Ctrl+F5/actualización .exe en otras PCs.
+
 ## 27/11/2026 - PUBLICADO el arreglo de Dirección JSON en los 3 sitios
 - El dueño eligió **«Publicar en los 3 (Recommended)»**. Se compiló en el worktree `siumax-direccion` (HEAD `109fb65`) con los **39 archivos del WIP ajeno de `src/`** copiados encima, sin tocarlos ni commitearlos. Bundle **`index-CBtEOYAt.js` / `index-Di8Dfc2n.css`**.
 - `publicar-bundle-combinado.cjs` subió **22 archivos por sitio** a Nego (`siumax`), ecosistema y Evicamp, con `chown www-data` y `systemctl reload nginx`. Iconos de ecosistema repuestos (logo `c159d216…`).

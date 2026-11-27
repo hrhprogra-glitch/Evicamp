@@ -1901,6 +1901,12 @@
 - **Publicado:** bundle **`index-C9sqzhbx.js` / `index-Di8Dfc2n.css`** en Nego, ecosistema y Evicamp (22 archivos por sitio, nginx recargado, iconos de ecosistema repuestos). Compilado en worktree con los 39 archivos WIP ajenos copiados encima, sin commitearlos ni tocarlos. Verificación HTTP **27 OK / 0 fallos**: los tres sirven el mismo hash y el JS trae el botón «Espera» junto a la X. Sin SQL, push ni reinicio de API.
 - **Falta:** la revisión visual del dueño con **Ctrl+F5**.
 
+## 27/11/2026 (dueño: ticket 80mm Epson TM-T20IV en .exe, perfecto; no cambiar)
+
+- **Pidió:** arreglar impresión 80mm en el `.exe` para Epson TM-T20IV-L: salía blanco arriba, luego corrido/cortado a la derecha, y borroso/cortado a la izquierda. Hizo varias pruebas físicas en impresora real. Al final confirmó “ahora si ya quedo perfecto !!!! eso ya nunca lo cambies…” y pidió aplicar ese boceto a todos los que impriman con su previsualización, enviando lista de seleccionados. Luego pidió “actualizalo a todos…” (lista enviada) y “perfecto ahora actualiza el .exe me sigue cambiando a siumax y el logo de siumax”; dio OK para publicar.
+- **Decidió/acordó:** el boceto final es el de `escritorio/main.js` v1.2.24/1.2.25 (body real, `@page margin:0 size:auto`, `body padding-left:4mm`, `margins:none`, `pageRanges 0-0`, `scaleFactor:100`, sin `preferCSSPageSize`, sin pageSize micras, sin transform scale). Se publicó v1.2.25 en Ecosistema y SiuMax. Si un .exe vuelve a mostrar SiuMax/logo SiuMax, no usar “Buscar actualizaciones” desde ese exe; reinstalar desde el instalador oficial de Ecosistema.
+- **Pendiente:** alinear CSS/HTML 80mm web/preview al mismo boceto visual en los flujos seleccionados, solo con OK del dueño; revisar otras PCs con Ctrl+F5/actualización.
+
 ## 27/11/2026 (dueño: dirección con JSON crudo en ecosistema)
 - **Dueño:** *«perfecto pero encontre un error ingrese un cliente y la dirección me salio así {"zip":"","pais":"","calle":"MZA. 3A LOTE. 35 SOL DE LA MOLINA LIMA - LIMA - LA MOLINA","calle2":"","ciudad":"","estado":"","distrito":""}»*. Aclaró: *«eso me paso en ecosistema»*.
 - **Causa encontrada:** en la rama `fase-11-sunat` no existía `src/utils/direccion.ts`; ese archivo solo estaba en la rama `arreglar-direccion-salidas`, desde donde se había compilado el bundle anterior. El formulario copiaba `cli.direccion` tal cual.

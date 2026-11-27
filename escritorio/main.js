@@ -177,33 +177,42 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
     await oculta.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
     await new Promise((r) => setTimeout(r, 450));
 
-    // Medir alto real del contenido (solo body, no documentElement.scrollHeight
-    // porque puede reflejar el viewport grande y generar papel en blanco).
+    // Ticket 80mm térmico: medir alto real del BODY. No usar preferCSSPageSize
+    // ni pageSize custom en micras con esta térmica Epson: desplaza el contenido.
+    // Estrategia segura: imprimir 1 página con márgenes 0; el alto de ventana se
+    // ajusta al contenido para que no haya paginación extra.
     const altoPx = await oculta.webContents.executeJavaScript(`(() => {
       const b = document.body, d = document.documentElement;
       [d, b].forEach((el) => {
         if (!el) return;
         el.style.margin = '0';
         el.style.marginTop = '0';
+        el.style.paddingTop = '0';
         el.style.height = 'auto';
         el.style.minHeight = '0';
         el.style.maxHeight = 'none';
         el.style.overflow = 'visible';
       });
+      document.querySelectorAll('style[data-siumax-print]').forEach((s) => s.remove());
+      const st = document.createElement('style');
+      st.setAttribute('data-siumax-print', '1');
+      // Base 1.2.20 (sin blanco arriba): margins none + pageRanges 0-0 + size:auto.
+      // Epson TM-T20IV: el driver recorta ~2-3mm a la izquierda; compensamos con
+      // padding-left en body sin escalar (el scale movía el encabezado).
+      st.textContent = '@page{margin:0!important;size:auto}html,body{margin:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}html{padding:0!important}body{padding:0 0 0 4mm!important;box-sizing:border-box!important}body>*:first-child{margin-top:0!important}';
+      document.head.appendChild(st);
       void (b && b.offsetHeight);
       window.scrollTo(0, 0);
-      const rectB = b ? b.getBoundingClientRect() : null;
       return Math.ceil(Math.max(
-        rectB?.bottom || 0,
+        b?.getBoundingClientRect?.().bottom || 0,
         b?.scrollHeight || 0,
         b?.offsetHeight || 0
       ));
     })()`).catch(() => 0);
 
-    const altoFinal = altoPx > 0 ? Math.max(altoPx + 16, 200) : 1200;
+    const altoFinal = altoPx > 0 ? Math.max(altoPx + 20, 200) : 1200;
     oculta.setContentSize(ancho80mm, altoFinal);
-    await new Promise((r) => setTimeout(r, 200));
-    const altoMicras = Math.max(Math.round((altoFinal * 25400) / 96) + 1500, 40000);
+    await new Promise((r) => setTimeout(r, 250));
 
     return await new Promise((resolve) => {
       oculta.webContents.print(
@@ -212,7 +221,8 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
           printBackground: true,
           deviceName: impresora || undefined,
           margins: { marginType: 'none' },
-          pageSize: { width: 80000, height: altoMicras },
+          pageRanges: [{ from: 0, to: 0 }],
+          scaleFactor: 100,
         },
         (ok, motivo) => resolve({ ok, motivo: ok ? null : motivo || 'No se pudo imprimir' })
       );
