@@ -239,9 +239,16 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
   };
 
   const datoCls = 'w-full min-h-[40px] px-2 py-2 border-2 border-[var(--color-border)] bg-[var(--color-surface)] font-bold uppercase break-words flex items-center';
+  // Dirección y ubicación pueden traer links largos: una sola línea con «…» y el valor completo en el tooltip.
+  const datoUnaLineaCls = `${datoCls} min-w-0`;
   const labelCls = 'block font-black uppercase text-[var(--color-ink)] mb-1';
   const clienteNombre = salida.customer?.name || (salida.observaciones?.match(/CLIENTE:\s*([^|]+)/)?.[1] || '').trim() || texto(salida.customer_id);
   const bienNombre = salida.bien?.nombre || (salida.observaciones?.match(/ATIENDE:\s*([^|]+)/)?.[1] || '').trim() || '—';
+  const direccionDetalle = texto(salida.direccion) || texto(salida.customer?.direccion) || texto(salida.bien?.direccion) || '—';
+  const ubicacionDetalle = texto(salida.ubicacion) || texto(salida.bien?.ubicacion) || '—';
+  const valorUnaLinea = (valor: string) => (
+    <span className="min-w-0 flex-1 truncate" title={valor} aria-label={valor}>{valor}</span>
+  );
 
   return (
     <>
@@ -300,11 +307,11 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
                 </div>
                 <div>
                   <span className={labelCls}>Dirección</span>
-                  <div className={datoCls}>{texto(salida.direccion) || texto(salida.customer?.direccion) || texto(salida.bien?.direccion) || '—'}</div>
+                  <div className={datoUnaLineaCls}>{valorUnaLinea(direccionDetalle)}</div>
                 </div>
                 <div>
                   <span className={labelCls}>Ubicación</span>
-                  <div className={datoCls}>{texto(salida.ubicacion) || texto(salida.bien?.ubicacion) || '—'}</div>
+                  <div className={datoUnaLineaCls}>{valorUnaLinea(ubicacionDetalle)}</div>
                 </div>
                 <div>
                   <span className={labelCls}>Tipo de salida</span>

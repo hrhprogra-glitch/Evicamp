@@ -1881,3 +1881,9 @@
 - **Dueño (después):** *«perfecto pero antes eso de importar lo agregas en la ventana nueva lista ??»*. Se confirmó que está en la barra de abajo de la ventana «Nueva lista de compras», junto a «Guardar lista», y eligió **«Publicar así (Recommended)»**.
 - **Publicado:** bundle **`index-BSZAgvGG.js` / `index-Di8Dfc2n.css`** en Nego, ecosistema y Evicamp (22 archivos por sitio, nginx recargado, iconos de ecosistema repuestos). Compilado en worktree con los 39 archivos WIP ajenos copiados encima, sin commitearlos ni tocarlos. Verificación HTTP **21 OK / 0 fallos**: los tres sirven el mismo hash y el JS trae los marcadores de Importar. Sin SQL, push ni reinicio de API.
 - **Falta:** la revisión visual del dueño con **Ctrl+F5**.
+
+## 27/11/2026 (dueño: captura del detalle de salida con dirección larga)
+- **Dueño:** *«ahora quiero que en el detalle de salida as un ajuste a la dirección o link que son largos te enviare una captura como esta quedando arruinando la estetica»*. Envió la captura de `SAL-0032`: DIRECCIÓN partida en dos líneas frente a UBICACIÓN vacía.
+- **Propuesta mostrada:** una línea con `…` y valor completo en tooltip/aria-label, o botón «Abrir mapa», o envolver en dos líneas parejas. Eligió **«Una línea con … (Recommended)»**.
+- **Hecho:** dirección y ubicación usan `truncate` dentro del recuadro de siempre; el texto completo sigue disponible para copiar y en el tooltip. Sin tocar la base ni la impresión. Prueba **6/6** en 3 corridas, 0 errores JS; devoluciones y facturas siguen bien.
+- **Falta:** el OK del dueño para publicar el bundle en los tres sitios; sin SQL ni push.

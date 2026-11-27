@@ -7,6 +7,12 @@
 
 ---
 
+## 27/11/2026 - Detalle de salida: dirección y link largos en una sola línea — HECHO EN LOCALHOST, SIN PUBLICAR
+- El dueño envió una captura de `SAL-0032` donde **DIRECCIÓN** se partía en dos líneas y chocaba visualmente con **UBICACIÓN**, que estaba vacía («-»). Pidió un ajuste para no arruinar la estética.
+- Se mostró la propuesta y eligió **«Una línea con … (Recommended)»**. En `ModalDetalleSalida.tsx` los campos Dirección y Ubicación ahora usan un `<span class="min-w-0 flex-1 truncate">` dentro del recuadro sobrio de siempre: se ven en **una línea**, con `…` si son largos, y el texto completo queda en `title` y `aria-label`. Sigue seleccionable y copiable. No se tocó el valor en la base ni la vista de impresión.
+- **Prueba nueva:** `herramientas-pruebas/verificar-direccion-larga-detalle-salida.mjs` **6/6 en 3 corridas seguidas**, 0 errores JS, todo por teclado. Comprueba una sola línea (40 px, igual que las demás celdas), elipsis, tooltip completo de dirección y de link, celdas con la misma altura y sin errores. Regresiones: devoluciones **2/2**, facturas **2/2**, `tsc` 0.
+- **No publicado.** Sin SQL, push ni reinicio de API. El trabajo ajeno en el mismo archivo (orden de materiales por `puntajeBusqueda`) se dejó intacto y no se metió en el commit; se escucharon solo los parches de Dirección/Ubicación. Falta el OK del dueño para publicar.
+
 ## 27/11/2026 - PUBLICADO Importar en Nueva lista, cartel de adjuntado y reemplazo en los 3 sitios
 - El dueño preguntó si el botón estaba dentro de la ventana «Nueva lista»; se confirmó que está en su barra de abajo, junto a «Guardar lista». Eligió **«Publicar así (Recommended)»**.
 - Se compiló en worktree limpio (`siumax-importar`, HEAD `6c1e651`) con los **39 archivos del WIP ajeno de `src/`** copiados encima, sin tocar ni commitear ese trabajo. Bundle **`index-BSZAgvGG.js` / `index-Di8Dfc2n.css`**.
