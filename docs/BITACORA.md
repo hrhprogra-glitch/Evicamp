@@ -7,6 +7,13 @@
 
 ---
 
+## 27/11/2026 - Dirección JSON crudo al elegir cliente en ecosistema — HECHO Y PROBADO, SIN PUBLICAR
+- El dueño reportó: *«ingrese un cliente y la dirección me salió así {"zip":"","pais":"","calle":"MZA. 3A LOTE. 35 SOL DE LA MOLINA LIMA - LIMA - LA MOLINA","calle2":"","ciudad":"","estado":"","distrito":""}»*, en **ecosistema**.
+- Causa: en la rama actual (`fase-11-sunat`) **no estaba** `src/utils/direccion.ts` (solo existe en la rama `arreglar-direccion-salidas`). `ModalNuevaSalida.tsx` copiaba `cli.direccion` tal cual en el campo. El bundle publicado traía la limpieza porque se compiló desde otra copia, pero el código base no.
+- Se agregó `src/utils/direccion.ts` con `direccionLegible()` y se aplicó en `ModalNuevaSalida.tsx` al elegir cliente o bien, al cargar borrador, `datosIniciales` y «Continuar salida». También en `ModalDetalleSalida.tsx` para que las salidas guardadas antes con JSON se vean limpias, sin borrar nada de la base.
+- **Prueba nueva:** `herramientas-pruebas/verificar-direccion-json-cliente.mjs` **5/5 en 3 corridas**, 0 errores JS, sin escrituras. También **5/5 en 3 corridas contra ecosistema** con el bundle local (`BUNDLE_DIR`); el 404 de `/suscripcion.json` de ese sitio es ajeno a Salidas y se ignora. Regresiones: dirección larga **6/6**, botón «Espera» **19/19**, doble guardado **1 sola llamada**; `tsc` 0.
+- El WIP ajeno de `ModalDetalleSalida.tsx` (orden de materiales por `puntajeBusqueda`) quedó intacto: al commit se metieron solo los 2 hunks propios. **NO PUBLICADO.** Sin SQL, push ni reinicio de API. Falta el OK del dueño.
+
 ## 27/11/2026 - PUBLICADO el botón «Espera» en los 3 sitios
 - El dueño pidió *«ponle el nombre "espera", es más corto»* y después eligió **«Publicar en los 3 (Recommended)»**. El botón dice **Espera** y sigue guardando de verdad para continuar con otra, sin comprobante.
 - Se compiló en el worktree `siumax-direccion` (HEAD `5dafcff`) con los **39 archivos del WIP ajeno de `src/`** copiados encima, sin tocarlos ni commitearlos. Bundle **`index-C9sqzhbx.js` / `index-Di8Dfc2n.css`**.

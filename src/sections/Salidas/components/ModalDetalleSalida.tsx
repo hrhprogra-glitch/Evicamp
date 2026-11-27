@@ -3,6 +3,7 @@ import { Truck, X, Printer, RotateCcw, CheckCircle, AlertTriangle, MapPin, User,
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
+import { direccionLegible } from '../../../utils/direccion';
 import { coincideBusqueda } from '../../../utils/busqueda';
 import { VistaPreviaSalida } from './VistaPreviaSalida';
 import { ModalDevolucionesSalida } from './ModalDevolucionesSalida';
@@ -244,7 +245,7 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
   const labelCls = 'block font-black uppercase text-[var(--color-ink)] mb-1';
   const clienteNombre = salida.customer?.name || (salida.observaciones?.match(/CLIENTE:\s*([^|]+)/)?.[1] || '').trim() || texto(salida.customer_id);
   const bienNombre = salida.bien?.nombre || (salida.observaciones?.match(/ATIENDE:\s*([^|]+)/)?.[1] || '').trim() || '—';
-  const direccionDetalle = texto(salida.direccion) || texto(salida.customer?.direccion) || texto(salida.bien?.direccion) || '—';
+  const direccionDetalle = direccionLegible(salida.direccion) || direccionLegible(salida.customer?.direccion) || direccionLegible(salida.bien?.direccion) || '—';
   const ubicacionDetalle = texto(salida.ubicacion) || texto(salida.bien?.ubicacion) || '—';
   const valorUnaLinea = (valor: string) => (
     <span className="min-w-0 flex-1 truncate" title={valor} aria-label={valor}>{valor}</span>

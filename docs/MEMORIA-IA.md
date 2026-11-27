@@ -8,6 +8,13 @@
 
 ---
 
+## 27/11/2026 — No dar por arreglado el JSON de direcciones sin comprobar la rama
+- El bundle publicado limpiaba el JSON migratorio de Dirección, pero el dueño volvió a verlo en ecosistema. Causa: `src/utils/direccion.ts` existía solo en la rama `arreglar-direccion-salidas`; la rama de trabajo `fase-11-sunat` no lo tenía y `ModalNuevaSalida.tsx` copiaba `cli.direccion` crudo. **Verificar que el archivo y el import existan en la rama actual**, no solo que el bundle viejo funcione.
+- `direccionLegible()` hay que aplicarla en **todas** las entradas del campo Dirección: elegir cliente, elegir bien, borrador de `localStorage`, `datosIniciales` (Agenda) y «Continuar salida». Si se aplica solo al elegir cliente, el JSON reaparece por otro camino.
+- En el detalle conviene limpiar también las salidas **ya guardadas** con JSON: `direccionLegible(salida.direccion) || direccionLegible(salida.customer?.direccion) || …`. Así no hace falta tocar la base.
+- Al tocar `ModalDetalleSalida.tsx` hay WIP ajeno (`puntajeBusqueda`). Técnica segura: copiar el archivo a temp, `git checkout --`, aplicar solo los hunks propios, `git add`, y volver a copiar el temp para conservar el WIP en el working tree.
+- Prueba `herramientas-pruebas/verificar-direccion-json-cliente.mjs`: intercepta `/rest/v1/customers` y `/rest/v1/salidas` con el JSON del dueño; **5/5** en 3 corridas.
+
 ## 27/11/2026 — «Espera» en Nueva salida: no pasar el handler directo al onClick
 - `handleGuardarSalida(continuarConOtra = false)` es un **booleano**. Si se pone `onClick={handleGuardarSalida}`, React le pasa el evento de clic como primer argumento: es *truthy* y el guardado normal se vuelve «guardar y otra» por accidente. Siempre `onClick={() => handleGuardarSalida()}` para la acción normal y `onClick={() => handleGuardarSalida(true)}` para la nueva. F10 ya llama sin argumentos.
 - El bloqueo anti doble guardado tiene que ser **`guardandoRef`** (ref), no solo `guardando` (estado): dos F10 seguidos o doble clic entran antes de que React actualice el estado. Activar la ref justo antes de la RPC y liberarla en `finally`.

@@ -1900,3 +1900,10 @@
 - **Dueño (después):** eligió **«Publicar en los 3 (Recommended)»**.
 - **Publicado:** bundle **`index-C9sqzhbx.js` / `index-Di8Dfc2n.css`** en Nego, ecosistema y Evicamp (22 archivos por sitio, nginx recargado, iconos de ecosistema repuestos). Compilado en worktree con los 39 archivos WIP ajenos copiados encima, sin commitearlos ni tocarlos. Verificación HTTP **27 OK / 0 fallos**: los tres sirven el mismo hash y el JS trae el botón «Espera» junto a la X. Sin SQL, push ni reinicio de API.
 - **Falta:** la revisión visual del dueño con **Ctrl+F5**.
+
+## 27/11/2026 (dueño: dirección con JSON crudo en ecosistema)
+- **Dueño:** *«perfecto pero encontre un error ingrese un cliente y la dirección me salio así {"zip":"","pais":"","calle":"MZA. 3A LOTE. 35 SOL DE LA MOLINA LIMA - LIMA - LA MOLINA","calle2":"","ciudad":"","estado":"","distrito":""}»*. Aclaró: *«eso me paso en ecosistema»*.
+- **Causa encontrada:** en la rama `fase-11-sunat` no existía `src/utils/direccion.ts`; ese archivo solo estaba en la rama `arreglar-direccion-salidas`, desde donde se había compilado el bundle anterior. El formulario copiaba `cli.direccion` tal cual.
+- **Hecho:** se trajo `direccionLegible()` a esta rama y se aplicó al elegir cliente o bien, al cargar borrador/datos iniciales/continuar salida y al detalle de salidas ya guardadas con JSON. No se borró ni se cambió nada en la base.
+- **Probado:** prueba nueva `verificar-direccion-json-cliente.mjs` **5/5** en 3 corridas, 0 errores JS, sin escrituras; regresiones de dirección larga, «Espera» y doble guardado OK; `tsc` 0.
+- **Falta:** el dueño debe dar el OK para publicar el arreglo en los 3 sitios. Sin SQL, push ni reinicio de API.

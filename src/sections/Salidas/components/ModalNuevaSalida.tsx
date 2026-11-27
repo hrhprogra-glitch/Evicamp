@@ -15,6 +15,7 @@ import { VistaPreviaSalida } from './VistaPreviaSalida';
 import { UnidadMaterial } from './UnidadMaterial';
 import { useEmpresaComprobante } from '../empresa';
 import { ID_CLIENTE_NOTA, esSalidaNota, nombreClienteSalida } from '../clienteNota';
+import { direccionLegible } from '../../../utils/direccion';
 import type { TipoSalida, Salida } from '../types';
 
 interface ModalNuevaSalidaProps {
@@ -263,7 +264,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         setClienteLibre(esSalidaNota(salidaRaiz) ? nombreClienteSalida(salidaRaiz, '') : '');
         setBienId(salidaRaiz.bien_id || '');
         setBienLibre('');
-        setDireccion(salidaRaiz.direccion || '');
+        setDireccion(direccionLegible(salidaRaiz.direccion));
         setUbicacion(salidaRaiz.ubicacion || '');
         setObservaciones(`Continuación de ${salidaRaiz.codigo}`);
         if (salidaRaiz.trabajadores) {
@@ -290,7 +291,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         if (datosIniciales.clienteLibre) setBusquedaCliente(datosIniciales.clienteLibre);
         setBienId(datosIniciales.bienId || '');
         setBienLibre(datosIniciales.bienLibre || '');
-        setDireccion(datosIniciales.direccion || '');
+        setDireccion(direccionLegible(datosIniciales.direccion));
         setUbicacion(datosIniciales.ubicacion || '');
         setObservaciones(datosIniciales.observaciones || '');
         if (datosIniciales.trabajadoresIds) {
@@ -323,7 +324,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               }
               if (b.bienId) setBienId(b.bienId);
               if (b.bienLibre) setBienLibre(b.bienLibre);
-              if (b.direccion) setDireccion(b.direccion);
+              if (b.direccion) setDireccion(direccionLegible(b.direccion));
               if (b.ubicacion) setUbicacion(b.ubicacion);
               if (b.fecha) setFecha(b.fecha);
               if (b.empleadoId) setEmpleadoId(b.empleadoId);
@@ -479,14 +480,14 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
           setBienes(data || []);
           if (data && data.length > 0 && !bienId) {
             setBienId(data[0].id);
-            if (data[0].direccion) setDireccion(data[0].direccion);
+            if (data[0].direccion) setDireccion(direccionLegible(data[0].direccion));
             if (data[0].ubicacion) setUbicacion(data[0].ubicacion);
           }
         });
 
       const cli = clientes.find((c) => c.id === Number(customerId));
       if (cli && cli.direccion && !direccion) {
-        setDireccion(cli.direccion);
+        setDireccion(direccionLegible(cli.direccion));
       }
     } else {
       setBienes([]);
