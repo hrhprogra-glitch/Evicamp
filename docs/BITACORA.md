@@ -7,6 +7,13 @@
 
 ---
 
+## 27/11/2026 - PUBLICADO el botón «Espera» en los 3 sitios
+- El dueño pidió *«ponle el nombre "espera", es más corto»* y después eligió **«Publicar en los 3 (Recommended)»**. El botón dice **Espera** y sigue guardando de verdad para continuar con otra, sin comprobante.
+- Se compiló en el worktree `siumax-direccion` (HEAD `5dafcff`) con los **39 archivos del WIP ajeno de `src/`** copiados encima, sin tocarlos ni commitearlos. Bundle **`index-C9sqzhbx.js` / `index-Di8Dfc2n.css`**.
+- `publicar-bundle-combinado.cjs` subió **22 archivos por sitio** a Nego (`siumax`), ecosistema y Evicamp, con `chown www-data` y `systemctl reload nginx`. Iconos de ecosistema repuestos (logo `c159d216…`).
+- `verificar-bundles-salidas.mjs` ahora comprueba el botón «Espera» junto a la X: **27 OK / 0 fallos**; los tres sirven el mismo hash. Ojo: «Cancelar (Esc)» sigue existiendo en **otros** modales del bundle, por eso la comprobación mira solo el trozo del botón nuevo.
+- Sin SQL, push, panel/clientes ni reinicio de API. Falta la revisión visual del dueño con **Ctrl+F5**.
+
 ## 27/11/2026 - «Espera» en Nueva salida, sin botón Cancelar — HECHO Y PROBADO, SIN PUBLICAR
 - El dueño pidió: *«ahora en nueva salida necesito que haiga una espera donde pueda guardar una salida y continuar con otra puede estar al costado del "x" y elimina el cancelar(esc) pero deja que se pueda salir con esc»*.
 - Se mostró la propuesta y eligió **«Guardar y otra (Recommended)»**: guarda de verdad (misma RPC que F10, con descuento de stock), sin comprobante, y deja el formulario limpio para la siguiente. Las otras opciones eran guardar en espera sin descontar stock y guardar mostrando comprobante. Después pidió ponerle el nombre **«Espera»** por ser más corto. También eligió **«Sí, Esc y X igual (Recommended)»**: se quita solo el botón Cancelar.

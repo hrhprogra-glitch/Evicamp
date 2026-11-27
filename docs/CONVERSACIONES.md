@@ -1897,4 +1897,6 @@
 - **Dueño (después):** *«ponle el nombre "espera", es más corto»*. El botón se llama **«Espera»** (el id técnico sigue siendo `#btn-guardar-y-otra-salida`); la acción sigue siendo guardar de verdad y continuar con otra.
 - **Hecho:** botón `#btn-guardar-y-otra-salida` justo antes de la X en la cabecera; guarda con la misma RPC, salta la vista previa, avisa y deja cliente/materiales limpios con el foco en el buscador de cliente. Se quitó el botón «Cancelar (Esc)» del pie. Se agregó `guardandoRef` para evitar doble guardado con F10 o doble clic; F10, la X y Esc siguen igual.
 - **Probado:** prueba nueva `verificar-boton-espera-salida.mjs` **19/19** en 3 corridas, 0 errores JS, sin escrituras reales. Regresiones: doble guardado (1 sola llamada), devoluciones y facturas OK; `tsc` 0.
-- **Falta:** el dueño debe revisar y dar el OK para publicar el bundle **`index-C9sqzhbx.js` / `index-Di8Dfc2n.css`** en Nego, ecosistema y Evicamp. Sin SQL, push ni reinicio de API.
+- **Dueño (después):** eligió **«Publicar en los 3 (Recommended)»**.
+- **Publicado:** bundle **`index-C9sqzhbx.js` / `index-Di8Dfc2n.css`** en Nego, ecosistema y Evicamp (22 archivos por sitio, nginx recargado, iconos de ecosistema repuestos). Compilado en worktree con los 39 archivos WIP ajenos copiados encima, sin commitearlos ni tocarlos. Verificación HTTP **27 OK / 0 fallos**: los tres sirven el mismo hash y el JS trae el botón «Espera» junto a la X. Sin SQL, push ni reinicio de API.
+- **Falta:** la revisión visual del dueño con **Ctrl+F5**.

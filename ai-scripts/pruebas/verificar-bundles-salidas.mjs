@@ -32,6 +32,11 @@ for (const sitio of sitios) {
   comprobar(`${sitio}: el JS trae Importar en Nueva lista y el cartel de adjuntado`,
     jsTxt.includes('btn-importar-compra') && jsTxt.includes('estado-adjuntos') && jsTxt.includes('Importar de nuevo'));
   comprobar(`${sitio}: el JS trae Dirección/Ubicación en una línea`, jsTxt.includes('min-w-0 flex-1 truncate'));
+  // «Cancelar (Esc)» sigue existiendo en OTROS modales del bundle; solo miramos el trozo del botón nuevo.
+  const iEspera = jsTxt.indexOf('btn-guardar-y-otra-salida');
+  comprobar(`${sitio}: el JS trae el botón «Espera» al lado de la X`,
+    iEspera >= 0 && /espera/i.test(jsTxt.slice(iEspera, iEspera + 900))
+      && jsTxt.slice(iEspera, iEspera + 900).includes('btn-cerrar-modal-nueva-salida'));
 }
 
 console.log(`\nRESULTADO: ${ok} OK, ${fallos} fallos`);
