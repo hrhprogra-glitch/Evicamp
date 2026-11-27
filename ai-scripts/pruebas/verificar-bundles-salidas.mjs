@@ -1,11 +1,5 @@
 // Comprueba por HTTP que el bundle servido contiene el arreglo de Salidas para PC pequeña.
-// No necesita login ni SSH. Uso: node ai-scripts/pruebas/verificar-bundles-salidas.mjs [sitio...]
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
-let puppeteer;
-try { puppeteer = require('puppeteer-core'); }
-catch { puppeteer = require('D:/Programación/siumax/videos/grabador/node_modules/puppeteer-core'); }
-
+// No necesita login, SSH ni puppeteer (solo fetch). Uso: node ai-scripts/pruebas/verificar-bundles-salidas.mjs [sitio...]
 const URLS = {
   nego: 'https://nego.siumax.duckdns.org',
   ecosistema: 'https://ecosistema123.duckdns.org',
@@ -33,6 +27,7 @@ for (const sitio of sitios) {
   comprobar(`${sitio}: el JS trae la lista adaptable`, jsTxt.includes('tabla-salidas-scroll') && jsTxt.includes('data-etiqueta'));
   comprobar(`${sitio}: el CSS trae la tabla compacta y las tarjetas`, cssTxt.includes('tabla-salidas-scroll') && cssTxt.includes('1101px'));
   comprobar(`${sitio}: ya no está el ancho fijo de 1080 px`, !jsTxt.includes('min-w-\\[1080px\\]'));
+  comprobar(`${sitio}: el JS trae el botón TUBO/M del buscador`, jsTxt.includes('btn-unidad-busqueda-salida'));
 }
 
 console.log(`\nRESULTADO: ${ok} OK, ${fallos} fallos`);

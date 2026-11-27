@@ -7,6 +7,13 @@
 
 ---
 
+## 27/11/2026 - PUBLICADO el botón TUBO/M en Nego, ecosistema y Evicamp
+- El dueño dijo: *«perfecto subelo a negosiumax, ecosistema y evicamp para que esten actualizados»*. Se publicó el bundle **`index-ZLw_rwzg.js` / `index-Ct6Zd1Td.css`** (22 archivos por sitio) con `ai-scripts/publicar-bundle-combinado.cjs <dist>`, nginx recargado. Los 3 sitios sirven el mismo hash y el JS contiene `btn-unidad-busqueda-salida`. Verificación HTTP **`15 OK, 0 fallos`**.
+- Se compiló en worktree limpio pegado a `HEAD` (`52e51b9`) con el WIP actual de `src/` copiado encima, para no publicar solo una parte: el `HEAD` traía importaciones (`imprimirTicket80mm`, `puntajeBusqueda`) cuyas definiciones estaban sin commitear y la compilación limpia fallaba. No se tocó el WIP del dueño ni se hicieron commits de esos archivos.
+- Después de ecosistema se corrieron los iconos con `restaurar-iconos-ecosistema.cjs`: logo `c159d216…` confirmado (el `icon-192.png` quedó con el hash que genera el script actual, `1507053…`).
+- Se corrigió `ai-scripts/pruebas/verificar-bundles-salidas.mjs`: exigía `puppeteer-core` de la unidad `D:` (compu vieja) aunque solo usa `fetch`. Ahora funciona en esta compu y además comprueba el marcador del botón nuevo en los 3 sitios.
+- Sin SQL, sin push, sin publicar en clientes ni panel, sin reiniciar la API. Falta la revisión visual del dueño con **Ctrl+F5**.
+
 ## 27/11/2026 - Unidad TUBO/M también en el buscador, antes de agregar — OpenCode (Big Pickle) — HECHO Y PROBADO, SIN PUBLICAR
 - El dueño dijo: *«así me gusto lo de cambiar unidad a tubo puedes agregarlo en el buscador a la hora de agregar para poder cambiarlo antes»*. Se mostró la propuesta y aprobó **«Sí, así (Recommended)»**.
 - Cambio solo en `src/sections/Salidas/components/ModalNuevaSalida.tsx`: botón **`#btn-unidad-busqueda-salida`** junto a la cantidad del buscador. Aparece solo si el producto tiene presentación (por ejemplo «1 TUBO = 5 M»). Dice **TUBO** o **M**; por defecto queda en TUBO, como antes. En TUBO solo enteros (`step=1`); en M se permiten decimales. Se maneja con **Tab + Espacio/Enter**.
