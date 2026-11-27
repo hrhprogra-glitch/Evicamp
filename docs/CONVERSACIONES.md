@@ -1906,4 +1906,6 @@
 - **Causa encontrada:** en la rama `fase-11-sunat` no existía `src/utils/direccion.ts`; ese archivo solo estaba en la rama `arreglar-direccion-salidas`, desde donde se había compilado el bundle anterior. El formulario copiaba `cli.direccion` tal cual.
 - **Hecho:** se trajo `direccionLegible()` a esta rama y se aplicó al elegir cliente o bien, al cargar borrador/datos iniciales/continuar salida y al detalle de salidas ya guardadas con JSON. No se borró ni se cambió nada en la base.
 - **Probado:** prueba nueva `verificar-direccion-json-cliente.mjs` **5/5** en 3 corridas, 0 errores JS, sin escrituras; regresiones de dirección larga, «Espera» y doble guardado OK; `tsc` 0.
-- **Falta:** el dueño debe dar el OK para publicar el arreglo en los 3 sitios. Sin SQL, push ni reinicio de API.
+- **Dueño (después):** eligió **«Publicar en los 3 (Recommended)»**.
+- **Publicado:** bundle **`index-CBtEOYAt.js` / `index-Di8Dfc2n.css`** en Nego, ecosistema y Evicamp (22 archivos por sitio, nginx recargado, iconos de ecosistema repuestos). Compilado en worktree con los 39 archivos WIP ajenos copiados encima, sin commitearlos ni tocarlos. `verificar-bundles-salidas.mjs` ahora comprueba también la limpieza del JSON y dio **30 OK / 0 fallos** en los tres sitios. Sin SQL, push ni reinicio de API.
+- **Falta:** la revisión visual del dueño con **Ctrl+F5**.

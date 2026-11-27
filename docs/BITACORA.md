@@ -7,6 +7,12 @@
 
 ---
 
+## 27/11/2026 - PUBLICADO el arreglo de Dirección JSON en los 3 sitios
+- El dueño eligió **«Publicar en los 3 (Recommended)»**. Se compiló en el worktree `siumax-direccion` (HEAD `109fb65`) con los **39 archivos del WIP ajeno de `src/`** copiados encima, sin tocarlos ni commitearlos. Bundle **`index-CBtEOYAt.js` / `index-Di8Dfc2n.css`**.
+- `publicar-bundle-combinado.cjs` subió **22 archivos por sitio** a Nego (`siumax`), ecosistema y Evicamp, con `chown www-data` y `systemctl reload nginx`. Iconos de ecosistema repuestos (logo `c159d216…`).
+- `verificar-bundles-salidas.mjs` ahora comprueba también la limpieza del JSON (`codigo_postal` y `calle2`): **30 OK / 0 fallos**; los tres sirven el mismo hash.
+- Sin SQL, push, panel/clientes ni reinicio de API. Falta la revisión visual del dueño con **Ctrl+F5**.
+
 ## 27/11/2026 - Dirección JSON crudo al elegir cliente en ecosistema — HECHO Y PROBADO, SIN PUBLICAR
 - El dueño reportó: *«ingrese un cliente y la dirección me salió así {"zip":"","pais":"","calle":"MZA. 3A LOTE. 35 SOL DE LA MOLINA LIMA - LIMA - LA MOLINA","calle2":"","ciudad":"","estado":"","distrito":""}»*, en **ecosistema**.
 - Causa: en la rama actual (`fase-11-sunat`) **no estaba** `src/utils/direccion.ts` (solo existe en la rama `arreglar-direccion-salidas`). `ModalNuevaSalida.tsx` copiaba `cli.direccion` tal cual en el campo. El bundle publicado traía la limpieza porque se compiló desde otra copia, pero el código base no.

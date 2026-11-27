@@ -37,6 +37,7 @@ for (const sitio of sitios) {
   comprobar(`${sitio}: el JS trae el botón «Espera» al lado de la X`,
     iEspera >= 0 && /espera/i.test(jsTxt.slice(iEspera, iEspera + 900))
       && jsTxt.slice(iEspera, iEspera + 900).includes('btn-cerrar-modal-nueva-salida'));
+  comprobar(`${sitio}: el JS limpia el JSON de dirección`, jsTxt.includes('codigo_postal') && jsTxt.includes('calle2'));
 }
 
 console.log(`\nRESULTADO: ${ok} OK, ${fallos} fallos`);
