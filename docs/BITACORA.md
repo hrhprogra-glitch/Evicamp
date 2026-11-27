@@ -7,6 +7,12 @@
 
 ---
 
+## 2026-11-26 - .exe escritorio: impresión 80mm y autoactualización Ecosistema
+- **Pedido:** en .exe salía espacio blanco arriba al imprimir; compilar/subir a 3 sitios. Luego Ecosistema no actualizaba a 1.2.x aunque debía ser automático; además dueño pidió nombre/logo de Ecosistema en el .exe y dejar regla en memoria.
+- **Hecho:** Fix impresión en `escritorio/main.js`: ventana oculta con ancho real 80mm (`useContentSize`), espera 250ms, medición real body/document, `pageSize` por alto, y `header:'' footer:''`. Compilado/publicado .exe **v1.2.3** al canal común (`/var/www/siuhub/html/actualizaciones/` + descargas). Causa de “no actualiza”: Ecosistema tenía `/actualizaciones/` propio con `latest.yml` 1.2.0; se unificó al canal general y se puso `no-cache` en nginx. Verificado: `https://ecosistema123.duckdns.org/actualizaciones/latest.yml` devuelve 1.2.3. También se actualizó `SiuMax-Setup.exe` en descargas de ecosistema/evicamp/nego.
+- **Cambio en curso:** `escritorio/main.js` ahora toma icono remoto `/icons/icon-192.png` y `document.title` del sitio conectado en `did-finish-load` para mostrar marca del cliente. Falta compilar/publicar nueva versión .exe con ese cambio y confirmar.
+- **Queda:** Compilar/publicar .exe con marca dinámica (logo/nombre por sitio), probar en Ecosistema que muestre Ecosistema y no SiuMax, y que siga imprimiendo sin blanco arriba. Aplicar SQL de `salida_fusiones` en ecosistema (falta; da 400). Seguir migración tickets restantes. No push GitHub.
+
 ## 26/11/2026 (PUBLICADO en Nego, ecosistema y Evicamp) · OpenCode (Big Pickle) — TODO JUNTO
 
 - **Dueño:** «perfecto subelo todo» y, al confirmar destinos, «a negosiumax, ecosistema y evicamp».

@@ -2,7 +2,7 @@
 // Abre el sistema del cliente desde el VPS en su propia ventana, así cada actualización
 // llega al instante sin reinstalar, y agrega lo que el navegador no puede: imprimir tickets
 // directo a la impresora elegida, sin la ventana de impresión.
-const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, shell, dialog, nativeImage, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { autoUpdater } = require('electron-updater');
@@ -39,7 +39,43 @@ const origenNegocio = () => {
   return u ? new URL(u).origin : null;
 };
 
+const MARCAS_POR_DOMINIO = {
+  'ecosistema123.duckdns.org': 'ECO SISTEMAS URH',
+};
+
+const actualizarMarcaVentana = async (tituloForzado) => {
+  const origen = origenNegocio();
+  if (!ventana || ventana.isDestroyed() || !origen) return;
+  try {
+    const res = await net.fetch(`${origen}/icons/icon-192.png`, { cache: 'no-store' });
+    if (res.ok) {
+      const buf = Buffer.from(await res.arrayBuffer());
+      const img = nativeImage.createFromBuffer(buf);
+      if (!img.isEmpty() && !ventana.isDestroyed()) ventana.setIcon(img);
+    }
+  } catch { /* sin icono remoto: se mantiene el icono local */ }
+  try {
+    let limpio = String(tituloForzado || '').trim().slice(0, 120);
+    if (!limpio) {
+      limpio = String(await ventana.webContents.executeJavaScript('document.title || ""').catch(() => '')).trim().slice(0, 120);
+    }
+    if (!limpio || /^SiuMax\b/i.test(limpio)) {
+      const host = new URL(origen).hostname.toLowerCase();
+      limpio = MARCAS_POR_DOMINIO[host] || limpio;
+    }
+    if (limpio && !ventana.isDestroyed() && limpio !== marcaActual) {
+      marcaActual = limpio;
+      ventana.setTitle(limpio);
+      construirMenu().catch(() => {});
+    } else if (limpio && !ventana.isDestroyed()) {
+      ventana.setTitle(limpio);
+    }
+  } catch { /* sin titulo */ }
+};
+
 let ventana = null;
+let marcaActual = 'SiuMax';
+const nombreMarca = () => marcaActual || 'SiuMax';
 
 // Una sola ventana: si abren el ícono otra vez, se trae la que ya está abierta
 if (!app.requestSingleInstanceLock()) {
@@ -107,6 +143,11 @@ const crearVentana = () => {
       ventana.loadFile(path.join(__dirname, 'sin-conexion.html'));
     }
   });
+  ventana.webContents.on('did-finish-load', () => { void actualizarMarcaVentana(); });
+  ventana.webContents.on('page-title-updated', (e, titulo) => {
+    e.preventDefault();
+    void actualizarMarcaVentana(titulo);
+  });
 
   cargarSistema();
 };
@@ -115,12 +156,24 @@ const crearVentana = () => {
 // La página manda el HTML del ticket; se carga en una ventana invisible y se imprime en silencio.
 ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
   const { impresora } = leerConfig();
-  const oculta = new BrowserWindow({ show: false, webPreferences: { sandbox: true } });
+  const ancho80mm = Math.round((80 / 25.4) * 96); // ~302px CSS a 96dpi, viewport real para ticket 80mm
+  const oculta = new BrowserWindow({
+    show: false,
+    width: ancho80mm,
+    height: 900,
+    useContentSize: true,
+    webPreferences: { sandbox: true },
+  });
   try {
     await oculta.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+    // Esperar que el logo/data URL y estilos se asienten antes de medir/imprimir.
+    await new Promise((r) => setTimeout(r, 250));
     // El papel mide lo que mide el ticket (06/11/2026): sin esto la impresora usa su hoja por defecto y un ticket
     // largo (muchos productos + QR) se cortaba abajo. 1 px = 25400/96 micras; 80 mm de ancho; +5 mm al final.
-    const altoPx = await oculta.webContents.executeJavaScript('Math.ceil(document.body.scrollHeight)').catch(() => 0);
+    const altoPx = await oculta.webContents.executeJavaScript(
+      '(() => { const b = document.body, d = document.documentElement; return Math.ceil(Math.max(b?.scrollHeight||0, b?.offsetHeight||0, d?.scrollHeight||0, d?.offsetHeight||0)); })()'
+    ).catch(() => 0);
+    if (altoPx > 0) oculta.setContentSize(ancho80mm, Math.max(altoPx + 40, 200));
     const pageSize = altoPx > 0 ? { width: 80000, height: Math.max(Math.round((altoPx * 25400) / 96) + 5000, 50000) } : undefined;
     return await new Promise((resolve) => {
       oculta.webContents.print(
@@ -129,6 +182,8 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
           printBackground: true,
           deviceName: impresora || undefined, // sin elegir: usa la impresora predeterminada de Windows
           margins: { marginType: 'none' },
+          header: '',
+          footer: '',
           ...(pageSize ? { pageSize } : {}),
         },
         (ok, motivo) => resolve({ ok, motivo: ok ? null : motivo || 'No se pudo imprimir' })
@@ -188,8 +243,8 @@ const configurarActualizaciones = () => {
     avisoPendiente = true;
     const { response } = await dialog.showMessageBox(ventana, {
       type: 'info',
-      title: 'Actualización de SiuMax',
-      message: `Hay una nueva versión de SiuMax (${info.version}) lista para instalar.`,
+      title: `Actualización de ${nombreMarca()}`,
+      message: `Hay una nueva versión de ${nombreMarca()} (${info.version}) lista para instalar.`,
       detail: 'Se instala en unos segundos. Si estás atendiendo una venta, elige "Después": se instalará sola al cerrar el programa.',
       buttons: ['Reiniciar ahora', 'Después'],
       defaultId: 1,
@@ -200,13 +255,13 @@ const configurarActualizaciones = () => {
   });
 
   autoUpdater.on('update-not-available', () => {
-    if (revisionManual) dialog.showMessageBox(ventana, { type: 'info', title: 'SiuMax', message: `Ya tienes la última versión (${app.getVersion()}).` });
+    if (revisionManual) dialog.showMessageBox(ventana, { type: 'info', title: nombreMarca(), message: `Ya tienes la última versión (${app.getVersion()}).` });
     revisionManual = false;
   });
 
   autoUpdater.on('error', (err) => {
     console.error('Actualización:', err && err.message);
-    if (revisionManual) dialog.showMessageBox(ventana, { type: 'warning', title: 'SiuMax', message: 'No se pudo buscar actualizaciones. Revisa el internet.' });
+    if (revisionManual) dialog.showMessageBox(ventana, { type: 'warning', title: nombreMarca(), message: 'No se pudo buscar actualizaciones. Revisa el internet.' });
     revisionManual = false;
   });
 
@@ -233,7 +288,7 @@ const construirMenu = async () => {
 
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     {
-      label: 'SiuMax',
+      label: nombreMarca(),
       submenu: [
         { label: 'Recargar', accelerator: 'F5', click: () => cargarSistema() },
         { label: 'Pantalla completa', accelerator: 'F11', click: () => ventana.setFullScreen(!ventana.isFullScreen()) },
@@ -268,12 +323,12 @@ const construirMenu = async () => {
       label: 'Ayuda',
       submenu: [
         {
-          label: 'Acerca de SiuMax',
+          label: `Acerca de ${nombreMarca()}`,
           click: () => dialog.showMessageBox(ventana, {
             type: 'info',
-            title: 'SiuMax',
-            message: `SiuMax ${app.getVersion()}`,
-            detail: `Conectado a: ${urlNegocio() || '(sin configurar)'}\nImpresora: ${leerConfig().impresora || 'predeterminada de Windows'}`,
+            title: nombreMarca(),
+            message: `${nombreMarca()} ${app.getVersion()}`,
+            detail: `Programa: SiuMax ${app.getVersion()}\nConectado a: ${urlNegocio() || '(sin configurar)'}\nImpresora: ${leerConfig().impresora || 'predeterminada de Windows'}`,
           }),
         },
         { label: 'Buscar actualizaciones', click: () => buscarActualizacionManual() },
