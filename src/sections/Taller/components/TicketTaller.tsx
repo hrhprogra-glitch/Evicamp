@@ -29,24 +29,24 @@ export const generarHtmlTicketTaller = (
     body {
       width: 80mm;
       margin: 0;
-      padding: 4mm 4mm 6mm;
+      padding: 3mm 3.5mm 4mm;
       font-family: 'Courier New', Courier, monospace;
-      font-size: 11px;
-      line-height: 1.35;
+      font-size: 10px;
+      line-height: 1.3;
       color: #000;
       background: #fff;
     }
     .text-center { text-align: center; }
     .text-right { text-align: right; }
     .font-bold { font-weight: bold; }
-    .border-b { border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px; }
-    .border-t { border-top: 1px dashed #000; padding-top: 5px; margin-top: 5px; }
-    .titulo { font-size: 14px; font-weight: 900; text-transform: uppercase; }
-    .codigo { font-size: 16px; font-weight: 900; letter-spacing: 1px; margin: 4px 0; }
+    .border-b { border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 4px; }
+    .border-t { border-top: 1px dashed #000; padding-top: 4px; margin-top: 4px; }
+    .titulo { font-size: 12px; font-weight: 900; text-transform: uppercase; }
+    .codigo { font-size: 12px; font-weight: 900; letter-spacing: 1px; margin: 3px 0; }
     .fila { display: flex; justify-content: space-between; margin-bottom: 2px; }
-    .bloque { margin-bottom: 6px; }
-    .condiciones { font-size: 9px; line-height: 1.2; text-align: justify; margin-top: 6px; }
-    .firmas { margin-top: 25px; display: flex; justify-content: space-between; gap: 8px; font-size: 9px; text-align: center; }
+    .bloque { margin-bottom: 5px; }
+    .condiciones { font-size: 8px; line-height: 1.2; text-align: justify; margin-top: 5px; }
+    .firmas { margin-top: 20px; display: flex; justify-content: space-between; gap: 8px; font-size: 8px; text-align: center; }
     .linea-firma { border-top: 1px solid #000; padding-top: 2px; width: 48%; }
   </style>
 </head>
@@ -89,9 +89,9 @@ export const generarHtmlTicketTaller = (
     <div class="font-bold">IMPORTES Y PAGOS:</div>
     <div class="fila"><span>Mano de obra:</span><span>S/ ${Number(orden.costo_mano_obra || 0).toFixed(2)}</span></div>
     <div class="fila"><span>Repuestos:</span><span>S/ ${Number(orden.costo_repuestos || 0).toFixed(2)}</span></div>
-    <div class="fila font-bold" style="font-size:12px;"><span>TOTAL ESTIMADO:</span><span>S/ ${Number(orden.total || 0).toFixed(2)}</span></div>
+    <div class="fila font-bold" style="font-size:11px;"><span>TOTAL ESTIMADO:</span><span>S/ ${Number(orden.total || 0).toFixed(2)}</span></div>
     <div class="fila"><span>Adelanto pagado:</span><span>S/ ${Number(orden.adelanto || 0).toFixed(2)}</span></div>
-    <div class="fila font-bold" style="font-size:13px;"><span>SALDO PENDIENTE:</span><span>S/ ${Number(orden.saldo || 0).toFixed(2)}</span></div>
+    <div class="fila font-bold" style="font-size:11px;"><span>SALDO PENDIENTE:</span><span>S/ ${Number(orden.saldo || 0).toFixed(2)}</span></div>
   </div>
 
   ${esEntrega && orden.meses_garantia > 0 ? `

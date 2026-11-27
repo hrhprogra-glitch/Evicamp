@@ -173,16 +173,21 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
     webPreferences: { sandbox: true },
   });
   try {
+    oculta.webContents.setZoomFactor(1);
     await oculta.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
     // Esperar que el logo/data URL y estilos se asienten antes de medir/imprimir.
     await new Promise((r) => setTimeout(r, 250));
-    // El papel mide lo que mide el ticket (06/11/2026): sin esto la impresora usa su hoja por defecto y un ticket
-    // largo (muchos productos + QR) se cortaba abajo. 1 px = 25400/96 micras; 80 mm de ancho; +5 mm al final.
+    // El papel mide lo que mide el ticket: sin esto la impresora usa su hoja por defecto y un ticket
+    // largo se cortaba abajo. 1 px = 25400/96 micras; 80 mm de ancho; pequeño margen final.
     const altoPx = await oculta.webContents.executeJavaScript(
       '(() => { const b = document.body, d = document.documentElement; return Math.ceil(Math.max(b?.scrollHeight||0, b?.offsetHeight||0, d?.scrollHeight||0, d?.offsetHeight||0)); })()'
     ).catch(() => 0);
-    if (altoPx > 0) oculta.setContentSize(ancho80mm, Math.max(altoPx + 40, 200));
-    const pageSize = altoPx > 0 ? { width: 80000, height: Math.max(Math.round((altoPx * 25400) / 96) + 5000, 50000) } : undefined;
+    const altoFinal = altoPx > 0 ? Math.max(altoPx + 24, 200) : 900;
+    oculta.setContentSize(ancho80mm, altoFinal);
+    await new Promise((r) => setTimeout(r, 150));
+    const pageSize = altoPx > 0
+      ? { width: 80000, height: Math.max(Math.round((altoFinal * 25400) / 96) + 2000, 50000) }
+      : undefined;
     return await new Promise((resolve) => {
       oculta.webContents.print(
         {

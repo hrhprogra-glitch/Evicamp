@@ -4,7 +4,8 @@
 // Todo por teclado: flechas entre [data-nav], Enter activa, Escape cierra. Sin internet.
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Download, FileText, Loader2, Printer, Receipt, Send, X } from 'lucide-react';
-import { imprimirEnTicketera } from '../../../utils/impresion';
+import { imprimirTicket80mm } from '../../../utils/impresion';
+import logoSiumax from '../../../assets/logo.png';
 import { avisar } from '../../../utils/dialogos';
 import type { Salida } from '../types';
 import type { EmpresaComprobante } from '../empresa';
@@ -121,30 +122,58 @@ ${salida.observaciones ? `<div class="nota"><b>Observaciones:</b> ${esc(salida.o
 </body></html>`;
 };
 
-const ticketHtml = (salida: Salida, empresa: EmpresaComprobante) => {
+const logoTicketCache = new Map<string, string>();
+const logoParaTicket = async (src: string): Promise<string> => {
+  const key = src || 'logo-siumax';
+  const cached = logoTicketCache.get(key);
+  if (cached) return cached;
+  const cargar = (url: string) => new Promise<string>((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const max = 240;
+      const escala = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.width * escala));
+      c.height = Math.max(1, Math.round(img.height * escala));
+      c.getContext('2d')?.drawImage(img, 0, 0, c.width, c.height);
+      try { resolve(c.toDataURL('image/png')); } catch { resolve(url); }
+    };
+    img.onerror = () => resolve(url);
+    img.src = url;
+  });
+  let data = await cargar(src);
+  if (!data.startsWith('data:') && src !== logoSiumax) data = await cargar(logoSiumax);
+  if (!data.startsWith('data:')) data = logoSiumax;
+  logoTicketCache.set(key, data);
+  return data;
+};
+
+const ticketHtml = async (salida: Salida, empresa: EmpresaComprobante) => {
   const datos = datosSalida(salida).map(([k, v]) => `<div>${esc(k)}: <b>${esc(v)}</b></div>`).join('');
   const pers = personal(salida).map((n) => `<div>- ${esc(n)}</div>`).join('');
   const items = materiales(salida).map((it) => `<div class="item"><div class="nom">${esc(it.descripcion)}</div>`
     + `<div class="fila"><span>${esc(it.cantidad)} ${esc(it.unidad)}</span>${it.devuelto ? `<span>DEV: ${esc(it.devuelto)}</span>` : ''}</div></div>`).join('');
+  const logo = await logoParaTicket(String(empresa.logo || '') || logoSiumax);
   return `<!doctype html><html lang="es"><head><meta charset="UTF-8"><title>Vale ${esc(salida.codigo)}</title><style>
 @page { size: 80mm auto; margin: 0; }
-* { box-sizing: border-box; }
-html, body { margin: 0; background: #fff; color: #000; font: 12px/1.35 'Courier New', Courier, monospace; }
-body { width: 80mm; padding: 4mm 4mm 6mm; }
-.cab { text-align: center; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 6px; }
-.cab img { display: block; margin: 0 auto 4px; max-height: 22mm; max-width: 50mm; object-fit: contain; filter: grayscale(1); }
-.cab h1 { margin: 0; font-size: 15px; text-transform: uppercase; letter-spacing: .08em; }
-.cab .tipo { margin-top: 6px; font-weight: 900; text-transform: uppercase; }
-.cab .num { font-size: 16px; font-weight: 900; letter-spacing: .12em; }
-.datos { text-transform: uppercase; font-size: 11px; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 4px; }
-h2 { font-size: 11px; text-transform: uppercase; margin: 8px 0 2px; }
-.item { padding: 4px 0; border-bottom: 1px dotted #999; }
-.item .nom { font-weight: 700; text-transform: uppercase; }
-.fila { display: flex; justify-content: space-between; gap: 6px; }
-.nota { margin-top: 8px; border: 1px solid #000; padding: 4px; }
-.pie { margin-top: 10px; text-align: center; font-size: 10px; }
+* { box-sizing: border-box; overflow-wrap: break-word; word-break: break-word; }
+html, body { margin: 0; background: #fff; color: #000; font: 700 10px/1.3 'Courier New', Courier, monospace; }
+body { width: calc(100% - 6mm); margin: 0 3mm; padding: 2mm 3.5mm 3mm 3.5mm; }
+.cab { text-align: center; border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 4px; }
+.cab img { display: block; margin: 0 auto 3px; max-height: 18mm; max-width: 42mm; object-fit: contain; }
+.cab h1 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.cab .tipo { margin-top: 4px; font-weight: 900; text-transform: uppercase; font-size: 10px; }
+.cab .num { font-size: 12px; font-weight: 900; letter-spacing: .12em; }
+.datos { text-transform: uppercase; font-size: 9px; border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 3px; }
+h2 { font-size: 10px; text-transform: uppercase; margin: 6px 0 2px; }
+.item { padding: 3px 0; border-bottom: 1px dotted #999; }
+.item .nom { font-weight: 900; text-transform: uppercase; }
+.fila { display: flex; justify-content: space-between; gap: 4px; font-size: 9px; }
+.nota { margin-top: 6px; border: 1px solid #000; padding: 3px; font-size: 9px; }
+.pie { margin-top: 6px; text-align: center; font-size: 9px; }
 </style></head><body>
-<div class="cab"><img src="${esc(new URL(empresa.logo, location.href).href)}" alt=""><h1>${esc(empresa.nombre)}</h1>
+<div class="cab">${logo ? `<img src="${logo}" alt="">` : ''}<h1>${esc(empresa.nombre)}</h1>
 <div class="tipo">Vale de salida a ${esc(salida.tipo)}</div><div class="num">${esc(salida.codigo)}</div></div>
 <div class="datos">${datos}</div>
 ${pers ? `<h2>Personal asignado</h2>${pers}` : ''}
@@ -265,8 +294,13 @@ export const VistaPreviaSalida: React.FC<Props> = ({ salida, empresa, onCerrar }
     try { localStorage.setItem(CLAVE_FORMATO, f); } catch { /* solo por esta vez */ }
   };
 
+  const [ticket, setTicket] = useState('');
+  useEffect(() => {
+    let vivo = true;
+    void ticketHtml(salida, empresa).then((h) => { if (vivo) setTicket(h); }).catch(() => { if (vivo) setTicket(''); });
+    return () => { vivo = false; };
+  }, [salida, empresa]);
   const hoja = hojaHtml(salida, empresa);
-  const ticket = ticketHtml(salida, empresa);
   const html = formato === 'TICKET' ? ticket : hoja;
   const vista = html.replace('</head>', '<style>@media screen { html, body { overflow: hidden !important; } }</style></head>');
 
@@ -314,11 +348,11 @@ export const VistaPreviaSalida: React.FC<Props> = ({ salida, empresa, onCerrar }
 
   const imprimir = async () => {
     if (formato === 'TICKET') {
-      const r = await imprimirEnTicketera(ticket, `Vale-${salida.codigo}`);
-      if (r) {
-        if (!r.ok) await avisar(`No se pudo imprimir el ticket: ${r.motivo}\n\nRevisa que la ticketera esté encendida y elegida en el menú de la app.`);
-        return;
-      }
+      let htmlTicket = ticket;
+      if (!htmlTicket) htmlTicket = await ticketHtml(salida, empresa);
+      const r = await imprimirTicket80mm(htmlTicket, `Vale-${salida.codigo}`);
+      if (!r.ok) await avisar(`No se pudo imprimir el ticket: ${r.motivo}\n\nRevisa que la ticketera esté encendida y elegida en el menú de la app.`);
+      return;
     }
     marco.current?.contentWindow?.print();
   };
@@ -407,8 +441,12 @@ export const VistaPreviaSalida: React.FC<Props> = ({ salida, empresa, onCerrar }
             </p>
           </div>
           <div className="bg-[var(--color-bg)] border-2 border-[var(--color-border)] p-2 sm:p-4">
-            <iframe ref={marco} title="Vista previa del comprobante" srcDoc={vista} tabIndex={-1} onLoad={ajustarAlto} scrolling="no"
-              className={`${formato === 'TICKET' ? 'box-content w-[80mm] mx-auto border-2 border-dashed border-gray-400' : 'w-full border border-[var(--color-border)]'} min-h-[300px] bg-white shadow-[4px_4px_0_0_var(--color-border)] pointer-events-none block overflow-hidden`} />
+            {formato === 'TICKET' && !ticket ? (
+              <div className="box-content w-[80mm] mx-auto border-2 border-dashed border-gray-400 min-h-[300px] bg-white shadow-[4px_4px_0_0_var(--color-border)] flex items-center justify-center text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)]">Cargando vista previa...</div>
+            ) : (
+              <iframe ref={marco} title="Vista previa del comprobante" srcDoc={vista} tabIndex={-1} onLoad={ajustarAlto} scrolling="no"
+                className={`${formato === 'TICKET' ? 'box-content w-[80mm] mx-auto border-2 border-dashed border-gray-400' : 'w-full border border-[var(--color-border)]'} min-h-[300px] bg-white shadow-[4px_4px_0_0_var(--color-border)] pointer-events-none block overflow-hidden`} />
+            )}
           </div>
         </div>
         <div className="p-3 border-t-2 border-[var(--color-ink)] bg-[var(--color-bg)] flex flex-wrap items-end justify-end gap-x-5 gap-y-2 shrink-0">

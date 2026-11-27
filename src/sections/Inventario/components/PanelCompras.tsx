@@ -14,11 +14,11 @@ import { createPortal } from 'react-dom';
 import { filaEnMedio } from '../../../utils/flechasEspaciales';
 import { BOTONES_INVENTARIO } from '../tecladoInventario';
 import { ShoppingCart, Plus, Truck, Send, PackageCheck, Trash2, X, Search, Loader2, Ban, Undo2, FileText, Share2, Download, Printer, ArrowLeft, Receipt, Sparkles, Paperclip, Eye, Upload } from 'lucide-react';
-import { imprimirEnTicketera } from '../../../utils/impresion';
+import { imprimirTicket80mm } from '../../../utils/impresion';
 import { supabase } from '../../../db/supabase';
 import { usePermiso, useEmpleado, avisarSinPermiso } from '../../../utils/permisos';
 import { avisar, confirmar } from '../../../utils/dialogos';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { PaginacionSobrio } from '../../../components/PaginacionSobrio';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
@@ -164,6 +164,33 @@ const logoParaPdf = (src: string) => new Promise<{ data: string; ancho: number; 
   img.src = src;
 });
 
+const logoTicketCache = new Map<string, string>();
+const logoParaTicket = async (src: string): Promise<string> => {
+  const key = src || 'logo-siumax';
+  const cached = logoTicketCache.get(key);
+  if (cached) return cached;
+  const cargar = (url: string) => new Promise<string>((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const max = 240;
+      const escala = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.width * escala));
+      c.height = Math.max(1, Math.round(img.height * escala));
+      c.getContext('2d')?.drawImage(img, 0, 0, c.width, c.height);
+      try { resolve(c.toDataURL('image/png')); } catch { resolve(url); }
+    };
+    img.onerror = () => resolve(url);
+    img.src = url;
+  });
+  let data = await cargar(src);
+  if (!data.startsWith('data:') && src !== logoSiumax) data = await cargar(logoSiumax);
+  if (!data.startsWith('data:')) data = logoSiumax;
+  logoTicketCache.set(key, data);
+  return data;
+};
+
 // PDF de un pedido (jsPDF se carga solo al pedirlo, para no hacer más pesado el sistema)
 // conPrecios = false (cajero con "Enviar / Imprimir pedidos" sin permiso de almacén): solo productos y cantidades
 const pdfDeCompra = async (c: Compra, empresa: string, unidades: Map<string, string>, logo: string, conPrecios = true) => {
@@ -281,10 +308,11 @@ ${c.notas ? `<div class="nota"><b>Nota:</b> ${esc(c.notas)}</div>` : ''}
 </body></html>`;
 };
 
-// El mismo pedido en ticket de 80 mm (como las boletas de venta): logo en gris, letra de ticketera, una línea por producto
-const ticketDeCompra = (c: Compra, empresa: string, unidades: Map<string, string>, logo: string, conPrecios = true) => {
+// El mismo pedido en ticket de 80 mm (como las boletas de venta): logo embebido, centrado, letra legible.
+const ticketDeCompra = async (c: Compra, empresa: string, unidades: Map<string, string>, logo: string, conPrecios = true) => {
   const recibida = c.estado === 'RECIBIDO';
   const num = String(c.id).slice(-6);
+  const logoSrc = await logoParaTicket(String(logo || '') || logoSiumax);
   let total = 0;
   const items = c.compras_detalle.map((d) => {
     const cant = recibida ? Number(d.cantidad_recibida ?? 0) : Number(d.cantidad);
@@ -305,23 +333,23 @@ const ticketDeCompra = (c: Compra, empresa: string, unidades: Map<string, string
   ].map(([k, v]) => `<div>${esc(k)}: <b>${esc(v)}</b></div>`).join('');
   return `<!doctype html><html lang="es"><head><meta charset="UTF-8"><title>Pedido ${num}</title><style>
 @page { size: 80mm auto; margin: 0; }
-* { box-sizing: border-box; }
-html, body { margin: 0; background: #fff; color: #000; font: 12px/1.35 'Courier New', Courier, monospace; }
-body { width: 80mm; padding: 4mm 4mm 6mm; }
-.cab { text-align: center; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 6px; }
-.cab img { display: block; margin: 0 auto 4px; max-height: 22mm; max-width: 50mm; object-fit: contain; filter: grayscale(1); }
-.cab h1 { margin: 0; font-size: 15px; text-transform: uppercase; letter-spacing: .08em; }
-.cab .tipo { margin-top: 6px; font-weight: 900; text-transform: uppercase; }
-.cab .num { font-size: 16px; font-weight: 900; letter-spacing: .12em; }
-.datos { text-transform: uppercase; font-size: 11px; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 4px; }
-.item { padding: 4px 0; border-bottom: 1px dotted #999; }
-.item .nom { font-weight: 700; text-transform: uppercase; }
-.fila { display: flex; justify-content: space-between; gap: 6px; }
-.total { display: flex; justify-content: space-between; font-size: 15px; font-weight: 900; border-top: 2px solid #000; margin-top: 6px; padding-top: 4px; }
-.nota { margin-top: 8px; border: 1px solid #000; padding: 4px; }
-.pie { margin-top: 10px; text-align: center; font-size: 10px; }
+* { box-sizing: border-box; overflow-wrap: break-word; word-break: break-word; }
+html, body { margin: 0; background: #fff; color: #000; font: 700 10px/1.3 'Courier New', Courier, monospace; }
+body { width: calc(100% - 6mm); margin: 0 3mm; padding: 2mm 3.5mm 3mm 3.5mm; }
+.cab { text-align: center; border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 4px; }
+.cab img { display: block; margin: 0 auto 3px; max-height: 18mm; max-width: 42mm; object-fit: contain; }
+.cab h1 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.cab .tipo { margin-top: 4px; font-weight: 900; text-transform: uppercase; font-size: 10px; }
+.cab .num { font-size: 12px; font-weight: 900; letter-spacing: .12em; }
+.datos { text-transform: uppercase; font-size: 9px; border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 3px; }
+.item { padding: 3px 0; border-bottom: 1px dotted #999; }
+.item .nom { font-weight: 900; text-transform: uppercase; }
+.fila { display: flex; justify-content: space-between; gap: 4px; font-size: 9px; }
+.total { display: flex; justify-content: space-between; font-size: 11px; font-weight: 900; border-top: 1px solid #000; margin-top: 4px; padding-top: 3px; }
+.nota { margin-top: 6px; border: 1px solid #000; padding: 3px; font-size: 9px; }
+.pie { margin-top: 6px; text-align: center; font-size: 9px; }
 </style></head><body>
-<div class="cab"><img src="${esc(new URL(logo, location.href).href)}" alt=""><h1>${esc(empresa || 'Mi negocio')}</h1>
+<div class="cab">${logoSrc ? `<img src="${logoSrc}" alt="">` : ''}<h1>${esc(empresa || 'Mi negocio')}</h1>
 <div class="tipo">${recibida ? 'Compra recibida' : 'Pedido de compra'}</div><div class="num">#${num}</div></div>
 <div class="datos">${datos}</div>
 ${items}
@@ -361,7 +389,8 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   const [recibiendo, setRecibiendo] = useState<Compra | null>(null);
   const [viendo, setViendo] = useState<Compra | null>(null); // detalle abierto (Enter sobre una lista)
   const [empresa, setEmpresa] = useState({ nombre: '', telefono: '', logo: logoSiumax }); // WhatsApp y logo de Ajustes
-  const [previa, setPrevia] = useState<Compra | null>(null); // Enviar / Imprimir: vista previa de la hoja
+  const [previa, setPrevia] = useState<Compra | null>(null);
+  const [previaTicket, setPreviaTicket] = useState(''); // Enviar / Imprimir: vista previa de la hoja
 
   const cargar = async () => {
     setCargando(true);
@@ -434,6 +463,15 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
   const volverFoco = (compraId?: number) => setTimeout(() => {
     enfocar((compraId && document.querySelector<HTMLElement>(`[data-compra="${compraId}"]`)) || inicioCompras());
   }, 350); // después de que los avisos devuelvan su foco (navegacionSesion), para que no lo pisen
+
+  useEffect(() => {
+    if (!previa) { setPreviaTicket(''); return; }
+    let vivo = true;
+    void ticketDeCompra(previa, empresa.nombre, unidadPorId, empresa.logo, conPrecios)
+      .then((h) => { if (vivo) setPreviaTicket(h); })
+      .catch(() => { if (vivo) setPreviaTicket(''); });
+    return () => { vivo = false; };
+  }, [previa, empresa.nombre, empresa.logo, unidadPorId, conPrecios]);
 
   // Número de WhatsApp de Ajustes > Datos de la empresa (Teléfono). Solo se usa si es un CELULAR peruano válido
   // (9 dígitos que empiezan en 9, con o sin 51): un fijo u otro formato hacía que WhatsApp diera "número no válido".
@@ -710,7 +748,7 @@ export const PanelCompras: React.FC<Props> = ({ productos, onStockActualizado })
         <VistaPrevia
           compra={previa}
           hoja={htmlDeCompra(previa, empresa.nombre, unidadPorId, empresa.logo, conPrecios)}
-          ticket={ticketDeCompra(previa, empresa.nombre, unidadPorId, empresa.logo, conPrecios)}
+          ticket={previaTicket}
           onCerrar={() => { const c = previa; setPrevia(null); focoDetalle.current = 'btn-detalle-compartir'; setViendo(c); }}
           onWhatsApp={() => enviarWhatsApp(previa)}
           onEnviarPdf={() => enviarPdf(previa)}
@@ -991,11 +1029,9 @@ const VistaPrevia: React.FC<{
   };
   const imprimir = async () => {
     if (formato === 'TICKET') {
-      const r = await imprimirEnTicketera(ticket, `Pedido ${String(c.id).slice(-6)}`);
-      if (r) { // app de escritorio: ya se mandó a la ticketera
-        if (!r.ok) await avisar(`No se pudo imprimir el ticket: ${r.motivo}\n\nRevisa que la ticketera esté encendida y elegida en el menú de la app (tecla Alt > Impresora de tickets).`);
-        return;
-      }
+      const r = await imprimirTicket80mm(ticket, `Pedido ${String(c.id).slice(-6)}`);
+      if (!r.ok) await avisar(`No se pudo imprimir el ticket: ${r.motivo}\n\nRevisa que la ticketera esté encendida y elegida en el menú de la app (tecla Alt > Impresora de tickets).`);
+      return;
     }
     marco.current?.contentWindow?.print();
   };
@@ -1202,7 +1238,9 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
   const enLista = new Set(items.map((i) => i.product_id));
   const disponibles = productos;
   const resultados = !abierto ? [] : busqueda.trim()
-    ? disponibles.filter((p) => coincideBusqueda([p.name, p.code, p.barcode, (p as any).marca, (p as any).modelo, (p as any).medida, (p as any).laboratorio, (p as any).ubicacion], busqueda)) // todos (antes se cortaba en 50)
+    ? disponibles
+        .filter((p) => coincideBusqueda([p.name, p.code, p.barcode, (p as any).marca, (p as any).modelo, (p as any).medida, (p as any).laboratorio, (p as any).ubicacion], busqueda))
+        .sort((a, b) => puntajeBusqueda([b.name, b.code, b.barcode, (b as any).marca, (b as any).modelo, (b as any).medida, (b as any).laboratorio, (b as any).ubicacion], busqueda) - puntajeBusqueda([a.name, a.code, a.barcode, (a as any).marca, (a as any).modelo, (a as any).medida, (a as any).laboratorio, (a as any).ubicacion], busqueda))
     : [...disponibles].sort((a, b) => Number(b.unit !== 'CONSUMO' && Number(b.quantity) <= Number(b.minStock)) - Number(a.unit !== 'CONSUMO' && Number(a.quantity) <= Number(a.minStock))
       || a.name.localeCompare(b.name));
   useEffect(() => { setMarcado(-1); }, [busqueda]);
