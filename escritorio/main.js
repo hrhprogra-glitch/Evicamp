@@ -176,9 +176,10 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
     oculta.webContents.setZoomFactor(1);
     await oculta.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
     await new Promise((r) => setTimeout(r, 450));
-    // Ticketera 80mm: medir alto real y usar pageSize expl�cito en micras.
-    // NO usar preferCSSPageSize: con 'auto' algunos drivers usan tama�o carta/A4
-    // y generan papel en blanco antes o despu�s del contenido.
+
+    // Medir alto real del ticket y fijar @page exacto en mm.
+    // preferCSSPageSize=true hace que Chromium use ese tama�o y evita que el
+    // driver de la t�rmica meta una p�gina carta/A4 con blanco arriba.
     const altoPx = await oculta.webContents.executeJavaScript(`(() => {
       const b = document.body, d = document.documentElement;
       [d, b].forEach((el) => {
@@ -188,26 +189,29 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
         el.style.paddingTop = el === b ? (el.style.paddingTop || '0') : '0';
         el.style.height = 'auto';
         el.style.minHeight = '0';
+        el.style.maxHeight = 'none';
         el.style.overflow = 'visible';
       });
-      const st = document.createElement('style');
-      st.setAttribute('data-siumax-print', '1');
-      st.textContent = '@page{margin:0!important}html,body{margin:0!important;height:auto!important;min-height:0!important;overflow:visible!important}';
-      document.head.appendChild(st);
-      if (document.fonts && document.fonts.ready) { /* medida tras reflow */ }
       void (b && b.offsetHeight);
       window.scrollTo(0, 0);
       const rect = b ? b.getBoundingClientRect() : { bottom: 0 };
-      return Math.ceil(Math.max(
+      const bottom = Math.ceil(Math.max(
         rect.bottom || 0,
         b?.scrollHeight || 0, b?.offsetHeight || 0,
         d?.scrollHeight || 0, d?.offsetHeight || 0
       ));
+      const mm = Math.max(Math.ceil((bottom * 25.4) / 96) + 2, 40);
+      let st = document.querySelector('style[data-siumax-print="1"]');
+      if (!st) { st = document.createElement('style'); st.setAttribute('data-siumax-print', '1'); document.head.appendChild(st); }
+      st.textContent = '@page{size:80mm ' + mm + 'mm;margin:0!important}@media print{html,body{margin:0!important;padding-top:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}}';
+      void (b && b.offsetHeight);
+      return bottom;
     })()`).catch(() => 0);
-    const altoFinal = altoPx > 0 ? Math.max(altoPx + 2, 120) : 1200;
+
+    const altoFinal = altoPx > 0 ? Math.max(altoPx + 4, 120) : 1200;
     oculta.setContentSize(ancho80mm, altoFinal);
     await new Promise((r) => setTimeout(r, 200));
-    const altoMicras = Math.max(Math.round((altoFinal * 25400) / 96) + 150, 40000);
+
     return await new Promise((resolve) => {
       oculta.webContents.print(
         {
@@ -215,8 +219,7 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
           printBackground: true,
           deviceName: impresora || undefined,
           margins: { marginType: 'none' },
-          pageSize: { width: 80000, height: altoMicras },
-          scaleFactor: 100,
+          preferCSSPageSize: true,
         },
         (ok, motivo) => resolve({ ok, motivo: ok ? null : motivo || 'No se pudo imprimir' })
       );
