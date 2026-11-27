@@ -610,7 +610,7 @@
 - Claude hizo la **11.3** (Caja con Boleta y Factura, ticket con IGV y QR; f2303a2, 26/26). Sigue la 11.4.
 - Claude hizo la **11.4** (pantalla Comprobantes, reenviar, reimprimir con QR, boletas sin internet; 74d7e8f, 23/23). Sigue la 11.5 (nota de crédito).
 - Claude hizo la **11.5** (notas de crédito al anular y al devolver; 825df14, 24/24). Sigue la 11.6 (reportes para el contador).
-- Claude hizo la **11.6** (reporte del mes para el contador: resumen e Excel; 18/18). Siguen 11.7 (Panel) y 11.8 (directo a SUNAT).
+- Claude hizo la **11.6** (reporte del mes para el contador: resumen e Excel; 19/19). Siguen 11.7 (Panel) y 11.8 (directo a SUNAT).
 - Claude hizo la **11.7** (habilitar facturación por cliente desde el Panel). Sigue la 11.8 (directo a SUNAT).
 - **Dueño:** *"continua lo que dejaste"*. Claude terminó la **11.8** (directo a SUNAT sin proveedor; 1838ed2, 20/20): el ambiente de pruebas de SUNAT aceptó boleta, factura y nota de crédito. **Fase 11 completa en siumax.** Evicamp intacto, sin push.
 - **Dueño (03/11):** ya cambió su Clave SOL y preguntó cómo crear un usuario SOL secundario. Claude lo guió con capturas: creó **FACTURA1** en su RUC 10760867697 con solo "Servicio de Envío de Documentos Electrónicos por Servicio Web" y "Consultar Envíos de CPE" (sin Certificado Digital ni nada más). SUNAT lo registró. La clave la guarda él (no se escribe en el chat). Sigue: registrarse en nubefact.com.
@@ -1889,3 +1889,12 @@
 - **Dueño (después):** eligió **«Publicar ahora (Recommended)»**.
 - **Publicado:** bundle **`index-C7IucTHC.js` / `index-Di8Dfc2n.css`** en Nego, ecosistema y Evicamp (22 archivos por sitio, nginx recargado, iconos de ecosistema repuestos). Compilado en worktree con los 39 archivos WIP ajenos copiados encima, sin commitearlos ni tocarlos. Verificación HTTP **24 OK / 0 fallos**: los tres sirven el mismo hash y el JS trae `min-w-0 flex-1 truncate`. Sin SQL, push ni reinicio de API.
 - **Falta:** la revisión visual del dueño con **Ctrl+F5**.
+
+## 27/11/2026 (dueño: poder guardar una salida y continuar con otra)
+- **Dueño:** *«perfecto ahora en nueva salida necesito que haiga una espera donde pueda guardar una salida y continuar con otra puede estar al costado del "x" y elimina el cancelar(esc) pero deja que se pueda salir con esc»*.
+- **Propuesta mostrada:** (1) **Guardar y otra**: guarda de verdad igual que F10, con descuento de stock, limpia el formulario y sigue en la ventana; (2) **Poner en espera**: no registra ni descuenta stock, guarda temporalmente para recuperar después; (3) **Guardar, ver comprobante y otra**. Eligió **«Guardar y otra (Recommended)»**.
+- **Segunda pregunta:** quitar «Cancelar (Esc)» y dejar que Esc y la X sigan cerrando, o solo X. Eligió **«Sí, Esc y X igual (Recommended)»**.
+- **Dueño (después):** *«ponle el nombre "espera", es más corto»*. El botón se llama **«Espera»** (el id técnico sigue siendo `#btn-guardar-y-otra-salida`); la acción sigue siendo guardar de verdad y continuar con otra.
+- **Hecho:** botón `#btn-guardar-y-otra-salida` justo antes de la X en la cabecera; guarda con la misma RPC, salta la vista previa, avisa y deja cliente/materiales limpios con el foco en el buscador de cliente. Se quitó el botón «Cancelar (Esc)» del pie. Se agregó `guardandoRef` para evitar doble guardado con F10 o doble clic; F10, la X y Esc siguen igual.
+- **Probado:** prueba nueva `verificar-boton-espera-salida.mjs` **19/19** en 3 corridas, 0 errores JS, sin escrituras reales. Regresiones: doble guardado (1 sola llamada), devoluciones y facturas OK; `tsc` 0.
+- **Falta:** el dueño debe revisar y dar el OK para publicar el bundle **`index-C9sqzhbx.js` / `index-Di8Dfc2n.css`** en Nego, ecosistema y Evicamp. Sin SQL, push ni reinicio de API.

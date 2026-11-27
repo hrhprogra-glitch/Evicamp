@@ -8,6 +8,13 @@
 
 ---
 
+## 27/11/2026 — «Espera» en Nueva salida: no pasar el handler directo al onClick
+- `handleGuardarSalida(continuarConOtra = false)` es un **booleano**. Si se pone `onClick={handleGuardarSalida}`, React le pasa el evento de clic como primer argumento: es *truthy* y el guardado normal se vuelve «guardar y otra» por accidente. Siempre `onClick={() => handleGuardarSalida()}` para la acción normal y `onClick={() => handleGuardarSalida(true)}` para la nueva. F10 ya llama sin argumentos.
+- El bloqueo anti doble guardado tiene que ser **`guardandoRef`** (ref), no solo `guardando` (estado): dos F10 seguidos o doble clic entran antes de que React actualice el estado. Activar la ref justo antes de la RPC y liberarla en `finally`.
+- En la rama «Espera» se hace `await avisar(...)` y recién después `reiniciarFormulario()`. Así la ref sigue en `true` mientras el aviso está abierto y no se puede guardar otra vez por encima. El foco se fija al buscador de cliente con `setTimeout` corto; `avisar` ya restaura foco al cerrar, por eso conviene esperar ~120 ms.
+- Quitar «Cancelar (Esc)» del pie **no** implica desactivar Esc: `useCerrarConEscape(isOpen && !salidaParaPrevia, onClose)` sigue igual y la X también. La decisión del 25/11 de «sin Cancelar si hay X» era de Imprimir productos, pero aplica igual aquí por pedido explícito del dueño.
+- Prueba `herramientas-pruebas/verificar-boton-espera-salida.mjs`: intercepta `fn_registrar_salida` con respuesta falsa y velocidad de 800 ms para poder hacer doble clic durante el guardado; comprueba posición del botón respecto de la X, ausencia de Cancelar, Esc/X, F10 con comprobante, y que al terminar no haya borrador ni materiales y el foco esté en `#buscar-cliente-salida`. **19/19** en 3 corridas.
+
 ## 27/11/2026 — Devoluciones: cómo probar sin ensuciar la base y trampas del teclado
 - En localhost (`5173`) el front apunta a **Nego**, no a ecosistema. Para probar devoluciones sin escribir en la base se interceptan las RPC con respuestas falsas y se arma un estado falso (`SAL-PRUEBA-IA`). Ver `herramientas-pruebas/verificar-devoluciones-entradas-localhost.mjs`. Nunca hace falta reiniciar la API.
 - El límite de devolución se valida con el `max` nativo del `<input>`: escribir `9` con `max=4` deja el campo inválido, el navegador no envía el formulario y **no se llama a la RPC**. No hace falta un mensaje especial ni tocar el estado.

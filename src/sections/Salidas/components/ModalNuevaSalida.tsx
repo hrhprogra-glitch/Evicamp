@@ -178,6 +178,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const [costoExterno, setCostoExterno] = useState('0');
 
   const [guardando, setGuardando] = useState(false);
+  // Ref (no solo estado): F10 dos veces o dos clics seguidos no deben llamar dos veces a la RPC.
+  const guardandoRef = useRef(false);
   const [tieneBorrador, setTieneBorrador] = useState(false);
 
   const inputBuscarRef = useRef<HTMLInputElement>(null);
@@ -398,7 +400,9 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     }
   }, [isOpen, tipo, customerId, clienteLibre, busquedaCliente, bienId, bienLibre, direccion, ubicacion, fecha, observaciones, trabajadoresSeleccionados, empleadoId, items, salidaRaiz, datosIniciales]);
 
-  const limpiarBorrador = () => {
+  // Deja la ventana lista para registrar otra salida sin cerrarla. Se usa al limpiar el borrador
+  // y al guardar con «Guardar y otra» (mensaje opcional: en ese caso se espera a que se cierre el aviso).
+  const reiniciarFormulario = (mensaje?: string) => {
     try {
       localStorage.removeItem(CLAVE_BORRADOR_SALIDA);
     } catch {}
@@ -419,11 +423,13 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     setBusquedaProd('');
     setProdSeleccionado(null);
     setTieneBorrador(false);
-    avisar('Borrador limpiado. Formulario listo desde cero.');
+    if (mensaje) avisar(mensaje);
     setTimeout(() => {
       inputBuscarClienteRef.current?.focus();
-    }, 50);
+    }, mensaje ? 120 : 50);
   };
+
+  const limpiarBorrador = () => reiniciarFormulario('Borrador limpiado. Formulario listo desde cero.');
 
   const cargarCatalogos = async () => {
     try {
@@ -855,8 +861,10 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     }
   };
 
-  // Guardar la salida (RPC en backend)
-  const handleGuardarSalida = async () => {
+  // Guardar la salida (RPC en backend). continuarConOtra=true es el botón de la cabecera:
+  // guarda igual que F10, pero salta la vista previa y deja el formulario limpio para la siguiente.
+  const handleGuardarSalida = async (continuarConOtra = false) => {
+    if (guardandoRef.current) return;
     if (!customerId) {
       avisar(clienteLibre.trim()
         ? 'Registra el nombre como nota desde la lista para guardar la salida'
@@ -896,6 +904,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     if (bienLibre.trim()) notasLibres.push(`ATIENDE: ${bienLibre.trim().toUpperCase()}`);
     const obsFinal = [observaciones.trim(), ...notasLibres].filter(Boolean).join(' | ');
 
+    guardandoRef.current = true;
     setGuardando(true);
     try {
       const payload = {
@@ -933,6 +942,14 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         localStorage.removeItem(CLAVE_BORRADOR_SALIDA);
       } catch {}
       setTieneBorrador(false);
+
+      if (continuarConOtra) {
+        // No se abre la vista previa: el dueño quiere pasar a la siguiente salida de inmediato.
+        onSuccess(data);
+        await avisar(`Salida ${data?.codigo || ''} guardada. Formulario listo para otra.`);
+        reiniciarFormulario();
+        return;
+      }
 
       // 194: la salida ya quedó guardada. En vez de cerrar de golpe, se arma el comprobante con lo que el
       // formulario tiene en pantalla y sale la vista previa para elegir impresión, descarga o WhatsApp.
@@ -1009,6 +1026,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       console.error('Error registrando salida:', err);
       avisar(err.message || 'Error al guardar la salida');
     } finally {
+      guardandoRef.current = false;
       setGuardando(false);
     }
   };
@@ -1058,6 +1076,19 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               <span className="hidden sm:inline-block text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 px-2 py-1 font-bold uppercase tracking-wider">
                 ✓ Borrador auto-guardado
               </span>
+            )}
+            {!salidaRaiz && (
+              <button
+                id="btn-guardar-y-otra-salida"
+                type="button"
+                disabled={guardando}
+                onClick={() => handleGuardarSalida(true)}
+                title="Guardar esta salida y dejar el formulario listo para otra (sin comprobante)"
+                className="flex items-center gap-1 px-3 py-1.5 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] text-[var(--color-ink)] font-black uppercase tracking-wider text-[10px] hover:bg-[var(--color-ink)] hover:text-white cursor-pointer rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Plus size={14} />
+                Espera
+              </button>
             )}
             <button
               id="btn-cerrar-modal-nueva-salida"
@@ -1730,17 +1761,10 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
           </span>
           <div className="flex gap-2">
             <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border-2 border-[var(--color-border)] font-black uppercase hover:bg-black/5 cursor-pointer rounded-none"
-            >
-              Cancelar (Esc)
-            </button>
-            <button
               id="btn-guardar-salida"
               type="button"
               disabled={guardando}
-              onClick={handleGuardarSalida}
+              onClick={() => handleGuardarSalida()}
               title="Guardar salida de inmediato (F10 o Ctrl+Enter)"
               className="px-6 py-2 bg-[var(--color-ink)] text-white font-black uppercase tracking-wider hover:bg-[var(--color-accent)] hover:text-[var(--color-ink)] cursor-pointer shadow-[3px_3px_0_0_var(--color-ink)] active:translate-x-0.5 active:translate-y-0.5 rounded-none"
             >

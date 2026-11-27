@@ -7,6 +7,14 @@
 
 ---
 
+## 27/11/2026 - «Espera» en Nueva salida, sin botón Cancelar — HECHO Y PROBADO, SIN PUBLICAR
+- El dueño pidió: *«ahora en nueva salida necesito que haiga una espera donde pueda guardar una salida y continuar con otra puede estar al costado del "x" y elimina el cancelar(esc) pero deja que se pueda salir con esc»*.
+- Se mostró la propuesta y eligió **«Guardar y otra (Recommended)»**: guarda de verdad (misma RPC que F10, con descuento de stock), sin comprobante, y deja el formulario limpio para la siguiente. Las otras opciones eran guardar en espera sin descontar stock y guardar mostrando comprobante. Después pidió ponerle el nombre **«Espera»** por ser más corto. También eligió **«Sí, Esc y X igual (Recommended)»**: se quita solo el botón Cancelar.
+- En `ModalNuevaSalida.tsx`: botón **`#btn-guardar-y-otra-salida`** en la cabecera, justo antes de la X, con tooltip «sin comprobante». Llama a `handleGuardarSalida(true)`, salta la vista previa, avisa «Formulario listo para otra» y llama a `reiniciarFormulario()` (cliente, materiales, borrador y foco al buscador). Se quitó «Cancelar (Esc)» del pie. El botón nuevo se oculta en «Continuar Salida» (no tiene sentido dejar modo edición). Siguen igual F10/Ctrl+Enter, la X, Esc, el aviso de guardado y el borrador automático.
+- Se sumó **`guardandoRef`** (ref, no solo estado) para que F10 dos veces o doble clic no llamen dos veces a `fn_registrar_salida`; se liberó en `finally`.
+- **Prueba nueva:** `herramientas-pruebas/verificar-boton-espera-salida.mjs` **19/19 en 3 corridas seguidas**, 0 errores JS, RPC falsa (0 escrituras). Cubre botón al lado de la X, sin Cancelar, Esc y X, F10 con comprobante, doble clic = 1 guardado, sin comprobante en «Espera», formulario limpio y foco en el cliente. Regresiones: doble guardado **1 sola llamada**, devoluciones **TODO BIEN**, facturas **23/23**; `tsc` 0.
+- Bundle de prueba compilado en el worktree `siumax-direccion`: **`index-C9sqzhbx.js` / `index-Di8Dfc2n.css`** (con el WIP ajeno de `src/` copiado encima, sin tocarlo ni commitearlo). **NO PUBLICADO.** Sin SQL, push ni reinicio de API. Falta el OK del dueño para subirlo a Nego, ecosistema y Evicamp.
+
 ## 27/11/2026 - PUBLICADO el ajuste de Dirección/Ubicación en el detalle de salida (3 sitios)
 - El dueño eligió **«Publicar ahora (Recommended)»**. Se compiló en worktree limpio (`siumax-direccion`, HEAD `85f6c40`) con los **39 archivos del WIP ajeno de `src/`** copiados encima, sin tocarlos ni commitearlos. Bundle **`index-C7IucTHC.js` / `index-Di8Dfc2n.css`**.
 - `publicar-bundle-combinado.cjs` subió **22 archivos por sitio** a Nego (`siumax`), ecosistema y Evicamp, con `chown www-data` y `systemctl reload nginx`. Iconos de ecosistema repuestos (logo `c159d216…`).
@@ -2893,7 +2901,7 @@ ejemplos para copiar). Por cada sección: graphify antes de leer → cambios →
 ## 03/11/2026 (mañana, 76) · Claude — FASE 11.6 hecha (reporte para el contador)
 - `src/components/ReporteContador.tsx` (`armarRegistro(mes)`, `descargarRegistroCSV`), botón `#btn-comp-reporte` en Comprobantes. CSV con BOM (Excel lo abre directo), notas de crédito en negativo, notas de venta solo en el resumen. Sin librería de Excel (se evitó agregar una pesada).
 - El ZIP de PDF/XML del mes NO se hizo: las copias viven en el VPS (`/var/lib/siumax-cpe`) y con Nubefact cada fila trae el enlace del PDF; si el dueño lo pide, hace falta un servicio de descarga.
-- Prueba 18/18. Solo siumax.
+- Prueba 19/19. Solo siumax.
 
 ---
 
@@ -2980,7 +2988,7 @@ ejemplos para copiar). Por cada sección: graphify antes de leer → cambios →
      - Acceso público en `https://siumax.duckdns.org/#/tienda`.
      - En Ajustes > Tienda Web se configura el WhatsApp, bienvenida, etc.
      - **MUY IMPORTANTE:** El dueño pidió explícitamente **NO tener el botón "TIENDA WEB" en el menú lateral (Sidebar)** bajo Operaciones. Se quitó y el menú quedó limpio con solo Caja y Clientes. No volver a agregarlo al Sidebar.
-  5. **Pruebas Automatizadas:** `ai-scripts/pruebas/prueba-fase9-10-ui.mjs` con 18/18 checks aprobados en Edge / Puppeteer.
+  5. **Pruebas Automatizadas:** `ai-scripts/pruebas/prueba-fase9-10-ui.mjs` con 19/19 checks aprobados en Edge / Puppeteer.
   6. **Restricción de Producción (Regla 4):** NADA de las Fases 8, 9 y 10 ha sido subido a Evicamp ni pusheado a GitHub `main`. Todo está seguro en la rama local y desplegado en el servidor de pruebas `siumax`.
   7. **Siguiente paso:** Esperar la revisión y feedback del dueño sobre las Fases 9 y 10 en `siumax`, o lo que él indique a continuación.
 
