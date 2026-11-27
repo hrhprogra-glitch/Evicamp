@@ -7,6 +7,15 @@
 
 ---
 
+## 27/11/2026 (Nueva salida: el tubo se elige por unidad en pantalla, sin tocar la base) · OpenCode (Big Pickle) — HECHO Y PROBADO, SIN PUBLICAR
+
+- **Dueño:** pidió cambiar solo Nueva salida: *«ahí va aparecer el buscador la unidad y la cantidad que saldrá ahora»* y aprobó el mockup con **«Sí, así (Recommended)»**. Precisó: *«ojo si sale por unidad no debe permitirme salir con decimales los metros sí»*. Rechazó tocar base, detalle ni comprobante (queda supersedida la opción «1 TUBO en todo»).
+- **Cambio (solo la pantalla de Nueva salida):** el buscador ya no trae el clon «TUBO x5»; muestra el producto real con `Unidad: M · 1 TUBO = 5 M · Stock: 249.5 M`. Al agregar 1 tubo la fila queda **`5` con la M resaltada**; el botón de unidad (con id para teclado) la pasa a **`1 TUBO`**. En TUBO/ROLLO el campo va con `step=1` y **no acepta decimales** (aviso y se conserva el entero); en metros sí. `+/-` suma o resta una presentación completa (5 M por tubo).
+- **Sin cambios en la BD:** lo que se manda a `fn_registrar_salida` sigue siendo `cantidad` en metros y `unidad` real (`5` / `M`); el almacén descuenta 5 m por tubo igual que antes. `modoPres` es solo visual y no viaja en el payload.
+- **Sin pisar el WIP:** se compiló en copia temporal con el WIP del dueño (`puntajeBusqueda`) + lo ya publicado; después se aplicaron los mismos bloques a la working copy principal conservando su trabajo. `tsc` EXIT 0. Bundle combinado **`index-Cm7GRPLM.js` / `index-B6juBlGS.css`**.
+- **Pruebas (RPC falsas, nada escrito en la base):** nueva `herramientas-pruebas/verificar-unidad-tubo-salidas.mjs`: buscador sin clon, `1 TUBO = 5 M`, fila `5 M` resaltada → `1 TUBO`, decimal rechazado, payload `5`/`M`; al volver a metros, `2.5`/`M` sin aviso. **0 errores JS.** Regresiones con el mismo bundle: dirección limpia y no reaparece al borrar, F10×2+clic×2 → **1 sola llamada**, «Continuar salida» edita la original y devuelve el material quitado. Todo OK.
+- **Pendiente:** que el dueño autorice publicar en Nego, ecosistema y Evicamp. Sin push, SQL ni reinicio de API.
+
 ## 2026-11-26 - .exe escritorio: impresión 80mm y autoactualización Ecosistema
 - **Pedido:** en .exe salía espacio blanco arriba al imprimir; compilar/subir a 3 sitios. Luego Ecosistema no actualizaba a 1.2.x aunque debía ser automático; además dueño pidió nombre/logo de Ecosistema en el .exe y dejar regla en memoria.
 - **Hecho:** Fix impresión en `escritorio/main.js`: ventana oculta con ancho real 80mm (`useContentSize`), espera 250ms, medición real body/document, `pageSize` por alto, y `header:'' footer:''`. Compilado/publicado .exe **v1.2.3** al canal común (`/var/www/siuhub/html/actualizaciones/` + descargas). Causa de “no actualiza”: Ecosistema tenía `/actualizaciones/` propio con `latest.yml` 1.2.0; se unificó al canal general y se puso `no-cache` en nginx. Verificado: `https://ecosistema123.duckdns.org/actualizaciones/latest.yml` devuelve 1.2.3. También se actualizó `SiuMax-Setup.exe` en descargas de ecosistema/evicamp/nego.

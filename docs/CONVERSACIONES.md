@@ -1835,3 +1835,9 @@
 ## 26/11/2026 (dueño autoriza publicar todo en los tres sitios)
 - **Dueño:** «perfecto subelo todo» y, al preguntarle los destinos, «a negosiumax, ecosistema y evicamp».
 - **Hecho:** publicado el bundle que junta su trabajo ya en vivo con los arreglos de dirección, doble guardado y «Continuar salida» (edita la original). 22 archivos por sitio, `index-DyKoTZi1.js` / `index-DeRs4Lda.css`. Verificado en Nego y ecosistema por interfaz; Evicamp por el JS servido (no hay clave de `evi`). Sin push, SQL ni reinicio de API. Revisión pendiente con Ctrl+F5.
+
+## 27/11/2026 (dueño: en Nueva salida el tubo debe salir como unidad, sin decimales)
+- **Dueño:** pidió *«no haremos un cambio en salidas en nueva salida ahí va aparecer el buscador la unidad y la cantidad que saldrá ahora»*, con el ejemplo de que buscando el tubo solo salga el tubo y no el «x 5 metros». Aprobó el mockup con **«Sí, así (Recommended)»**.
+- **Aclaración importante:** *«ojo si sale por unidad no debe permitirme salir con decimales los metros si»*. Es decir, 1 o 2 tubos enteros; si quiere 2.5 metros, primero debe cambiar la unidad a M.
+- **Decisión:** solo cambia la pantalla de Nueva salida. No se toca base, detalle ni comprobante; queda descartada la opción de «1 TUBO en todo». El almacén sigue descontando 5 metros por tubo.
+- **Hecho:** buscador sin clones y con `1 TUBO = 5 M`; fila `5 M` resaltada con botón para pasar a `1 TUBO`; decimales bloqueados en unidad; payload en metros. Probado con RPC falsas y regresiones, sin escribir en la base. Queda pendiente el OK para publicar en los tres sitios.

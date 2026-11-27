@@ -9,8 +9,8 @@ import { avisar } from '../../../utils/dialogos';
 import { useEmpleado } from '../../../utils/permisos';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
-import { coincideBusqueda } from '../../../utils/busqueda';
-import { conPresentaciones } from '../../../utils/presentaciones';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
+import { presentacionesValidas, type Presentacion } from '../../../utils/presentaciones';
 import { VistaPreviaSalida } from './VistaPreviaSalida';
 import { UnidadMaterial } from './UnidadMaterial';
 import { useEmpresaComprobante } from '../empresa';
@@ -111,19 +111,33 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const [trabajadores, setTrabajadores] = useState<any[]>(_cacheCatalogosServic.trabajadores || []);
   const [productos, setProductos] = useState<any[]>(_cacheCatalogosServic.productos || []);
 
-  // 24/11/2026 (dueño: «quiero que sea igual»): Salidas busca también las presentaciones, igual que Caja.
-  // Cada clon trae el factor del rollo; al agregarlo se convierte a metros para no mezclar unidades
-  // en el stock ni en el historial (que ya quedó todo en M).
-  const productosBuscables = useMemo(() => conPresentaciones(productos as any[]), [productos]);
+  // 27/11/2026 (dueño): en Salidas el buscador muestra SOLO el producto real, ya no el clon «TUBO x5».
+  // La presentación queda como dato del producto: se ve en la lista («1 TUBO = 5 M») y se elige en la
+  // fila ya agregada. La BD y el almacén siguen en metros, igual que antes (sin tocar SQL).
+  const productosBuscables = useMemo(() => productos as any[], [productos]);
+
+  /** Presentación válida de un producto (en los datos hay una sola: TUBO x5, ROLLO x100, etc.). */
+  const presPorProducto = useMemo(() => {
+    const mapa = new Map<number, Presentacion>();
+    for (const p of productos as any[]) {
+      const pr = presentacionesValidas(p?.presentaciones)[0];
+      if (pr) mapa.set(Number(p.id), pr);
+    }
+    return mapa;
+  }, [productos]);
+  const presDeProducto = (productId: number | null | undefined) =>
+    productId == null ? undefined : presPorProducto.get(Number(productId));
+  const presDeItem = (it: { product_id?: number | null }) => presDeProducto(it.product_id);
 
   // Items agregados
   const [items, setItems] = useState<{
     product_id: number | null;
     descripcion: string;
     unidad: string;
-    cantidad: number;
+    cantidad: number;          // siempre en la unidad real del producto (metros), para stock y BD
     costo_unitario: number;
     es_externo: boolean;
+    modoPres?: boolean;        // true = la fila se muestra en la presentación (1 TUBO), no en metros
   }[]>([]);
 
   // Dueño 24/11/2026: al agregar un producto no podía borrar el "1" para escribir otro número.
@@ -136,7 +150,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     it.product_id != null ? `p${it.product_id}` : `d${it.descripcion || idx}`;
 
   // 24/11/2026: se quitó «1 UND = N M». La unidad del producto ya es la real (manguera = M).
-  // El rollo se elige en el buscador como en Caja; al agregarlo se convierte a metros (1 ROLLO x500 = 500 M).
+  // 27/11/2026: el botón de la columna Unidad alterna entre M (resaltado por defecto) y la presentación
+  // (TUBO/ROLLO). En presentación SOLO se permiten enteros; por metros se pueden usar decimales.
 
   // Inputs para agregar item (modo SUNAT)
   const [busquedaProd, setBusquedaProd] = useState('');
@@ -483,6 +498,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   const prodsFiltrados = termino
     ? productosBuscables
         .filter((p) => coincideBusqueda([p.name, p.code], termino))
+        .sort((a, b) => puntajeBusqueda([b.name, b.code], termino) - puntajeBusqueda([a.name, a.code], termino))
         .slice(0, 8)
     : [];
 
@@ -552,16 +568,17 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         return;
       }
 
-      // Igual que en Caja: si eligió una presentación (ROLLO x100/400/500), lo escrito son rollos.
-      // Se guarda y descuenta en METROS para no mezclar unidades en el stock ni en el historial.
-      const factor = Math.max(1, Number(prodAAgregar.presentacion?.factor) || 1);
       const idReal = prodAAgregar.productoId != null ? Number(prodAAgregar.productoId) : Number(prodAAgregar.id);
       const prodBase = productos.find((p) => Number(p.id) === idReal);
+      // 27/11/2026: la presentación se lee del producto real (el buscador ya no trae el clon «x5»).
+      // Lo escrito cuenta presentaciones (1 tubo) y se guarda en METROS para no mezclar unidades en stock.
+      const pres = presDeProducto(idReal);
+      const factor = pres?.factor || 1;
       const metros = Number((c * factor).toFixed(4));
       if (factor > 1) {
         const stockMetros = Number(prodBase?.quantity ?? prodAAgregar.quantity) || 0;
         if (metros > stockMetros) {
-          avisar(`Stock insuficiente: solo hay ${stockMetros} M para este rollo.`);
+          avisar(`Stock insuficiente: solo hay ${stockMetros} ${prodBase?.unit || 'M'} para ${pres?.unidad || 'esa presentación'}.`);
           return;
         }
       }
@@ -575,6 +592,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
           const actualizado = {
             ...actual,
             cantidad: Number((actual.cantidad + metros).toFixed(4)),
+            // Al agregar otra vez, vuelve a metros: así nunca queda una cantidad con decimales en TUBO.
+            modoPres: false,
           };
           return [actualizado, ...prev.filter((_, i) => i !== idxExistente)];
         } else {
@@ -586,6 +605,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               cantidad: metros,
               costo_unitario: Number(prodBase?.cost_price ?? prodAAgregar.cost_price ?? 0),
               es_externo: false,
+              modoPres: false,
             },
             ...prev,
           ];
@@ -652,12 +672,27 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     }
   };
 
+  // Lo que se VE en la fila: si está en presentación, se divide entre el factor (5 M / 5 = 1 TUBO).
+  // Por debajo SIEMPRE se guarda en metros, que es lo que descuenta el almacén.
+  const cantidadVisible = (it: { cantidad: number; modoPres?: boolean; product_id?: number | null }) => {
+    const pr = it.modoPres ? presDeItem(it) : undefined;
+    return Number((pr ? it.cantidad / pr.factor : it.cantidad).toFixed(4));
+  };
+  const unidadVisible = (it: { unidad: string; modoPres?: boolean; product_id?: number | null }) =>
+    it.modoPres && presDeItem(it) ? presDeItem(it)!.unidad : it.unidad;
+
   // Edición directa de cantidad en la tabla
   const handleModificarCantidad = (index: number, nuevaCantidad: number) => {
     if (isNaN(nuevaCantidad) || nuevaCantidad <= 0) return;
+    const pr = items[index]?.modoPres ? presDeItem(items[index]) : undefined;
+    // Dueño 27/11/2026: salir por unidad (TUBO/ROLLO) NO permite decimales; por metros sí.
+    if (pr && !Number.isInteger(nuevaCantidad)) return;
+    const metros = pr
+      ? Number((nuevaCantidad * pr.factor).toFixed(4))
+      : Number(nuevaCantidad.toFixed(4));
     setItems((prev) => {
       const copia = [...prev];
-      copia[index] = { ...copia[index], cantidad: Number(nuevaCantidad.toFixed(4)) };
+      copia[index] = { ...copia[index], cantidad: metros };
       return copia;
     });
   };
@@ -666,6 +701,12 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   // Así borrar "25" deja el campo vacío mientras se edita y no se guarda el "2" intermedio.
   const confirmarCantidadFila = (clave: string, index: number, texto: string) => {
     const valor = parseFloat(texto);
+    const it = items[index];
+    const pr = it?.modoPres ? presDeItem(it) : undefined;
+    if (pr && !isNaN(valor) && !Number.isInteger(valor)) {
+      avisar(`En ${pr.unidad} solo se permite un número entero, sin decimales. Para metros, cambia la unidad a ${it.unidad}.`);
+      return;
+    }
     if (!isNaN(valor) && valor > 0) {
       handleModificarCantidad(index, valor);
     } else if (cantidadAlEntrar.current[clave] != null) {
@@ -674,12 +715,37 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
   };
 
   const handlePasoCantidad = (index: number, delta: number) => {
+    const pr = items[index]?.modoPres ? presDeItem(items[index]) : undefined;
+    const paso = pr ? pr.factor : 1; // en TUBO, +1 suma un tubo entero (5 M)
     setItems((prev) => {
       const copia = [...prev];
-      const nueva = Math.max(0.001, Number((copia[index].cantidad + delta).toFixed(4)));
+      const nueva = Math.max(paso, Number((copia[index].cantidad + delta * paso).toFixed(4)));
       copia[index] = { ...copia[index], cantidad: nueva };
       return copia;
     });
+  };
+
+  // Botón de la columna Unidad: alterna M (resaltado al agregar) ↔ TUBO/ROLLO (enteros).
+  const handleToggleUnidad = (index: number) => {
+    const it = items[index];
+    const pr = presDeItem(it);
+    if (!pr) return;
+    if (it.modoPres) {
+      setItems((prev) => prev.map((x, i) => (i === index ? { ...x, modoPres: false } : x)));
+    } else {
+      const tubos = it.cantidad / pr.factor;
+      const enteros = Math.max(1, Math.ceil(Number(tubos.toFixed(4))));
+      const metros = Number((enteros * pr.factor).toFixed(4));
+      if (Math.abs(tubos - enteros) > 0.0001) {
+        avisar(`Solo se sale por ${pr.unidad} en enteros. Se ajustó a ${enteros} ${pr.unidad} (${metros} ${it.unidad}).`);
+      }
+      setItems((prev) => prev.map((x, i) => (i === index ? { ...x, modoPres: true, cantidad: metros } : x)));
+    }
+    setTimeout(() => {
+      const input = document.getElementById(`input-cantidad-item-${claveItem(it, index)}`) as HTMLInputElement | null;
+      input?.focus();
+      input?.select();
+    }, 30);
   };
 
   const handleEliminarItem = (index: number) => {
@@ -786,6 +852,16 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     if (items.length === 0) {
       avisar('Agrega al menos un material o repuesto a la salida');
       inputBuscarRef.current?.focus();
+      return;
+    }
+    // 27/11/2026: si la fila está en TUBO/ROLLO, no se permite salir con decimales (los metros sí).
+    const itemConDecimal = items.find((it) => {
+      const pr = it.modoPres ? presDeItem(it) : undefined;
+      return pr && !Number.isInteger(Number((it.cantidad / pr.factor).toFixed(4)));
+    });
+    if (itemConDecimal) {
+      const pr = presDeItem(itemConDecimal)!;
+      avisar(`«${itemConDecimal.descripcion}» está en ${pr.unidad} con decimales. Usa un número entero o cambia la unidad a ${itemConDecimal.unidad}.`);
       return;
     }
 
@@ -1365,6 +1441,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                   <div className="border-2 border-[var(--color-ink)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)] max-h-72 overflow-y-auto">
                     {prodsFiltrados.map((p, idx) => {
                       const activo = idx === indiceSugerencia;
+                      const pres = presDeProducto(Number(p.id));
                       return (
                         <div
                           key={p.id}
@@ -1387,6 +1464,11 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                                 <span className="px-1 py-0.5 bg-black/10 border border-black/20 text-[var(--color-ink)]">{p.code}</span>
                               )}
                               <span>Unidad: {p.unit || 'UNID'} · Costo: S/ {Number((p as any).cost_price || 0).toFixed(2)}</span>
+                              {pres && (
+                                <span className="px-1 py-0.5 border border-[var(--color-border)] text-[var(--color-ink)]">
+                                  1 {pres.unidad} = {pres.factor} {p.unit || 'UND'}
+                                </span>
+                              )}
                             </p>
                           </div>
                           <span
@@ -1466,14 +1548,33 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                             </span>
                           )}
                         </td>
-                        <td className="p-2 text-center font-bold"><UnidadMaterial unidad={it.unidad} /></td>
+                        <td className="p-2 text-center font-bold">
+                          {presDeItem(it) ? (
+                            <button
+                              id={`btn-unidad-item-${claveItem(it, idx)}`}
+                              type="button"
+                              onClick={() => handleToggleUnidad(idx)}
+                              title={`Cambiar entre ${it.unidad} y ${presDeItem(it)!.unidad} (por unidad solo enteros)`}
+                              className={`px-1.5 py-1 border font-black rounded-none cursor-pointer whitespace-nowrap ${
+                                it.modoPres
+                                  ? 'border-[var(--color-ink)] bg-[var(--color-surface)] text-[var(--color-ink)]'
+                                  : 'border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-ink)]'
+                              }`}
+                            >
+                              <UnidadMaterial unidad={unidadVisible(it)} />
+                              <span className="ml-0.5 text-[9px]">⇄</span>
+                            </button>
+                          ) : (
+                            <UnidadMaterial unidad={it.unidad} />
+                          )}
+                        </td>
                         <td className="p-2">
                           {/* Edición directa en la fila (se puede borrar y escribir + botones -/+) */}
                           <div className="flex items-center justify-center gap-1">
                             <button
                               type="button"
                               onClick={() => handlePasoCantidad(idx, -1)}
-                              title="Restar 1"
+                              title={`Restar 1 ${unidadVisible(it)}`}
                               className="w-6 h-6 flex items-center justify-center border border-[var(--color-border)] hover:bg-[var(--color-ink)] hover:text-white font-mono font-bold cursor-pointer rounded-none"
                             >
                               -
@@ -1481,11 +1582,11 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                             <input
                               id={`input-cantidad-item-${claveItem(it, idx)}`}
                               type="number"
-                              step="any"
-                              min="0.001"
-                              value={cantidadEditando[claveItem(it, idx)] ?? String(it.cantidad)}
+                              step={it.modoPres ? '1' : 'any'}
+                              min={it.modoPres ? '1' : '0.001'}
+                              value={cantidadEditando[claveItem(it, idx)] ?? String(cantidadVisible(it))}
                               onFocus={(e) => {
-                                cantidadAlEntrar.current[claveItem(it, idx)] = it.cantidad;
+                                cantidadAlEntrar.current[claveItem(it, idx)] = cantidadVisible(it);
                                 // Dueño 25/11/2026: al entrar en la cantidad de la fila, seleccionar todo
                                 // para reemplazar el número escribiendo directo (regla del teclado SiuMax).
                                 e.currentTarget.select();
@@ -1517,7 +1618,7 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                             <button
                               type="button"
                               onClick={() => handlePasoCantidad(idx, 1)}
-                              title="Sumar 1"
+                              title={`Sumar 1 ${unidadVisible(it)}`}
                               className="w-6 h-6 flex items-center justify-center border border-[var(--color-border)] hover:bg-[var(--color-ink)] hover:text-white font-mono font-bold cursor-pointer rounded-none"
                             >
                               +
