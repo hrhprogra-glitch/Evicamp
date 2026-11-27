@@ -6,7 +6,7 @@ import { ModalProveedor } from '../../Proveedores/components/ModalProveedor';
 import type { Proveedor } from '../../Proveedores/types';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { CuerpoVentana, BarraFiltros, CajaLista, claseBotonBarra, claseBuscadorBarra, claseBotonPrincipal } from '../../../components/ListaVentana';
 
 type FiltroEstado = 'TODOS' | 'ACTIVO' | 'INACTIVO';
@@ -26,8 +26,12 @@ export const ModalGestionProveedores: React.FC<Props> = ({ isOpen, onClose }) =>
   const [proveedorAEditar, setProveedorAEditar] = useState<Proveedor | null>(null);
   const [busqueda, setBusqueda] = useState('');
   const [filtro, setFiltro] = useState<FiltroEstado>('TODOS');
-  const visibles = proveedores.filter((p) => (filtro === 'TODOS' || p.estado === filtro)
-    && coincideBusqueda([p.razon_social, p.nombre_comercial, p.ruc, p.telefono, p.email], busqueda));
+  const visibles = (() => {
+    const base = proveedores.filter((p) => (filtro === 'TODOS' || p.estado === filtro)
+      && coincideBusqueda([p.razon_social, p.nombre_comercial, p.ruc, p.telefono, p.email], busqueda));
+    if (!busqueda.trim()) return base;
+    return [...base].sort((a, b) => puntajeBusqueda([b.razon_social, b.nombre_comercial, b.ruc, b.telefono, b.email], busqueda) - puntajeBusqueda([a.razon_social, a.nombre_comercial, a.ruc, a.telefono, a.email], busqueda));
+  })();
 
   // Teclas de la fila de arriba
   const teclasArriba = (e: React.KeyboardEvent<HTMLElement>) => {

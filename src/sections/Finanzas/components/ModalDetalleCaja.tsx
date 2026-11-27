@@ -1,4 +1,4 @@
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import {formatearCantidadDetalle, formatearMonto } from '../../../utils/formato';
 // src/sections/Finanzas/components/ModalDetalleCaja.tsx
 import React, { useState, useEffect, useRef } from 'react';

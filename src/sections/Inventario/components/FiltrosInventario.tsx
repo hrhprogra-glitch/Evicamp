@@ -231,8 +231,8 @@ export const FiltrosInventario: React.FC<Props> = ({
           className="h-11 sm:h-14 w-full sm:w-auto min-w-0 bg-[var(--color-surface)] border border-[#E2E8F0] text-[10px] font-bold text-[var(--color-ink)] uppercase px-3 outline-none focus:border-[var(--color-success)] focus:ring-1 focus:ring-[var(--color-success)] transition-colors cursor-pointer"
         >
           <option value="">Todas las Categorías</option>
-          {categorias.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
+          {categorias.map((cat, i) => (
+            <option key={`${cat}-${i}`} value={cat}>{cat}</option>
           ))}
         </select>
 

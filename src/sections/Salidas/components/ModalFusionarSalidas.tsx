@@ -4,7 +4,7 @@
 // Al marcar una salida ya fusionada se marca todo su grupo; al desmarcarla se quita solo esa.
 // Teclado: las flechas solo mueven el selector; Enter activa el botón y el selector se queda.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Check, Layers, Printer, RotateCcw, Search, X } from 'lucide-react';
+import { ArrowLeft, Check, Layers, Printer, RotateCcw, Search, Unlink, X } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
@@ -140,15 +140,27 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, fusione
   if (!isOpen) return null;
 
   // Al elegir una salida ya fusionada se marcan TODAS las de ese general.
-  // Al desmarcarla se quita solo esa del grupo y las demás siguen fusionadas.
+  // Al volver a hacer clic, se deselecciona todo el grupo (solo UI, sin desvincular en BD).
+  // Desvincular se hace solo con el botón explícito de la fila.
   const alternar = (id: number) => {
     const salida = lista.find((s) => Number(s.id) === Number(id));
     const yaMarcada = elegidas.includes(Number(id));
-    if (yaMarcada && salida?.fusion) {
-      void desvincular(Number(id), salida.fusion);
+    if (yaMarcada) {
+      if (salida?.fusion) {
+        const idGrupo = Number(salida.fusion.id);
+        const codigoGrupo = salida.fusion.codigo;
+        const idsGrupo = new Set(
+          lista
+            .filter((s) => s.fusion && (Number(s.fusion.id) === idGrupo || s.fusion.codigo === codigoGrupo))
+            .map((s) => Number(s.id))
+        );
+        setElegidas((prev) => prev.filter((x) => !idsGrupo.has(x)));
+        return;
+      }
+      setElegidas((prev) => prev.filter((x) => x !== Number(id)));
       return;
     }
-    if (!yaMarcada && salida?.fusion) {
+    if (salida?.fusion) {
       const idGrupo = Number(salida.fusion.id);
       const codigoGrupo = salida.fusion.codigo;
       const idsGrupo = lista
@@ -158,7 +170,7 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, fusione
       setFusionGuardada(salida.fusion);
       return;
     }
-    setElegidas((prev) => yaMarcada ? prev.filter((x) => x !== Number(id)) : [...prev, Number(id)]);
+    setElegidas((prev) => [...prev, Number(id)]);
   };
 
   // Quita UNA salida del grupo guardado (no borra ni edita la salida real ni su stock).
@@ -320,7 +332,7 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, fusione
                 <p className="ventana-cabecera__subtitulo">
                   {enGeneral
                     ? `${fusionGuardada ? `GENERAL ${fusionGuardada.codigo} · ` : ''}${seleccionadas.length} salida(s) · ${filas.length} material(es) · solo vista, sin crear salida`
-                    : 'Elige salidas para fusionar · marcar una ya fusionada marca todo su grupo'}
+                    : 'Elige salidas para fusionar · marcar una ya fusionada marca todo su grupo · para quitar una fusionada usa Desvincular'}
                 </p>
               </div>
             </div>
@@ -387,7 +399,7 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, fusione
                           key={s.id}
                           data-fila-fusion={s.id}
                           onClick={() => alternar(Number(s.id))}
-                          title="Haga clic en la fila para elegir o quitar esta salida"
+                          title={marcada && s.fusion ? 'Salida fusionada: usa el botón Desvincular para quitarla del general' : 'Haga clic en la fila para elegir o quitar esta salida'}
                           className={`${marcada ? 'bg-[var(--color-accent)]/20' : ''} cursor-pointer`}
                         >
                           <td className="p-2">
@@ -404,12 +416,23 @@ export const ModalFusionarSalidas: React.FC<Props> = ({ isOpen, salidas, fusione
                           <td className="p-2 font-black">
                             {s.codigo}
                             {s.fusion && (
-                              <span
-                                id={`badge-fusion-lista-${s.id}`}
-                                data-fusion-codigo-lista={s.fusion.codigo}
-                                title={`Ya está en el general ${s.fusion.codigo}`}
-                                className="bg-indigo-100 text-indigo-800 border border-indigo-300 px-1.5 py-0.5 text-[9px] font-black uppercase block mt-0.5 w-fit"
-                              >Fusionada · {s.fusion.codigo}</span>
+                              <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                <span
+                                  id={`badge-fusion-lista-${s.id}`}
+                                  data-fusion-codigo-lista={s.fusion.codigo}
+                                  title={`Ya está en el general ${s.fusion.codigo}`}
+                                  className="bg-indigo-100 text-indigo-800 border border-indigo-300 px-1.5 py-0.5 text-[9px] font-black uppercase w-fit"
+                                >Fusionada · {s.fusion.codigo}</span>
+                                {marcada && (
+                                  <button
+                                    id={`btn-desvincular-fusion-${s.id}`}
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); void desvincular(Number(s.id), s.fusion); }}
+                                    title={`Desvincular ${s.codigo} del general ${s.fusion.codigo}`}
+                                    className="h-6 px-1.5 border border-rose-700 bg-rose-50 text-rose-800 font-black uppercase text-[9px] flex items-center gap-1 cursor-pointer hover:bg-rose-700 hover:text-white"
+                                  ><Unlink size={11} /> Desvincular</button>
+                                )}
+                              </div>
                             )}
                           </td>
                           <td className="p-2 uppercase">{nombreClienteSalida(s, 'NO REGISTRADO')}</td>

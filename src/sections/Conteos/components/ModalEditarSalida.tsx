@@ -2,7 +2,7 @@
 // CORREGIR UNA SALIDA ya guardada (sección Conteos): cantidad, lote, motivo o detalle. Las salidas nuevas se
 // registran en "Nuevo ajuste" (ModalAjuste.tsx); los conteos se corrigen en ModalEditarConteo.tsx.
 // (Antes era la ventana "Registrar merma" de Inventario; su modo "nuevo" ya no se abre.)
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import React, { useState, useEffect, useRef } from 'react';

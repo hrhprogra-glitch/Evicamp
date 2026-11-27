@@ -244,13 +244,16 @@ export const ModalProducto: React.FC<Props> = ({ isOpen, onClose, onGoToLotes, o
   useEffect(() => {
     const fetchCategorias = async () => {
       const { data } = await supabase.from('categories').select('name');
-      if (data) {
-        const dbCats = data.map((c: any) => c.name?.trim().toUpperCase()).filter(Boolean);
-        setCategoriasLista(Array.from(new Set(dbCats)).sort());
-      }
+      const dbCats = (data || []).map((c: any) => c.name?.trim().toUpperCase()).filter(Boolean);
+      // Mezclar también las categorías que ya tienen productos: en ecosistema la tabla
+      // categories puede estar incompleta, pero el filtro de Inventario sí las muestra.
+      const catsProductos = (productosExistentes || [])
+        .map((p: any) => (p?.category ?? p?.categoria ?? '').trim().toUpperCase())
+        .filter(Boolean);
+      setCategoriasLista(Array.from(new Set([...dbCats, ...catsProductos])).sort());
     };
     if (isOpen) fetchCategorias();
-  }, [isOpen]);
+  }, [isOpen, productosExistentes]);
 
   const handleCrearCategoria = async (nombreCat: string) => {
     const nuevaCat = nombreCat?.trim().toUpperCase();

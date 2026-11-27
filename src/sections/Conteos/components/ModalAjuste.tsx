@@ -16,7 +16,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ClipboardCheck, Search, X } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
 import type { Product } from '../../Inventario/types';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
@@ -102,7 +102,9 @@ export const ModalAjuste: React.FC<Props> = ({ isOpen, onClose, products, puedeS
     if (!texto) return elegibles;
     // El lector de código de barras: el código exacto va primero
     const exacto = elegibles.filter((p) => [p.code, p.barcode].some((c) => c && String(c).toUpperCase() === texto.toUpperCase()));
-    const resto = elegibles.filter((p) => !exacto.includes(p) && coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], texto));
+    const resto = elegibles
+      .filter((p) => !exacto.includes(p) && coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], texto))
+      .sort((a, b) => puntajeBusqueda([b.name, b.code, b.barcode, b.marca, b.modelo, b.medida, b.laboratorio, b.ubicacion], texto) - puntajeBusqueda([a.name, a.code, a.barcode, a.marca, a.modelo, a.medida, a.laboratorio, a.ubicacion], texto));
     return [...exacto, ...resto];
   }, [elegibles, busqueda]);
 

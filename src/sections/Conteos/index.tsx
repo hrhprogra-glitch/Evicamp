@@ -1,4 +1,4 @@
-import { coincideBusqueda } from '../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../utils/busqueda';
 ﻿import React, { useState, useEffect, useMemo } from 'react';
 import { Database, TrendingDown, PackageMinus, ClipboardCheck } from 'lucide-react';
 import { supabase } from '../../db/supabase';
@@ -166,10 +166,16 @@ export const Conteos: React.FC = () => {
 
     if (searchQuery && searchQuery.trim()) {
       const prodPorId = new Map(products.map(p => [String(p.id), p]));
-      result = result.filter(m => {
-        const prod = prodPorId.get(String((m as any).product_id)) || products.find(p => p.name === m.product_name);
-        return coincideBusqueda([m.product_name, m.notes, prod?.code, prod?.barcode], searchQuery);
-      });
+      result = result
+        .filter(m => {
+          const prod = prodPorId.get(String((m as any).product_id)) || products.find(p => p.name === m.product_name);
+          return coincideBusqueda([m.product_name, m.notes, prod?.code, prod?.barcode], searchQuery);
+        })
+        .sort((a, b) => {
+          const pa = prodPorId.get(String((a as any).product_id)) || products.find(p => p.name === a.product_name);
+          const pb = prodPorId.get(String((b as any).product_id)) || products.find(p => p.name === b.product_name);
+          return puntajeBusqueda([b.product_name, b.notes, pb?.code, pb?.barcode], searchQuery) - puntajeBusqueda([a.product_name, a.notes, pa?.code, pa?.barcode], searchQuery);
+        });
     }
 
     if (filtroMotivo) {

@@ -1,4 +1,4 @@
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import React, { useState, useEffect } from 'react';
@@ -166,10 +166,13 @@ export const ModalFiado: React.FC<Props> = ({ isOpen, onClose, onSave, fiadoAEdi
   // LÓGICA DE INVENTARIO: Buscar y Agregar
   // Añadimos p.name ? para asegurarnos de que el producto tiene nombre antes de buscar
   // 🔥 FILTRO DE SEGURIDAD: Solo mostramos productos que tengan stock físico
-  const prodFiltrados = searchProd.trim() === '' ? [] : productos.filter(p => {
-    if (!p.name || p.quantity <= 0 || p.activo === false) return false; // <--- Solo productos con stock y no eliminados
-    return coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], searchProd);
-  }).slice(0, 5);
+  const prodFiltrados = searchProd.trim() === '' ? [] : productos
+    .filter(p => {
+      if (!p.name || p.quantity <= 0 || p.activo === false) return false; // <--- Solo productos con stock y no eliminados
+      return coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], searchProd);
+    })
+    .sort((a, b) => puntajeBusqueda([b.name, b.code, b.barcode, b.marca, b.modelo, b.medida, b.laboratorio, b.ubicacion], searchProd) - puntajeBusqueda([a.name, a.code, a.barcode, a.marca, a.modelo, a.medida, a.laboratorio, a.ubicacion], searchProd))
+    .slice(0, 5);
 
   const agregarProducto = (prod: Product) => {
     // 🚫 BLOQUEO DE SEGURIDAD: Evitar agregar si no hay stock

@@ -6,6 +6,7 @@ import { ModalDetalleProducto } from './ModalDetalleProducto';
 import { clicConTeclado } from '../../../utils/clicConTeclado';
 import { formatearMonto } from '../../../utils/formato';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
+import { coincideBusqueda } from '../../../utils/busqueda';
 
 interface Props {
   datos: AnalisisProducto[];
@@ -43,25 +44,11 @@ export const TablaAnalisisProductos: React.FC<Props> = ({ datos, fechaInicio, fe
   const [productoSeleccionado, setProductoSeleccionado] = useState<AnalisisProducto | null>(null);
   const categoriasUnicas = Array.from(new Set(datos.map(d => d.categoria))).sort();
 
-  // ⚙️ MOTOR DE BÚSQUEDA OMNIDIRECCIONAL (EVICAMP V3)
-  const normalizarTexto = (texto: string) => {
-    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-  };
-
   const datosFiltrados = useMemo(() => datos.filter(prod => {
-    const indiceOmni = normalizarTexto(`${prod.nombre || ''} ${prod.code || ''} ${prod.barcode || ''} ${prod.categoria || ''} ${prod.estado || ''} ${prod.tipoControl || ''}`);
-    const busquedaNormalizada = normalizarTexto(busqueda || '');
-
-    const terminosBusqueda = busquedaNormalizada.split(/\s+/).filter(Boolean);
-
-    const coincideBusqueda = terminosBusqueda.length === 0 || terminosBusqueda.every(termino =>
-      indiceOmni.includes(termino)
-    );
-
+    const coincide = coincideBusqueda([prod.nombre, prod.code, prod.barcode, prod.categoria, prod.estado, prod.tipoControl], busqueda);
     const coincideCat = filtroCat === 'TODAS' || prod.categoria === filtroCat;
     const coincideEstado = filtroEstado === 'TODOS' || prod.estado === filtroEstado;
-
-    return coincideBusqueda && coincideCat && coincideEstado;
+    return coincide && coincideCat && coincideEstado;
   }), [datos, busqueda, filtroCat, filtroEstado]);
 
   const hayFiltrosActivos = busqueda.trim() !== '' || filtroCat !== 'TODAS' || filtroEstado !== 'TODOS';

@@ -1,4 +1,4 @@
-import { coincideBusqueda } from '../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../utils/busqueda';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Users, Plus, Loader2, Layers, Package } from 'lucide-react';
 import { supabase } from '../../db/supabase';
@@ -174,7 +174,9 @@ export const Proveedores: React.FC<Props> = ({ onNavigate }) => {
   const filteredProveedores = useMemo(() => {
     let result = [...proveedores];
     if (searchQueryProv && searchQueryProv.trim()) {
-      result = result.filter(p => coincideBusqueda([p.ruc, p.razon_social, p.nombre_comercial], searchQueryProv));
+      result = result
+        .filter(p => coincideBusqueda([p.ruc, p.razon_social, p.nombre_comercial], searchQueryProv))
+        .sort((a, b) => puntajeBusqueda([b.ruc, b.razon_social, b.nombre_comercial], searchQueryProv) - puntajeBusqueda([a.ruc, a.razon_social, a.nombre_comercial], searchQueryProv));
     }
     if (filtroEstadoProv) {
       result = result.filter(p => p.estado === filtroEstadoProv);

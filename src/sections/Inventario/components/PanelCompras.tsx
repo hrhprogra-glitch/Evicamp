@@ -401,20 +401,20 @@ const ticketDeCompra = async (c: Compra, empresa: string, unidades: Map<string, 
   return `<!doctype html><html lang="es"><head><meta charset="UTF-8"><title>Pedido ${num}</title><style>
 @page { size: 80mm auto; margin: 0; }
 * { box-sizing: border-box; overflow-wrap: break-word; word-break: break-word; }
-html, body { margin: 0; background: #fff; color: #000; font: 700 10px/1.3 'Courier New', Courier, monospace; }
-body { width: calc(100% - 6mm); margin: 0 3mm; padding: 2mm 3.5mm 3mm 3.5mm; }
-.cab { text-align: center; border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 4px; }
-.cab img { display: block; margin: 0 auto 3px; max-height: 18mm; max-width: 42mm; object-fit: contain; }
-.cab h1 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
-.cab .tipo { margin-top: 4px; font-weight: 900; text-transform: uppercase; font-size: 10px; }
-.cab .num { font-size: 12px; font-weight: 900; letter-spacing: .12em; }
-.datos { text-transform: uppercase; font-size: 9px; border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 3px; }
-.item { padding: 3px 0; border-bottom: 1px dotted #999; }
+html, body { margin: 0; background: #fff; color: #000; font: 700 14px/1.4 'Courier New', Courier, monospace; }
+body { width: 72mm; max-width: 100%; margin: 0 auto; padding: 3mm 3mm 4mm; }
+.cab { text-align: center; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 6px; }
+.cab img { display: block; margin: 0 auto 4px; max-height: 22mm; max-width: 50mm; object-fit: contain; }
+.cab h1 { margin: 0; font-size: 17px; text-transform: uppercase; letter-spacing: .08em; }
+.cab .tipo { margin-top: 6px; font-weight: 900; text-transform: uppercase; font-size: 13px; }
+.cab .num { font-size: 18px; font-weight: 900; letter-spacing: .12em; }
+.datos { text-transform: uppercase; font-size: 12px; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 4px; }
+.item { padding: 4px 0; border-bottom: 1px dotted #999; }
 .item .nom { font-weight: 900; text-transform: uppercase; }
-.fila { display: flex; justify-content: space-between; gap: 4px; font-size: 9px; }
-.total { display: flex; justify-content: space-between; font-size: 11px; font-weight: 900; border-top: 1px solid #000; margin-top: 4px; padding-top: 3px; }
-.nota { margin-top: 6px; border: 1px solid #000; padding: 3px; font-size: 9px; }
-.pie { margin-top: 6px; text-align: center; font-size: 9px; }
+.fila { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; }
+.total { display: flex; justify-content: space-between; font-size: 14px; font-weight: 900; border-top: 2px solid #000; margin-top: 6px; padding-top: 4px; }
+.nota { margin-top: 8px; border: 1px solid #000; padding: 4px; font-size: 12px; }
+.pie { margin-top: 10px; text-align: center; font-size: 12px; }
 </style></head><body>
 <div class="cab">${logoSrc ? `<img src="${logoSrc}" alt="">` : ''}<h1>${esc(empresa || 'Mi negocio')}</h1>
 <div class="tipo">${recibida ? 'Compra recibida' : 'Pedido de compra'}</div><div class="num">#${num}</div></div>

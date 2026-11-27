@@ -7,7 +7,7 @@ import { ModalFusionarSalidas } from './components/ModalFusionarSalidas';
 import { ModalDetalleSalida } from './components/ModalDetalleSalida';
 import { conNombreClienteNota } from './clienteNota';
 import type { Salida, SalidaFusion, TipoSalida, EstadoSalida } from './types';
-import { coincideBusqueda } from '../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../utils/busqueda';
 
 interface SalidasProps {
   salidaIdInicial?: number;
@@ -132,27 +132,21 @@ export const Salidas: React.FC<SalidasProps> = ({ salidaIdInicial, onVolver }) =
 
   // Filtrado
   const salidasFiltradas = useMemo(() => {
-    return salidas.filter((s) => {
+    const q = busqueda.trim();
+    const camposSalida = (s: Salida) => [
+      s.codigo, s.customer?.name, s.customer?.dni, s.customer?.ruc, s.bien?.nombre, s.direccion,
+      ...(s.trabajadores || []).map((t) => t.trabajador?.nombre),
+      ...(s.items || []).map((it) => it.descripcion),
+    ];
+    const result = salidas.filter((s) => {
       if (filtroTipo !== 'TODOS' && s.tipo !== filtroTipo) return false;
       if (filtroEstado !== 'TODOS' && s.estado !== filtroEstado) return false;
       if (filtroFecha && String(s.fecha || '').slice(0, 10) !== filtroFecha) return false;
-      if (busqueda.trim()) {
-        // Mismo buscador flexible que el detalle y Devolver: ignora tildes, mayúsculas,
-        // espacios de más y encuentra palabras aunque estén en otro orden.
-        const campos: (string | null | undefined)[] = [
-          s.codigo,
-          s.customer?.name,
-          s.customer?.dni,
-          s.customer?.ruc,
-          s.bien?.nombre,
-          s.direccion,
-          ...(s.trabajadores || []).map((t) => t.trabajador?.nombre),
-          ...(s.items || []).map((it) => it.descripcion),
-        ];
-        return coincideBusqueda(campos, busqueda);
-      }
+      if (q) return coincideBusqueda(camposSalida(s), q);
       return true;
     });
+    if (q) result.sort((a, b) => puntajeBusqueda(camposSalida(b), q) - puntajeBusqueda(camposSalida(a), q));
+    return result;
   }, [salidas, filtroTipo, filtroEstado, filtroFecha, busqueda]);
 
   // Métricas (cuadros de la cabecera)

@@ -4,7 +4,7 @@ import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { direccionLegible } from '../../../utils/direccion';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { VistaPreviaSalida } from './VistaPreviaSalida';
 import { ModalDevolucionesSalida } from './ModalDevolucionesSalida';
 import { UnidadMaterial } from './UnidadMaterial';
@@ -226,7 +226,11 @@ export const ModalDetalleSalida: React.FC<ModalDetalleSalidaProps> = ({
 
   if (!isOpen) return null;
 
-  const materialesFiltrados = materiales.filter((m) => coincideBusqueda([m.descripcion, m.unidad], buscarMaterial));
+  const materialesFiltrados = buscarMaterial.trim()
+    ? materiales
+        .filter((m) => coincideBusqueda([m.descripcion, m.unidad], buscarMaterial))
+        .sort((a, b) => puntajeBusqueda([b.descripcion, b.unidad], buscarMaterial) - puntajeBusqueda([a.descripcion, a.unidad], buscarMaterial))
+    : materiales;
 
   const getEstadoBadge = (estado: string) => {
     switch (estado) {

@@ -5,7 +5,7 @@ import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { ModalValeTraspaso } from './ModalValeTraspaso';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 
 interface ModalTraspasoProps {
@@ -182,12 +182,15 @@ export const ModalTraspaso: React.FC<ModalTraspasoProps> = ({ onClose, onTraspas
 
   // Sugerencias filtradas
   const sugerencias = busqueda.trim()
-    ? productosDisponibles.filter((item) =>
-        coincideBusqueda(
-          `${item.product.name} ${item.variant_name || ''} ${item.product.barcode || ''} ${item.product.code || ''}`,
-          busqueda
+    ? productosDisponibles
+        .filter((item) =>
+          coincideBusqueda(
+            `${item.product.name} ${item.variant_name || ''} ${item.product.barcode || ''} ${item.product.code || ''}`,
+            busqueda
+          )
         )
-      ).slice(0, 8)
+        .sort((a, b) => puntajeBusqueda(`${b.product.name} ${b.variant_name || ''} ${b.product.barcode || ''} ${b.product.code || ''}`, busqueda) - puntajeBusqueda(`${a.product.name} ${a.variant_name || ''} ${a.product.barcode || ''} ${a.product.code || ''}`, busqueda))
+        .slice(0, 8)
     : [];
 
   const agregarProductoAlTraspaso = (item: any) => {

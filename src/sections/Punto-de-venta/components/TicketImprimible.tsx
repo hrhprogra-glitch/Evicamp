@@ -109,36 +109,36 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
         {/* CABECERA */}
         <div className="text-center border-b-2 border-black pb-2 mb-4">
           {empresa.logo_url && <img src={empresa.logo_url} alt="" className="mx-auto mb-2 max-h-[22mm] max-w-[50mm] object-contain grayscale" />}
-          <h3 className="font-black text-lg uppercase tracking-widest">{empresa.nombre_empresa || 'Mi Negocio'}</h3>
+          <h3 className="font-black text-xl uppercase tracking-widest">{empresa.nombre_empresa || 'Mi Negocio'}</h3>
           {esCpe && empresa.razon_social && empresa.razon_social.trim().toUpperCase() !== (empresa.nombre_empresa || '').trim().toUpperCase() && (
-            <p className="text-[12px] font-bold uppercase">{empresa.razon_social}</p>
+            <p className="text-[13px] font-bold uppercase">{empresa.razon_social}</p>
           )}
-          {empresa.ruc && <p className="text-[12px] font-bold mt-1">RUC: {empresa.ruc}</p>}
-          {empresa.direccion && <p className="text-[12px]">{empresa.direccion}</p>}
-          {empresa.telefono && <p className="text-[12px]">Tel: {empresa.telefono}</p>}
+          {empresa.ruc && <p className="text-[13px] font-bold mt-1">RUC: {empresa.ruc}</p>}
+          {empresa.direccion && <p className="text-[13px]">{empresa.direccion}</p>}
+          {empresa.telefono && <p className="text-[13px]">Tel: {empresa.telefono}</p>}
           
-          <h3 className="font-black text-sm uppercase mt-2">
+          <h3 className="font-black text-base uppercase mt-2">
             {esCpe ? nombreComprobante(comprobante!.docType) : fiadoData ? 'TICKET DE FIADO' : 'Nota de Venta'}
           </h3>
-          {esCpe && fiadoData && <p className="text-[11px] font-black uppercase">Venta al crédito</p>}
+          {esCpe && fiadoData && <p className="text-[12px] font-black uppercase">Venta al crédito</p>}
           {esCpe && comprobante!.referencia && (
-            <div className="text-[11px] font-bold uppercase mt-1">
+            <div className="text-[12px] font-bold uppercase mt-1">
               <p>Corrige: {nombreComprobante(comprobante!.referencia.docType)} {numeroComprobante(comprobante!.referencia.serie, comprobante!.referencia.numero)}</p>
               {comprobante!.motivo && <p>Motivo: {comprobante!.motivo}</p>}
             </div>
           )}
-          <p className="font-black tracking-widest text-base">{nroBoleta}</p>
-          <p className="text-[12px] font-bold mt-1">Fecha: {fecha}</p>
-          {vendedor && <p className="text-[12px] font-bold uppercase">Atendido por: {vendedor}</p>}
+          <p className="font-black tracking-widest text-lg">{nroBoleta}</p>
+          <p className="text-[13px] font-bold mt-1">Fecha: {fecha}</p>
+          {vendedor && <p className="text-[13px] font-bold uppercase">Atendido por: {vendedor}</p>}
 
           {/* DATOS DEL FIADO */}
           {fiadoData && (
             <div className="mt-2 text-left border-2 border-black p-1.5 bg-gray-100">
-              <p className="text-[12px] font-black uppercase border-b border-black pb-1 mb-1">Datos del Crédito</p>
-              <p className="text-[12px] font-bold uppercase">Cliente: <span className="font-black">{fiadoData.clienteNombre}</span></p>
-              {fiadoData.clienteDni && <p className="text-[12px] font-bold uppercase">DNI: <span className="font-black">{fiadoData.clienteDni}</span></p>}
-              {fiadoData.clienteTelefono && <p className="text-[12px] font-bold uppercase">Cel: <span className="font-black">{fiadoData.clienteTelefono}</span></p>}
-              <p className="text-[12px] font-black uppercase mt-1 text-red-600">Límite Pago: {fiadoData.fechaVencimiento}</p>
+              <p className="text-[13px] font-black uppercase border-b border-black pb-1 mb-1">Datos del Crédito</p>
+              <p className="text-[13px] font-bold uppercase">Cliente: <span className="font-black">{fiadoData.clienteNombre}</span></p>
+              {fiadoData.clienteDni && <p className="text-[13px] font-bold uppercase">DNI: <span className="font-black">{fiadoData.clienteDni}</span></p>}
+              {fiadoData.clienteTelefono && <p className="text-[13px] font-bold uppercase">Cel: <span className="font-black">{fiadoData.clienteTelefono}</span></p>}
+              <p className="text-[13px] font-black uppercase mt-1 text-red-600">Límite Pago: {fiadoData.fechaVencimiento}</p>
             </div>
           )}
 
@@ -146,29 +146,29 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
           {esCpe && (
             <div className="mt-2 text-left border-2 border-black p-1.5 bg-gray-50">
               {comprobante!.clienteTipoDoc && comprobante!.clienteTipoDoc !== 'SIN' && comprobante!.clienteNumDoc ? (
-                <p className="text-[12px] font-bold uppercase">{comprobante!.clienteTipoDoc}: <span className="font-black">{comprobante!.clienteNumDoc}</span></p>
+                <p className="text-[13px] font-bold uppercase">{comprobante!.clienteTipoDoc}: <span className="font-black">{comprobante!.clienteNumDoc}</span></p>
               ) : null}
-              <p className="text-[12px] font-bold uppercase">
+              <p className="text-[13px] font-bold uppercase">
                 {comprobante!.docType === 1 ? 'Razón social' : 'Cliente'}: <span className="font-black">{comprobante!.clienteNombre || 'CLIENTES VARIOS'}</span>
               </p>
-              {comprobante!.clienteDireccion && <p className="text-[12px] uppercase">Dir: <span>{comprobante!.clienteDireccion}</span></p>}
+              {comprobante!.clienteDireccion && <p className="text-[13px] uppercase">Dir: <span>{comprobante!.clienteDireccion}</span></p>}
             </div>
           )}
 
           {/* DATOS DEL CLIENTE EN NOTA DE VENTA */}
           {!esCpe && !fiadoData && cliente && (
             <div className="mt-2 text-left border-2 border-black p-1.5 bg-gray-50">
-              <p className="text-[12px] font-bold uppercase">Cliente: <span className="font-black">{cliente.nombre}</span></p>
-              {cliente.dni && <p className="text-[12px] font-bold uppercase">DNI: <span className="font-black">{cliente.dni}</span></p>}
-              {cliente.ruc && <p className="text-[12px] font-bold uppercase">RUC: <span className="font-black">{cliente.ruc}</span></p>}
-              {cliente.telefono && <p className="text-[12px] font-bold uppercase">Cel: <span className="font-black">{cliente.telefono}</span></p>}
-              {cliente.direccion && <p className="text-[12px] uppercase">Dir: <span>{cliente.direccion}</span></p>}
+              <p className="text-[13px] font-bold uppercase">Cliente: <span className="font-black">{cliente.nombre}</span></p>
+              {cliente.dni && <p className="text-[13px] font-bold uppercase">DNI: <span className="font-black">{cliente.dni}</span></p>}
+              {cliente.ruc && <p className="text-[13px] font-bold uppercase">RUC: <span className="font-black">{cliente.ruc}</span></p>}
+              {cliente.telefono && <p className="text-[13px] font-bold uppercase">Cel: <span className="font-black">{cliente.telefono}</span></p>}
+              {cliente.direccion && <p className="text-[13px] uppercase">Dir: <span>{cliente.direccion}</span></p>}
             </div>
           )}
         </div>
 
         {/* TABLA DE PRODUCTOS */}
-        <table className="w-full text-[12px] mb-4">
+        <table className="w-full text-[13px] mb-4">
           <thead>
             <tr className="border-b-2 border-black text-left">
               <th className="w-[15%] pb-1 font-black">CANT</th>
@@ -183,15 +183,15 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
                 <td className="py-1.5 pr-1 uppercase align-top">
                   <span className="font-bold leading-tight block">{item.name}</span>
                   {/* Con 1 unidad el precio c/u es igual al total de la línea: no se repite */}
-                  {Number(item.cartQuantity) !== 1 && <span className="text-[11px] text-gray-600 font-bold">S/ {formatearMonto(item.price)} c/u</span>}
+                  {Number(item.cartQuantity) !== 1 && <span className="text-[12px] text-gray-600 font-bold">S/ {formatearMonto(item.price)} c/u</span>}
                   {item.numeroSerie && (
-                    <span className="text-[10px] text-black font-mono font-bold block">SERIE/IMEI: {item.numeroSerie}</span>
+                    <span className="text-[11px] text-black font-mono font-bold block">SERIE/IMEI: {item.numeroSerie}</span>
                   )}
                   {item.garantiaHasta && (
-                    <span className="text-[10px] text-gray-800 font-bold block">GARANTÍA HASTA: {item.garantiaHasta}</span>
+                    <span className="text-[11px] text-gray-800 font-bold block">GARANTÍA HASTA: {item.garantiaHasta}</span>
                   )}
                   {Boolean(!item.garantiaHasta && item.mesesGarantia && item.mesesGarantia > 0) && (
-                    <span className="text-[10px] text-gray-800 font-bold block">GARANTÍA: {item.mesesGarantia} {item.mesesGarantia === 1 ? 'MES' : 'MESES'}</span>
+                    <span className="text-[11px] text-gray-800 font-bold block">GARANTÍA: {item.mesesGarantia} {item.mesesGarantia === 1 ? 'MES' : 'MESES'}</span>
                   )}
                 </td>
                 <td className="py-1.5 text-right font-bold align-top">
@@ -203,9 +203,9 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
         </table>
 
         {/* TOTALES Y PAGOS */}
-        <div className="border-t-2 border-black pt-2 space-y-1 font-black text-xs uppercase">
+        <div className="border-t-2 border-black pt-2 space-y-1 font-black text-sm uppercase">
           {esCpe && (
-            <div className="space-y-0.5 text-[12px] font-bold mb-1">
+            <div className="space-y-0.5 text-[13px] font-bold mb-1">
               {comprobante!.totales.gravada > 0 && <div className="flex justify-between"><span>Op. gravada:</span><span>S/ {formatearMonto(comprobante!.totales.gravada)}</span></div>}
               {comprobante!.totales.exonerada > 0 && <div className="flex justify-between"><span>Op. exonerada:</span><span>S/ {formatearMonto(comprobante!.totales.exonerada)}</span></div>}
               {comprobante!.totales.inafecta > 0 && <div className="flex justify-between"><span>Op. inafecta:</span><span>S/ {formatearMonto(comprobante!.totales.inafecta)}</span></div>}
@@ -213,13 +213,13 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
               {comprobante!.totales.icbper > 0 && <div className="flex justify-between"><span>ICBPER (bolsas):</span><span>S/ {formatearMonto(comprobante!.totales.icbper)}</span></div>}
             </div>
           )}
-          <div className="flex justify-between text-lg mb-2">
+          <div className="flex justify-between text-xl mb-2">
             <span>Total:</span>
             <span>S/ {formatearMonto(total)}</span>
           </div>
           
           {!(esCpe && comprobante!.docType === 7) && (<>
-          <div className="border-t border-black pt-1 mb-1 text-[12px] text-gray-600">
+          <div className="border-t border-black pt-1 mb-1 text-[13px] text-gray-600">
             {fiadoData ? 'PAGOS PARCIALES:' : 'MÉTODOS DE PAGO:'}
           </div>
 
@@ -228,7 +228,7 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
           {pagos.tarjeta > 0 && <div className="flex justify-between"><span>Tarjeta:</span><span>S/ {formatearMonto(pagos.tarjeta)}</span></div>}
           
           {(fiadoData || vuelto > 0) && (
-            <div className="flex justify-between border-t-2 border-black pt-1 text-base mt-2">
+            <div className="flex justify-between border-t-2 border-black pt-1 text-lg mt-2">
               <span>{fiadoData ? 'POR PAGAR:' : 'VUELTO:'}</span>
               <span>S/ {formatearMonto(fiadoData ? fiadoData.montoDeuda.toFixed(2) : vuelto)}</span>
             </div>
@@ -246,20 +246,20 @@ export const TicketImprimible = forwardRef<HTMLDivElement, Props>(
                 clienteTipoDoc: comprobante!.clienteTipoDoc, clienteNumDoc: comprobante!.clienteNumDoc, hash: comprobante!.hash,
               })} />
             ) : (
-              <p className="text-[11px] font-black uppercase">Comprobante por numerar: se emite al conectarse a internet</p>
+              <p className="text-[12px] font-black uppercase">Comprobante por numerar: se emite al conectarse a internet</p>
             )}
-            <p className="text-[10px] font-bold uppercase leading-tight">Representación impresa de la {nombreComprobante(comprobante!.docType).toLowerCase()}</p>
-            {comprobante!.hash && <p className="text-[9px] font-mono break-all">Resumen: {comprobante!.hash}</p>}
+            <p className="text-[11px] font-bold uppercase leading-tight">Representación impresa de la {nombreComprobante(comprobante!.docType).toLowerCase()}</p>
+            {comprobante!.hash && <p className="text-[10px] font-mono break-all">Resumen: {comprobante!.hash}</p>}
             {comprobante!.modo && comprobante!.modo !== 'REAL' && (
-              <p className="text-[11px] font-black uppercase border-2 border-black p-1 mt-1">*** Modo {comprobante!.modo === 'SIMULADO' ? 'simulado' : 'prueba'}: sin valor tributario ***</p>
+              <p className="text-[12px] font-black uppercase border-2 border-black p-1 mt-1">*** Modo {comprobante!.modo === 'SIMULADO' ? 'simulado' : 'prueba'}: sin valor tributario ***</p>
             )}
           </div>
         )}
 
         {/* PIE DE PÁGINA */}
         <div className="text-center mt-6 border-t-2 border-dashed border-gray-400 pt-3">
-          <p className="font-black text-[12px] uppercase">¡Gracias por su compra!</p>
-          <p className="mt-3 text-[11px] font-black">*** SIUMAX NEGO ***</p>
+          <p className="font-black text-[13px] uppercase">¡Gracias por su compra!</p>
+          <p className="mt-3 text-[12px] font-black">*** SIUMAX NEGO ***</p>
         </div>
         <div className="h-2"></div>
       </div>

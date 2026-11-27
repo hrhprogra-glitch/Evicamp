@@ -7,7 +7,7 @@ import { filaEnMedio } from '../../../utils/flechasEspaciales';
 import React, { useMemo, useState } from 'react';
 import { Edit, Plus, Trash2, ChevronLeft, ChevronRight, FilterX, MapPin, Search, X } from 'lucide-react';
 import type { Cliente, Fiado, GrupoClientes } from '../types';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
@@ -52,10 +52,19 @@ export const PestanaClientes: React.FC<Props> = ({ clientes, fiados, grupos = []
     const nombreGrupo = new Map(grupos.map((g) => [g.id, g.nombre]));
     const conResumen = clientes.map((c) => ({ c, grupo: c.grupoId ? nombreGrupo.get(c.grupoId) || '' : '', ...resumenDeCliente(c, fiados) }));
     const texto = busqueda.trim();
-    let lista = texto ? conResumen.filter(({ c, grupo }) => coincideBusqueda([c.nombre, c.dni, c.ruc, c.telefono, c.referencia, c.direccion, grupo], texto)) : conResumen;
+    let lista = texto
+      ? conResumen
+          .filter(({ c, grupo }) => coincideBusqueda([c.nombre, c.dni, c.ruc, c.telefono, c.referencia, c.direccion, grupo], texto))
+          .sort((a, b) => puntajeBusqueda([b.c.nombre, b.c.dni, b.c.ruc, b.c.telefono, b.c.referencia, b.c.direccion, b.grupo], texto) - puntajeBusqueda([a.c.nombre, a.c.dni, a.c.ruc, a.c.telefono, a.c.referencia, a.c.direccion, a.grupo], texto))
+      : conResumen;
     if (filtro === 'CON_DEUDA') lista = lista.filter((x) => x.deuda > 0.05);
     if (filtro === 'SIN_DEUDA') lista = lista.filter((x) => x.deuda <= 0.05);
     return [...lista].sort((a, b) => {
+      if (texto) {
+        const pb = puntajeBusqueda([b.c.nombre, b.c.dni, b.c.ruc, b.c.telefono, b.c.referencia, b.c.direccion, b.grupo], texto);
+        const pa = puntajeBusqueda([a.c.nombre, a.c.dni, a.c.ruc, a.c.telefono, a.c.referencia, a.c.direccion, a.grupo], texto);
+        if (pb !== pa) return pb - pa;
+      }
       if (orden === 'RECIENTES') return (Number(b.c.id) || 0) - (Number(a.c.id) || 0);
       if (orden === 'DEUDA') {
         const diff = b.deuda - a.deuda;

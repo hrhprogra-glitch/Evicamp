@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../db/supabase';
 import { traerTodo } from '../../utils/traerTodo';
-import { coincideBusqueda } from '../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../utils/busqueda';
 import { useTiposNegocio } from '../../utils/tiposNegocio';
 import type { Cotizacion, CotizacionItem } from './types';
 import { aCotizacion } from './types';
@@ -57,10 +57,13 @@ export const Cotizaciones: React.FC<Props> = ({ onNavigatePOS, pedirNueva = 0 })
   useEffect(() => { cargar(); }, [cargar]);
   useEffect(() => { if (pedirNueva > 0) setNueva({ coti: null }); }, [pedirNueva]);
 
-  const filtradas = useMemo(() => cotizaciones.filter((c) =>
-    (filtroEstado === 'TODOS' || c.estado === filtroEstado) &&
-    coincideBusqueda([c.numero, c.cliente_nombre, c.cliente_documento, c.cliente_telefono, c.observaciones, c.bien?.nombre], busqueda),
-  ), [cotizaciones, filtroEstado, busqueda]);
+  const filtradas = useMemo(() => {
+    const base = cotizaciones.filter((c) =>
+      (filtroEstado === 'TODOS' || c.estado === filtroEstado) &&
+      coincideBusqueda([c.numero, c.cliente_nombre, c.cliente_documento, c.cliente_telefono, c.observaciones, c.bien?.nombre], busqueda));
+    if (!busqueda.trim()) return base;
+    return [...base].sort((a, b) => puntajeBusqueda([b.numero, b.cliente_nombre, b.cliente_documento, b.cliente_telefono, b.observaciones, b.bien?.nombre], busqueda) - puntajeBusqueda([a.numero, a.cliente_nombre, a.cliente_documento, a.cliente_telefono, a.observaciones, a.bien?.nombre], busqueda));
+  }, [cotizaciones, filtroEstado, busqueda]);
 
   const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA));
   const paginadas = useMemo(

@@ -27,26 +27,27 @@ export const generarHtmlTicketTaller = (
     @page { size: 80mm auto; margin: 0; }
     * { box-sizing: border-box; }
     body {
-      width: 80mm;
-      margin: 0;
-      padding: 3mm 3.5mm 4mm;
+      width: 72mm;
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 3mm 3mm 4mm;
       font-family: 'Courier New', Courier, monospace;
-      font-size: 10px;
-      line-height: 1.3;
+      font-size: 13px;
+      line-height: 1.4;
       color: #000;
       background: #fff;
     }
     .text-center { text-align: center; }
     .text-right { text-align: right; }
     .font-bold { font-weight: bold; }
-    .border-b { border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 4px; }
-    .border-t { border-top: 1px dashed #000; padding-top: 4px; margin-top: 4px; }
-    .titulo { font-size: 12px; font-weight: 900; text-transform: uppercase; }
-    .codigo { font-size: 12px; font-weight: 900; letter-spacing: 1px; margin: 3px 0; }
+    .border-b { border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px; }
+    .border-t { border-top: 1px dashed #000; padding-top: 5px; margin-top: 5px; }
+    .titulo { font-size: 16px; font-weight: 900; text-transform: uppercase; }
+    .codigo { font-size: 18px; font-weight: 900; letter-spacing: 1px; margin: 4px 0; }
     .fila { display: flex; justify-content: space-between; margin-bottom: 2px; }
-    .bloque { margin-bottom: 5px; }
-    .condiciones { font-size: 8px; line-height: 1.2; text-align: justify; margin-top: 5px; }
-    .firmas { margin-top: 20px; display: flex; justify-content: space-between; gap: 8px; font-size: 8px; text-align: center; }
+    .bloque { margin-bottom: 6px; }
+    .condiciones { font-size: 10px; line-height: 1.25; text-align: justify; margin-top: 6px; }
+    .firmas { margin-top: 25px; display: flex; justify-content: space-between; gap: 8px; font-size: 10px; text-align: center; }
     .linea-firma { border-top: 1px solid #000; padding-top: 2px; width: 48%; }
   </style>
 </head>

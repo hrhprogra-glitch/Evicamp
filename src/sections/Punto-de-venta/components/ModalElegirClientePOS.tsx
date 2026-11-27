@@ -3,7 +3,7 @@ import { Search, UserPlus, Users, X, UserCheck } from 'lucide-react';
 import type { Cliente } from '../types';
 import { supabase } from '../../../db/supabase';
 import { traerTodo } from '../../../utils/traerTodo';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { ModalFichaCliente, type DatosCliente } from '../../Clientes/components/ModalFichaCliente';
 
@@ -88,7 +88,10 @@ export const ModalElegirClientePOS: React.FC<Props> = ({
   const filtrados = useMemo(() => {
     const q = search.trim();
     if (!q) return clientes.slice(0, 80);
-    return clientes.filter(c => coincideBusqueda([c.nombre, c.dni, c.ruc, c.telefono, c.referencia], q)).slice(0, 80);
+    return clientes
+      .filter(c => coincideBusqueda([c.nombre, c.dni, c.ruc, c.telefono, c.referencia], q))
+      .sort((a, b) => puntajeBusqueda([b.nombre, b.dni, b.ruc, b.telefono, b.referencia], q) - puntajeBusqueda([a.nombre, a.dni, a.ruc, a.telefono, a.referencia], q))
+      .slice(0, 80);
   }, [clientes, search]);
 
   // Focus trap y atajos de teclado globales del modal

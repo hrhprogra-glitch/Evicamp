@@ -3,7 +3,7 @@ import { Package, Search, Printer, MessageCircle, CheckCircle2, X, Calendar, Clo
 import { supabase } from '../../../db/supabase';
 import type { PedidoCliente, DetallePedido } from '../types';
 import { traerTodo } from '../../../utils/traerTodo';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { useEmpleado } from '../../../utils/permisos';
 import { formatearMonto } from '../../../utils/formato';
 import { PaginacionSobrio } from '../../../components/PaginacionSobrio';

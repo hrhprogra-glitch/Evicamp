@@ -1,4 +1,4 @@
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import React, { useState, useEffect, useRef } from 'react';
@@ -475,11 +475,16 @@ export const ModalLote: React.FC<Props> = ({ isOpen, onClose, productos, initial
   if (!isOpen) return null;
 
   // Motor de filtrado ultra-rápido (EXCLUYE LOS PRODUCTOS DE CONSUMO INTERNO)
-  const filteredProducts = productos.filter(p => {
-    if (p.unit === 'CONSUMO') return false; // <-- BLOQUEO ESTRICTO: NO MOSTRAR CONSUMO AQUÍ
-    if (!searchQuery.trim()) return true;
-    return coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], searchQuery);
-  });
+  const filteredProducts = productos
+    .filter(p => {
+      if (p.unit === 'CONSUMO') return false; // <-- BLOQUEO ESTRICTO: NO MOSTRAR CONSUMO AQUÍ
+      if (!searchQuery.trim()) return true;
+      return coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], searchQuery);
+    })
+    .sort((a, b) => {
+      if (!searchQuery.trim()) return 0;
+      return puntajeBusqueda([b.name, b.code, b.barcode, b.marca, b.modelo, b.medida, b.laboratorio, b.ubicacion], searchQuery) - puntajeBusqueda([a.name, a.code, a.barcode, a.marca, a.modelo, a.medida, a.laboratorio, a.ubicacion], searchQuery);
+    });
 
   const textoProveedor = proveedor.trim().toUpperCase();
   const filteredProveedores = proveedoresActivos

@@ -6,7 +6,7 @@ import { TiendaCategorias } from './components/TiendaCategorias';
 import { TiendaProductoCard } from './components/TiendaProductoCard';
 import { TiendaCarritoDrawer } from './components/TiendaCarritoDrawer';
 import { TiendaModalPedido } from './components/TiendaModalPedido';
-import { coincideBusqueda } from '../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../utils/busqueda';
 import { numeroWhatsapp, soles } from './formato';
 import { ShoppingBag, Loader2, AlertCircle, MapPin, Phone, MessageCircle, Lock, SearchX, ChevronRight } from 'lucide-react';
 

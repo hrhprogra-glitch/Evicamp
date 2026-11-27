@@ -7,7 +7,7 @@ import { Edit, UserX, UserCheck, FilterX, Search, X } from 'lucide-react';
 import { filaEnMedio } from '../../../utils/flechasEspaciales';
 import { supabase } from '../../../db/supabase';
 import { traerTodo } from '../../../utils/traerTodo';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { avisar, confirmar } from '../../../utils/dialogos';
 import { usePermiso, avisarSinPermiso } from '../../../utils/permisos';
 import type { Trabajador } from '../types';
@@ -55,10 +55,20 @@ export const PestanaTrabajadores: React.FC<Props> = ({ idPestana, pedirNuevo }) 
   const nombreUsuario = useMemo(() => new Map(usuarios.map((u) => [u.id, u.nombre])), [usuarios]);
   const filas = useMemo(() => {
     let lista = trabajadores;
-    if (busqueda.trim()) lista = lista.filter((t) => coincideBusqueda([t.nombre, t.dni, t.cargo, t.telefono], busqueda.trim()));
+    const q = busqueda.trim();
+    if (q) lista = lista
+      .filter((t) => coincideBusqueda([t.nombre, t.dni, t.cargo, t.telefono], q))
+      .sort((a, b) => puntajeBusqueda([b.nombre, b.dni, b.cargo, b.telefono], q) - puntajeBusqueda([a.nombre, a.dni, a.cargo, a.telefono], q));
     if (filtro === 'ACTIVOS') lista = lista.filter((t) => t.estado === 'ACTIVO');
     if (filtro === 'INACTIVOS') lista = lista.filter((t) => t.estado === 'INACTIVO');
-    return [...lista].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    return [...lista].sort((a, b) => {
+      if (q) {
+        const pb = puntajeBusqueda([b.nombre, b.dni, b.cargo, b.telefono], q);
+        const pa = puntajeBusqueda([a.nombre, a.dni, a.cargo, a.telefono], q);
+        if (pb !== pa) return pb - pa;
+      }
+      return a.nombre.localeCompare(b.nombre, 'es');
+    });
   }, [trabajadores, busqueda, filtro]);
 
   const guardar = async (d: DatosTrabajador): Promise<boolean> => {

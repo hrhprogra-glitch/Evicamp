@@ -1,5 +1,5 @@
 import { traerTodo } from '../../../utils/traerTodo';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { Database,Layers, Edit, Trash2, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../../db/supabase';

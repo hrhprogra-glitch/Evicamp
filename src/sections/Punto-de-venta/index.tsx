@@ -4,7 +4,7 @@ import type { CartItem, Cliente, HeldCart } from './types';
 import type { Product } from '../Inventario/types';
 import { useRef } from 'react';
 import { Wallet, Printer, X, Users } from 'lucide-react';
-import { useImprimir } from '../../utils/impresion';
+import { imprimirTicket80mm } from '../../utils/impresion';
 import { useEmpleado, usePermiso } from '../../utils/permisos';
 import { conAutorizacion } from '../../utils/autorizacion';
 import { esDecimal, unidadDe } from '../../utils/unidades';
@@ -17,7 +17,7 @@ import { TicketVenta } from './components/TicketVenta';
 import { ModalCobro } from './components/ModalCobro';
 import { ModalBalanza } from './components/ModalBalanza';
 import { ModalPrecioConsumo } from './components/ModalPrecioConsumo';
-import { TicketImprimible } from './components/TicketImprimible';
+import { generarTicketVentaHtml } from './ticketVentaHtml';
 import { ModalElegirClientePOS } from './components/ModalElegirClientePOS';
 import { ModalNombreEspera } from './components/ModalNombreEspera';
 import { ModalCotizacionPOS } from './components/ModalCotizacionPOS';
@@ -406,10 +406,37 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
   const [selectedWeightProduct, setSelectedWeightProduct] = useState<Product | null>(null);
   const [isPrecioModalOpen, setIsPrecioModalOpen] = useState(false); // <-- NUEVO
   const [selectedConsumoProduct, setSelectedConsumoProduct] = useState<Product | null>(null); // <-- NUEVO
-  const componentRef = useRef<HTMLDivElement>(null);
+  const [imprimiendoTicket, setImprimiendoTicket] = useState(false);
+  const [ticketHtmlPreview, setTicketHtmlPreview] = useState('');
+  const ticketPreviewFrame = useRef<HTMLIFrameElement>(null);
 
-  // En la app de escritorio imprime directo; en el navegador abre la ventana de impresión
-  const handlePrint = useImprimir(componentRef, 'Boleta de Venta');
+  useEffect(() => {
+    if (!isVistaPreviaOpen || !ultimaVenta) { setTicketHtmlPreview(''); return; }
+    let vivo = true;
+    (async () => {
+      const { data: empresa } = await supabase.from('empresa_config').select('nombre_empresa,ruc,direccion,telefono,logo_url,razon_social').limit(1).maybeSingle();
+      const html = await generarTicketVentaHtml({ ...ultimaVenta, empresa });
+      if (vivo) setTicketHtmlPreview(html);
+    })().catch(() => { if (vivo) setTicketHtmlPreview(''); });
+    return () => { vivo = false; };
+  }, [isVistaPreviaOpen, ultimaVenta]);
+
+  const handlePrint = async () => {
+    if (!ultimaVenta || imprimiendoTicket) return;
+    setImprimiendoTicket(true);
+    try {
+      let html = ticketHtmlPreview;
+      if (!html) {
+        const { data: empresa } = await supabase.from('empresa_config').select('nombre_empresa,ruc,direccion,telefono,logo_url,razon_social').limit(1).maybeSingle();
+        html = await generarTicketVentaHtml({ ...ultimaVenta, empresa });
+      }
+      const r = await imprimirTicket80mm(html, `Venta-${ultimaVenta.nroBoleta}`);
+      if (!r.ok) alert(`No se pudo imprimir el ticket: ${r.motivo}\n\nRevisa que la impresora esté encendida y elegida en el menú de la app (tecla Alt > Impresora de tickets).`);
+    } finally {
+      setImprimiendoTicket(false);
+      setTimeout(() => document.getElementById('vista-btn-imprimir')?.focus(), 60);
+    }
+  };
 
   // 🔥 NUEVO: ATAJOS DE TECLADO GLOBALES (F2, F3, F4, ESCAPE)
   useEffect(() => {
@@ -1353,22 +1380,25 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
               </button>
             </div>
             
-            {/* CONTENEDOR DEL TICKET (Fondo gris y zoom automático) */}
-            <div className="flex-1 overflow-y-auto p-6 bg-[var(--color-bg)] flex items-start justify-center custom-scrollbar">
-              {/* Le aplicamos un scale-110 para que en la PC se vea un poco más grande y nítido */}
-              <div className="transform sm:scale-110 origin-top pb-10">
-                <TicketImprimible
-                  ref={componentRef}
-                  cart={ultimaVenta.cart}
-                  total={ultimaVenta.total}
-                  pagos={ultimaVenta.pagos}
-                  vuelto={ultimaVenta.vuelto}
-                  nroBoleta={ultimaVenta.nroBoleta}
-                  fiadoData={ultimaVenta.fiadoData}
-                  cliente={ultimaVenta.cliente}
-                  vendedor={ultimaVenta.vendedor}
-                  comprobante={ultimaVenta.comprobante}
-                />
+            {/* CONTENEDOR DEL TICKET: usa el mismo HTML que se imprime, para que la vista previa sea fiel */}
+            <div className="flex-1 overflow-y-auto p-4 bg-[var(--color-bg)] flex items-start justify-center custom-scrollbar">
+              <div className="pb-6 w-full flex justify-center">
+                {ticketHtmlPreview ? (
+                  <iframe
+                    ref={ticketPreviewFrame}
+                    title="Vista previa del ticket"
+                    srcDoc={ticketHtmlPreview.replace('</head>', '<style>@media screen{html,body{overflow:hidden!important;background:#fff!important}}</style></head>')}
+                    tabIndex={-1}
+                    onLoad={() => {
+                      const d = ticketPreviewFrame.current?.contentDocument;
+                      if (ticketPreviewFrame.current && d) ticketPreviewFrame.current.style.height = `${Math.max(d.documentElement.scrollHeight, d.body?.scrollHeight || 0) + 2}px`;
+                    }}
+                    scrolling="no"
+                    className="w-[80mm] max-w-full min-h-[220px] bg-white border-2 border-dashed border-gray-400 shadow-[4px_4px_0_0_var(--color-border)] pointer-events-none block overflow-hidden"
+                  />
+                ) : (
+                  <div className="w-[80mm] max-w-full min-h-[220px] bg-white border-2 border-dashed border-gray-400 flex items-center justify-center text-[11px] font-black uppercase tracking-widest text-[var(--color-muted)]">Cargando vista previa...</div>
+                )}
               </div>
             </div>
 
@@ -1396,10 +1426,11 @@ export const POS: React.FC<{ onNavigate?: (v: string) => void }> = ({ onNavigate
               </button>
               <button
                 id="vista-btn-imprimir"
-                onClick={() => handlePrint()}
-                className="flex-1 border-2 border-[var(--color-ink)] bg-[var(--color-accent)] text-[var(--color-ink)] py-3 font-black text-xs uppercase tracking-widest hover:bg-[var(--color-accent-dark)] hover:text-white transition-colors flex items-center justify-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-[4px] active:shadow-none cursor-pointer outline-none focus:ring-4 focus:ring-[var(--color-info)] focus:ring-offset-2"
+                onClick={() => void handlePrint()}
+                disabled={imprimiendoTicket}
+                className="flex-1 border-2 border-[var(--color-ink)] bg-[var(--color-accent)] text-[var(--color-ink)] py-3 font-black text-xs uppercase tracking-widest hover:bg-[var(--color-accent-dark)] hover:text-white transition-colors flex items-center justify-center gap-2 shadow-[4px_4px_0_0_var(--color-ink)] active:translate-y-[4px] active:shadow-none cursor-pointer outline-none focus:ring-4 focus:ring-[var(--color-info)] focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Printer size={18} /> Imprimir
+                <Printer size={18} /> {imprimiendoTicket ? 'Imprimiendo...' : 'Imprimir'}
               </button>
             </div>
 

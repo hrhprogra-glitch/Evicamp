@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { RotateCcw, X, Search } from 'lucide-react';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { UnidadMaterial } from './UnidadMaterial';
 
 export type MaterialDevolucion = {
@@ -68,7 +68,11 @@ export const ModalDevolucionesSalida: React.FC<ModalDevolucionesSalidaProps> = (
 
   if (!isOpen) return null;
 
-  const materialesFiltrados = materiales.filter((m) => coincideBusqueda([m.descripcion, m.unidad], buscarMaterial));
+  const materialesFiltrados = buscarMaterial.trim()
+    ? materiales
+        .filter((m) => coincideBusqueda([m.descripcion, m.unidad], buscarMaterial))
+        .sort((a, b) => puntajeBusqueda([b.descripcion, b.unidad], buscarMaterial) - puntajeBusqueda([a.descripcion, a.unidad], buscarMaterial))
+    : materiales;
 
   const inputCls = 'w-full p-2 min-h-[40px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] outline-none font-bold uppercase bg-[var(--color-surface)] rounded-none disabled:opacity-50';
   const total = materiales.reduce((sum, m) => {

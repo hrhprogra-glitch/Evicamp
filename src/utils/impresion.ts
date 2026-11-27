@@ -23,6 +23,49 @@ export const imprimirEnTicketera = async (html: string, titulo: string) => {
   return escritorio ? escritorio.imprimir(html, titulo) : null;
 };
 
+let imprimiendoTicket80 = false;
+/** Imprime un ticket 80mm ya armado como HTML completo.
+ *  Escritorio: ticketera directa. Navegador: iframe oculto de tamaño real (no 0x0),
+ *  print tras onload+300ms, limpieza en afterprint y fallback 60s, guard anti doble diálogo. */
+export const imprimirTicket80mm = async (html: string, titulo: string): Promise<{ ok: boolean; motivo: string | null }> => {
+  const escritorio = puente();
+  if (escritorio) return escritorio.imprimir(html, titulo);
+  if (imprimiendoTicket80) return { ok: true, motivo: null };
+  imprimiendoTicket80 = true;
+  imprimiendo = true;
+  return new Promise((resolve) => {
+    const frame = document.createElement('iframe');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.style.cssText = 'position:fixed;left:0;top:0;width:80mm;height:100vh;border:0;opacity:0;pointer-events:none;z-index:-1;';
+    let resuelto = false;
+    const limpiar = (ok: boolean, motivo: string | null = null) => {
+      if (resuelto) return;
+      resuelto = true;
+      window.clearTimeout(fallback);
+      try { frame.remove(); } catch { /* ya se quitó */ }
+      imprimiendoTicket80 = false;
+      imprimiendo = false;
+      resolve({ ok, motivo });
+    };
+    const fallback = window.setTimeout(() => limpiar(true), 60000);
+    frame.onload = () => {
+      window.setTimeout(() => {
+        try {
+          const win = frame.contentWindow;
+          if (!win) { limpiar(false, 'No se pudo abrir la ventana de impresión.'); return; }
+          win.addEventListener('afterprint', () => limpiar(true), { once: true });
+          win.focus();
+          win.print();
+        } catch (e) {
+          limpiar(false, e instanceof Error ? e.message : 'Error al imprimir.');
+        }
+      }, 300);
+    };
+    frame.srcdoc = html;
+    document.body.appendChild(frame);
+  });
+};
+
 // Documento completo con los estilos de la página, para que el ticket salga igual que en pantalla.
 // Los estilos van COPIADOS dentro (no como <link>): el CSS del sistema se carga con crossorigin y el servidor no manda
 // permiso CORS, así que desde la ventana invisible de impresión (otra "procedencia") el navegador lo bloqueaba y el

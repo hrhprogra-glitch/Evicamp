@@ -16,7 +16,7 @@ import { ChefHat, Boxes, Plus, Trash2, X, Search, ChevronDown, Layers } from 'lu
 import { supabase } from '../../../db/supabase';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
 import { avisar, confirmar } from '../../../utils/dialogos';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
 import { formatearCantidad } from '../../../utils/formato';
@@ -186,6 +186,7 @@ export const ModalProduccion: React.FC<Props> = ({ isOpen, onClose, onSuccess, p
     return productos
       .filter((p) => p.activo !== false && String(p.id) !== editId && p.tipoCompuesto !== 'COMBO')
       .filter((p) => coincideBusqueda([p.name, p.code, p.barcode, p.marca], t))
+      .sort((a, b) => puntajeBusqueda([b.name, b.code, b.barcode, b.marca], t) - puntajeBusqueda([a.name, a.code, a.barcode, a.marca], t))
       .slice(0, 12);
   }, [productos, busqueda, editId]);
 

@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Search, X } from 'lucide-react';
 import { useCerrarConEscape } from '../../../utils/useCerrarConEscape';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { CuerpoVentana, CajaLista, FilaLista, LineaDato, claseBuscadorBarra } from '../../../components/ListaVentana';
 
 export interface OpcionElegir { id: string; titulo: string; subtitulo?: string; buscar?: (string | undefined)[] }
@@ -33,7 +33,12 @@ export const ModalElegir: React.FC<Props> = ({ abierta, titulo, ayuda, opciones,
 
   const visibles = useMemo(() => {
     const texto = busqueda.trim();
-    return (texto ? opciones.filter((o) => coincideBusqueda([o.titulo, o.subtitulo, ...(o.buscar || [])], texto)) : opciones).slice(0, 150);
+    const base = texto
+      ? opciones
+          .filter((o) => coincideBusqueda([o.titulo, o.subtitulo, ...(o.buscar || [])], texto))
+          .sort((a, b) => puntajeBusqueda([b.titulo, b.subtitulo, ...(b.buscar || [])], texto) - puntajeBusqueda([a.titulo, a.subtitulo, ...(a.buscar || [])], texto))
+      : opciones;
+    return base.slice(0, 150);
   }, [opciones, busqueda]);
 
   if (!abierta) return null;

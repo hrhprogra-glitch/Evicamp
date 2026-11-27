@@ -4,7 +4,7 @@ import { BOTONES_INVENTARIO } from './tecladoInventario';
 import { escalasValidas } from '../../utils/preciosCantidad';
 import { presentacionesValidas } from '../../utils/presentaciones';
 import { traerTodo } from '../../utils/traerTodo';
-import { coincideBusqueda } from '../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../utils/busqueda';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Package, Layers, Box, AlertTriangle, LayoutGrid, Plus, Database, Activity, Users, ShoppingCart, ChefHat, ArrowRightLeft, Wrench } from 'lucide-react';
 import { supabase } from '../../db/supabase';
@@ -249,23 +249,33 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
 
   const categoriasUnicas = useMemo(() => {
     const cats = products.map(p => p.category).filter(Boolean);
-    // 🔥 Mezclamos las que ya tienen productos con TODAS las de tu tabla
-    return Array.from(new Set([...cats, ...dbCategories])).sort();
+    // Mezcla categorías de productos y tabla, sin repetir por mayúsculas/minúsculas.
+    const mapa = new Map<string, string>();
+    [...cats, ...dbCategories].forEach((c) => {
+      const limpio = String(c || '').trim();
+      if (!limpio) return;
+      const k = limpio.toUpperCase();
+      if (!mapa.has(k)) mapa.set(k, limpio);
+    });
+    return Array.from(mapa.values()).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
   }, [products, dbCategories]);
 
   // LÓGICA MAESTRA DE FILTRADO Y ORDENAMIENTOñ
   const filteredProducts = useMemo(() => {
     let result = [...products];
+    const hayBusqueda = Boolean(searchQuery && searchQuery.trim());
+    const camposBusqueda = (p: any) => [p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion];
 
-    if (searchQuery && searchQuery.trim()) {
+    if (hayBusqueda) {
       result = result.filter(p => {
         if (!p) return false;
-        return coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo, p.medida, p.laboratorio, p.ubicacion], searchQuery);
+        return coincideBusqueda(camposBusqueda(p), searchQuery);
       });
     }
 
     if (filtroCategoria) {
-      result = result.filter(p => p.category === filtroCategoria);
+      const catSel = filtroCategoria.trim().toUpperCase();
+      result = result.filter(p => String(p.category || '').trim().toUpperCase() === catSel);
     }
 
     if (filtroEstado === 'CON_STOCK') {
@@ -284,6 +294,12 @@ export const Inventario: React.FC<InventarioProps> = ({ onNavigate }) => {
     }
 
     result.sort((a, b) => {
+      // Con búsqueda activa, lo más parecido va primero; el orden elegido desempata.
+      if (hayBusqueda) {
+        const pb = puntajeBusqueda(camposBusqueda(b), searchQuery);
+        const pa = puntajeBusqueda(camposBusqueda(a), searchQuery);
+        if (pb !== pa) return pb - pa;
+      }
       if (filtroOrden === 'RECIENTES') return (Number(b.id) || 0) - (Number(a.id) || 0);
       if (filtroOrden === 'NOMBRE_ASC') return a.name.localeCompare(b.name);
       if (filtroOrden === 'NOMBRE_DESC') return b.name.localeCompare(a.name);

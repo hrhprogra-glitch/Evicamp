@@ -1,4 +1,4 @@
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import React, { useState, useEffect } from 'react';
 import { X, Banknote, Smartphone, CreditCard, CheckCircle2, Calculator, UserPlus, Calendar, ChevronDown, Plus } from 'lucide-react';
 import { supabase } from '../../../db/supabase';
@@ -474,8 +474,9 @@ export const ModalCobro: React.FC<Props> = ({ isOpen, onClose, total, clienteSel
                       NO SE ENCONTRARON CLIENTES
                     </div>
                   ) : (
-                    clientesDb
+                    [...clientesDb]
                       .filter(c => coincideBusqueda([c.nombre, c.name, c.dni, c.telefono], searchCliente))
+                      .sort((a, b) => puntajeBusqueda([b.nombre, b.name, b.dni, b.telefono], searchCliente) - puntajeBusqueda([a.nombre, a.name, a.dni, a.telefono], searchCliente))
                       .map((c, index, arr) => (
                         <div
                           key={c.id}

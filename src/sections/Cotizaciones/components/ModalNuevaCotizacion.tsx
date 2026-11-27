@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Save, Plus, Trash2, FileText, Search } from 'lucide-react';
 import { traerTodo } from '../../../utils/traerTodo';
-import { coincideBusqueda } from '../../../utils/busqueda';
+import { coincideBusqueda, puntajeBusqueda } from '../../../utils/busqueda';
 import { unidadDe } from '../../../utils/unidades';
 import { BotonEscanerCelular } from '../../../components/BotonEscanerCelular';
 import { buscarProductoPorCodigo } from '../../../utils/decodificarBarras';
@@ -117,7 +117,10 @@ export const ModalNuevaCotizacion: React.FC<Props> = ({ cotizacionEditar, detall
   };
   // Productos del inventario para seleccionar en las líneas (los activos; hasta 8 resultados)
   const resultados = busProd.trim()
-    ? productos.filter((p) => coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo], busProd)).slice(0, 8)
+    ? productos
+        .filter((p) => coincideBusqueda([p.name, p.code, p.barcode, p.marca, p.modelo], busProd))
+        .sort((a, b) => puntajeBusqueda([b.name, b.code, b.barcode, b.marca, b.modelo], busProd) - puntajeBusqueda([a.name, a.code, a.barcode, a.marca, a.modelo], busProd))
+        .slice(0, 8)
     : [];
   const agregarProducto = (p: ProductoCoti) => {
     const linea: CotizacionItem = {
