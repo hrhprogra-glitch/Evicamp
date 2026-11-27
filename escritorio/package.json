@@ -1,7 +1,7 @@
 {
   "name": "siuhub-escritorio",
   "productName": "SiuMax",
-  "version": "1.2.14",
+  "version": "1.2.15",
   "description": "SiuMax para la PC de la caja: impresión directa de tickets.",
   "author": "SiuMax",
   "private": true,

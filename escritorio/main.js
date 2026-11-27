@@ -220,6 +220,9 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
           deviceName: impresora || undefined,
           margins: { marginType: 'none' },
           preferCSSPageSize: true,
+          pageRanges: [{ from: 0, to: 0 }],
+          header: '',
+          footer: '',
         },
         (ok, motivo) => resolve({ ok, motivo: ok ? null : motivo || 'No se pudo imprimir' })
       );
