@@ -175,24 +175,31 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
   try {
     oculta.webContents.setZoomFactor(1);
     await oculta.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
-    await new Promise((r) => setTimeout(r, 300));
-    // Medir contenido real y fijar @page al alto exacto. Evita blanco arriba cuando
-    // el motor de impresión centra o desplaza dentro de un pageSize mayor.
+    await new Promise((r) => setTimeout(r, 350));
+    // Medir contenido real. El blanco arriba suele venir de desalineaci�n entre
+    // pageSize de Electron y @page del HTML: fijamos ambos al alto real y margen 0.
     const altoPx = await oculta.webContents.executeJavaScript(`(() => {
       const b = document.body, d = document.documentElement;
-      [b, d].forEach((el) => { if (el) { el.style.marginTop = '0'; el.style.paddingTop = el.style.paddingTop || '0'; } });
-      const h = Math.ceil(Math.max(b?.scrollHeight||0, b?.offsetHeight||0, b?.getBoundingClientRect?.().height||0, d?.scrollHeight||0, d?.offsetHeight||0));
-      const mm = Math.max(Math.ceil((h * 25.4) / 96) + 2, 50);
+      if (b) { b.style.margin = '0'; b.style.marginTop = '0'; }
+      if (d) { d.style.margin = '0'; d.style.marginTop = '0'; }
+      const h = Math.ceil(Math.max(
+        b?.getBoundingClientRect?.().bottom || 0,
+        b?.scrollHeight || 0, b?.offsetHeight || 0,
+        d?.scrollHeight || 0, d?.offsetHeight || 0
+      ));
+      const mm = Math.max(Math.ceil((h * 25.4) / 96) + 1, 40);
       const style = document.createElement('style');
-      style.textContent = '@page{size:80mm ' + mm + 'mm;margin:0!important}@media print{html,body{margin:0!important;padding-top:0!important}}';
+      style.setAttribute('data-siumax-print', '1');
+      style.textContent = '@page{size:80mm ' + mm + 'mm;margin:0 !important}@media print{html,body{margin:0 !important;padding-top:0 !important;height:auto !important;min-height:0 !important;overflow:visible !important}}';
       document.head.appendChild(style);
+      window.scrollTo(0, 0);
       return h;
     })()`).catch(() => 0);
-    const altoFinal = altoPx > 0 ? Math.max(altoPx + 8, 200) : 900;
+    const altoFinal = altoPx > 0 ? Math.max(altoPx + 2, 120) : 900;
     oculta.setContentSize(ancho80mm, altoFinal);
     await new Promise((r) => setTimeout(r, 150));
     const pageSize = altoPx > 0
-      ? { width: 80000, height: Math.max(Math.round((altoFinal * 25400) / 96) + 800, 50000) }
+      ? { width: 80000, height: Math.max(Math.round((altoFinal * 25400) / 96) + 300, 40000) }
       : undefined;
     return await new Promise((resolve) => {
       oculta.webContents.print(
@@ -200,15 +207,16 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
           silent: true,
           printBackground: true,
           deviceName: impresora || undefined,
-          margins: { marginType: 'none' },
+          margins: { marginType: 'custom', top: 0, bottom: 0, left: 0, right: 0 },
           preferCSSPageSize: true,
+          pageRanges: '',
           header: '',
           footer: '',
           ...(pageSize ? { pageSize } : {}),
         },
         (ok, motivo) => resolve({ ok, motivo: ok ? null : motivo || 'No se pudo imprimir' })
       );
-    });
+    });;
   } catch (err) {
     return { ok: false, motivo: String(err && err.message ? err.message : err) };
   } finally {
