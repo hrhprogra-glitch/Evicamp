@@ -175,28 +175,34 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
   try {
     oculta.webContents.setZoomFactor(1);
     await oculta.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
-    await new Promise((r) => setTimeout(r, 350));
-    // Medir contenido real. Para t�rmica 80mm: pageSize expl�cito en micras,
-    // sin preferCSSPageSize (evita que el driver reposicione), m�rgenes 0.
+    await new Promise((r) => setTimeout(r, 400));
+    // Ticketera 80mm: medir alto real, fijar ventana y pageSize exacto en micras.
+    // Sin preferCSSPageSize para evitar que el driver reposicione el contenido.
     const altoPx = await oculta.webContents.executeJavaScript(`(() => {
       const b = document.body, d = document.documentElement;
-      if (b) { b.style.margin = '0'; b.style.paddingBottom = '0'; }
-      if (d) { d.style.margin = '0'; d.style.padding = '0'; }
-      const h = Math.ceil(Math.max(
-        b?.getBoundingClientRect?.().height || 0,
+      if (d) { d.style.margin='0'; d.style.padding='0'; d.style.height='auto'; d.style.overflow='visible'; }
+      if (b) { b.style.margin='0'; b.style.height='auto'; b.style.minHeight='0'; b.style.overflow='visible'; }
+      // Forzar reflow antes de medir
+      void (b && b.offsetHeight);
+      const rect = b ? b.getBoundingClientRect() : { bottom: 0, height: 0 };
+      const bottom = Math.ceil(Math.max(
+        rect.bottom || 0,
         b?.scrollHeight || 0, b?.offsetHeight || 0,
         d?.scrollHeight || 0, d?.offsetHeight || 0
       ));
-      const style = document.createElement('style');
-      style.textContent = '@page{margin:0}@media print{html,body{margin:0!important}}';
-      document.head.appendChild(style);
-      window.scrollTo(0, 0);
-      return h;
+      // @page sin margen; el body del ticket ya trae su propio padding.
+      const mm = Math.max(Math.ceil((bottom * 25.4) / 96) + 2, 40);
+      const st = document.createElement('style');
+      st.setAttribute('data-siumax-print','1');
+      st.textContent = '@page{size:80mm ' + mm + 'mm;margin:0!important}html,body{margin:0!important}';
+      document.head.appendChild(st);
+      window.scrollTo(0,0);
+      return bottom;
     })()`).catch(() => 0);
-    const altoFinal = altoPx > 0 ? Math.max(altoPx + 4, 120) : 900;
+    const altoFinal = altoPx > 0 ? Math.max(altoPx + 6, 120) : 1200;
     oculta.setContentSize(ancho80mm, altoFinal);
-    await new Promise((r) => setTimeout(r, 150));
-    const altoMicras = Math.max(Math.round((altoFinal * 25400) / 96) + 200, 40000);
+    await new Promise((r) => setTimeout(r, 200));
+    const altoMicras = Math.max(Math.round((altoFinal * 25400) / 96) + 400, 40000);
     return await new Promise((resolve) => {
       oculta.webContents.print(
         {
