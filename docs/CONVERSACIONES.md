@@ -1872,3 +1872,10 @@
 - **Dueño (después):** *«sí»*. Autorizó publicar en los tres sitios.
 - **Publicado:** bundle **`index-CFIwfujX.js` / `index-Di8Dfc2n.css`** en Nego, ecosistema y Evicamp: 22 archivos por sitio, nginx recargado e iconos de ecosistema repuestos (logo `c159d216…`). Compilado en worktree con el WIP ajeno copiado encima, sin commitearlo ni tocarlo. Verificación HTTP **18 OK / 0 fallos**: los tres sirven el mismo hash y el JS trae los marcadores nuevos. Sin SQL, push ni reinicio de API.
 - **Falta:** la revisión visual del dueño con **Ctrl+F5**.
+
+## 27/11/2026 (dueño: importar desde Nueva lista, mostrar que ya está adjuntado y poder corregirse)
+- **Dueño:** *«en nueva lista puedes agregar un opción para adjuntarlo para asi ya tenerlo asi cuando ya lo adjunte tiene que mostrarme en el detalle que ya esta adjuntado y una opción para volver hacerlo si me equivoque y puedes cambiar adjuntar por importar se entienda mas asi»*.
+- **Propuesta mostrada:** botón «Importar PDF o foto» en Nueva lista, cartel en el detalle, «Importar de nuevo» y renombrar «Adjuntar»→«Importar». Preguntado qué hacer al reemplazar, eligió **«Reemplazarla (Recommended)»** (confirmación y deja solo el archivo nuevo).
+- **Hecho:** el archivo se guarda en `compras.archivos` al guardar la lista; en el detalle aparece «✅ Archivo importado: nombre» (para PDF viejo de la migración: «Archivo antiguo (puede no estar disponible)»). «Importar de nuevo» confirma y reemplaza; «Quitar» lo saca antes de guardar. Todo por teclado, sin internet y sin tocar la base real.
+- **Probado en localhost:** prueba ampliada **23/23** en 3 corridas seguidas, 0 errores JS; devoluciones y proveedores siguen bien (2 corridas cada una) y `tsc` 0. Solo escrituras simuladas.
+- **Falta:** el OK del dueño para publicar en Nego, ecosistema y Evicamp; sin push ni SQL.

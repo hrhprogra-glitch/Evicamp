@@ -65,6 +65,31 @@ const descargarArchivo = (archivo: ArchivoVisto) => {
   document.body.appendChild(a); a.click(); a.remove();
 };
 
+/** Lee un PDF/foto elegido y lo deja listo para guardar DENTRO de la compra (sin internet). */
+const leerArchivo = (archivo: File): Promise<ArchivoCompra | null> => new Promise((resolver) => {
+  if (archivo.size > 4 * 1024 * 1024) {
+    void avisar('El archivo es muy grande (máximo 4 MB).');
+    resolver(null);
+    return;
+  }
+  const lector = new FileReader();
+  lector.onload = () => resolver({
+    tipo: /^image\//i.test(archivo.type) ? 'FOTO' : 'PDF',
+    nombre: archivo.name, datos: String(lector.result || ''),
+  });
+  lector.onerror = () => { void avisar('No se pudo leer el archivo.'); resolver(null); };
+  lector.readAsDataURL(archivo);
+});
+
+/** Texto que dice si la factura ya quedó guardada o si es un archivo viejo de la migración. */
+const estadoAdjuntos = (adjuntos: ArchivoCompra[]) => {
+  if (!adjuntos.length) return 'Sin archivo importado.';
+  const nombres = adjuntos.map((a) => a.nombre).join(', ');
+  return adjuntos.some((a) => a.datos)
+    ? `✅ Archivo importado: ${nombres}`
+    : `Archivo antiguo (puede no estar disponible): ${nombres}`;
+};
+
 /**
  * Prepara un adjunto para verlo o descargarlo DENTRO del sistema.
  * Los nuevos vienen en base64 (base de datos); los migrados apuntan a nuestro VPS y se leen con fetch.
@@ -928,30 +953,35 @@ const DetalleCompra: React.FC<{
   useEffect(() => () => { temporales.current.forEach((u) => URL.revokeObjectURL(u)); }, []);
   // Los enlaces viejos de Eco ya salen como botones, no como texto dentro de las notas
   const notasVisibles = (c.notas || '').split('\n').filter((l) => !/^\s*(PDF|Fotos)\s*:/i.test(l)).join('\n').trim();
-  const adjuntar = (archivo?: File) => {
+  // Importar = guardar el archivo DENTRO de la compra. Si ya hay uno, se reemplaza (con confirmación),
+  // para poder corregir un PDF equivocado sin dejar dos facturas.
+  const importarArchivo = async (archivo?: File, reemplazar = false) => {
     if (!archivo || subiendo) return;
-    if (archivo.size > 4 * 1024 * 1024) { void avisar('El archivo es muy grande (máximo 4 MB).'); return; }
     setSubiendo(true);
-    const lector = new FileReader();
-    lector.onload = async () => {
-      const nuevo: ArchivoCompra = { tipo: /^image\//i.test(archivo.type) ? 'FOTO' : 'PDF', nombre: archivo.name, datos: String(lector.result || '') };
-      const lista = [...adjuntos, nuevo];
-      const { error } = await supabase.from('compras').update({ archivos: lista }).eq('id', c.id);
+    const nuevo = await leerArchivo(archivo);
+    if (!nuevo) {
       setSubiendo(false);
-      if (error) { void avisar('No se pudo guardar el archivo: ' + error.message); return; }
-      onAdjuntosCambio?.(lista);
-      setTimeout(() => {
-        enfocar(document.getElementById('btn-detalle-adjuntar'));
-        void avisar(`Archivo guardado: "${archivo.name}". Ya puedes verlo o descargarlo.`);
-      }, 40);
-    };
-    lector.onerror = () => { setSubiendo(false); void avisar('No se pudo leer el archivo.'); };
-    lector.readAsDataURL(archivo);
+      setTimeout(() => enfocar(document.getElementById('btn-detalle-adjuntar')), 40);
+      return;
+    }
+    const lista = reemplazar ? [nuevo] : [...adjuntos, nuevo];
+    const { error } = await supabase.from('compras').update({ archivos: lista }).eq('id', c.id);
+    setSubiendo(false);
+    if (error) { void avisar('No se pudo guardar el archivo: ' + error.message); return; }
+    onAdjuntosCambio?.(lista);
+    setTimeout(() => {
+      enfocar(document.getElementById('btn-detalle-adjuntar'));
+      void avisar(`Archivo ${reemplazar ? 'reemplazado' : 'guardado'}: "${archivo.name}". Ya puedes verlo o descargarlo.`);
+    }, 40);
+  };
+  const pedirArchivo = async () => {
+    if (adjuntos.length && !await confirmar('Ya hay un archivo guardado. ¿Importar otro y reemplazarlo? El anterior se quitará.')) return;
+    archivoRef.current?.click();
   };
 
   const sinArchivo = (motivo: string, nombre: string, id: string) => {
     enfocar(document.getElementById(id));
-    void avisar(`No se pudo abrir "${nombre}": ${motivo}.\n\nSi es la factura antigua, adjunta el PDF o la foto de nuevo con «Adjuntar PDF o foto».`);
+    void avisar(`No se pudo abrir "${nombre}": ${motivo}.\n\nSi es la factura antigua, impórtala de nuevo con «Importar PDF o foto».`);
   };
   const verArchivo = async (a: ArchivoCompra, i: number) => {
     const id = `btn-detalle-archivo-${i}`;
@@ -1029,11 +1059,13 @@ const DetalleCompra: React.FC<{
         </p>
         {notasVisibles && <p className="text-xs font-bold text-[var(--color-ink)] mt-1">📝 {notasVisibles}</p>}
       </div>
-      {/* Fase 4: PDF y fotos de la compra. Ver / Descargar / Adjuntar quedan en UNA SOLA FILA (27/11/2026). */}
+      {/* Fase 4: PDF y fotos de la compra. Ver / Descargar / Importar quedan en UNA SOLA FILA (27/11/2026). */}
       {(adjuntos.length > 0 || !soloRecibe) && (
         <div className="border-y-2 border-[var(--color-border)] py-2">
           <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)] mb-1 flex items-center gap-1"><Paperclip size={12} /> Archivos de la compra</p>
-          {adjuntos.length === 0 && <p className="mb-2 text-[11px] font-bold text-[var(--color-muted)]">Sin archivos adjuntos.</p>}
+          <p id="estado-adjuntos" className={`mb-2 text-[11px] font-bold ${adjuntos.some((a) => a.datos) ? 'text-[var(--color-success)]' : 'text-[var(--color-muted)]'}`}>
+            {estadoAdjuntos(adjuntos)}
+          </p>
           <div className="flex flex-nowrap items-center gap-2 overflow-x-auto custom-scrollbar pb-1">
             {adjuntos.map((a, i) => {
               const imagen = a.tipo === 'FOTO' || /\.(jpe?g|png|gif|webp)$/i.test(a.nombre);
@@ -1053,11 +1085,12 @@ const DetalleCompra: React.FC<{
               );
             })}
             {!soloRecibe && <>
-              <input ref={archivoRef} type="file" accept=".pdf,image/*" className="hidden" aria-label="Elegir PDF o foto para adjuntar"
-                onChange={(e) => { adjuntar(e.target.files?.[0]); e.target.value = ''; }} />
+              <input ref={archivoRef} type="file" accept=".pdf,image/*" className="hidden" aria-label="Elegir PDF o foto para importar"
+                onChange={(e) => { void importarArchivo(e.target.files?.[0], adjuntos.length > 0); e.target.value = ''; }} />
               <button id="btn-detalle-adjuntar" type="button" data-nav={`1,${2 * adjuntos.length}`} disabled={subiendo}
-                onClick={() => archivoRef.current?.click()} className={`${claseBoton} shrink-0 whitespace-nowrap bg-white text-[var(--color-ink)]`}>
-                {subiendo ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Adjuntar PDF o foto
+                title={adjuntos.length ? 'Reemplazar el archivo guardado' : 'Importar PDF o foto'}
+                onClick={() => void pedirArchivo()} className={`${claseBoton} shrink-0 whitespace-nowrap bg-white text-[var(--color-ink)]`}>
+                {subiendo ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} {adjuntos.length ? 'Importar de nuevo' : 'Importar PDF o foto'}
               </button>
             </>}
           </div>
@@ -1227,6 +1260,10 @@ const EditorCompra: React.FC<{
       .then(({ data }) => { if (data) setListaProveedores(data as Proveedor[]); });
   }, []);
   const [notas, setNotas] = useState(compra?.notas || '');
+  // El PDF/foto se elige AQUÍ, en "Nueva lista", y se guarda junto con la lista (27/11/2026).
+  const [archivos, setArchivos] = useState<ArchivoCompra[]>(Array.isArray(compra?.archivos) ? compra.archivos! : []);
+  const archivoRef = useRef<HTMLInputElement>(null);
+  const [importando, setImportando] = useState(false);
   const [items, setItems] = useState<Item[]>(compra?.compras_detalle.map((d) => ({
     product_id: String(d.product_id), product_name: d.product_name, cantidad: Number(d.cantidad), costo_unit: Math.round(Number(d.costo_unit) * 10000) / 10000,
     presentacion: d.presentacion ?? null, factor: d.presentacion_factor ? Number(d.presentacion_factor) : null,
@@ -1243,6 +1280,21 @@ const EditorCompra: React.FC<{
   const agregar = (p: Product, cantidad = 1) => setItems((prev) => (prev.some((i) => i.product_id === String(p.id))
     ? prev
     : [...prev, { product_id: String(p.id), product_name: p.name, cantidad, costo_unit: Math.round((Number(p.cost) || 0) * 100) / 100, unidad: p.unit }]));
+
+  // Importar en la propia lista: si ya hay archivo se reemplaza (por si te equivocaste al elegirlo).
+  const importar = async (archivo?: File, reemplazar = false) => {
+    if (!archivo || importando) return;
+    setImportando(true);
+    const nuevo = await leerArchivo(archivo);
+    setImportando(false);
+    if (!nuevo) return;
+    setArchivos(reemplazar ? [nuevo] : [...archivos, nuevo]);
+    setTimeout(() => enfocar(document.getElementById('btn-importar-compra')), 40);
+  };
+  const pedirArchivo = async () => {
+    if (archivos.length && !await confirmar('Ya hay un archivo en esta lista. ¿Importar otro y reemplazarlo?')) return;
+    archivoRef.current?.click();
+  };
   // Fase 2.4 · SUGERIR PEDIDO (un solo botón; antes había otro aparte, "Agregar stock bajo"). Por cada producto, lo
   // que más haga falta de: (1) lo que se vende por día (últimos 30 días, sin anuladas: fn_ventas_por_producto) ×
   // los días que debe alcanzar − lo que hay; (2) si está en o bajo su stock mínimo, lo de siempre (sugerida).
@@ -1399,7 +1451,10 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
     try {
       const prov = listaProveedores.find((p) => p.id === proveedorId);
       const id = compra?.id ?? Date.now();
-      const cabecera = { provider_id: prov?.id || null, proveedor: prov?.razon_social || null, notas: notas.trim() || null };
+      const cabecera = {
+        provider_id: prov?.id || null, proveedor: prov?.razon_social || null, notas: notas.trim() || null,
+        archivos: archivos.length ? archivos : null,
+      };
       const r1 = compra
         ? await supabase.from('compras').update(cabecera).eq('id', id)
         : await supabase.from('compras').insert([{ id, ...cabecera, estado: 'PENDIENTE', autor: autor || null }]);
@@ -1426,8 +1481,18 @@ Elige "— Sin proveedor —" para sugerir de todos los productos.`);
     <Ventana cuerpo={cuerpo} ancho="max-w-5xl" titulo={compra ? `Editar pedido #${String(compra.id).slice(-6)}` : 'Nueva lista de compras'} onCerrar={() => onCerrar(null)}
       pie={<>
         <span className="mr-auto self-center text-[10px] font-bold text-[var(--color-muted)] uppercase hidden sm:inline">Flechas para moverte · Enter siguiente · Esc o X para cerrar</span>
+        {archivos.length > 0 && <span id="estado-importado" className="self-center text-[10px] font-bold text-[var(--color-success)]">{estadoAdjuntos(archivos)}</span>}
+        <input ref={archivoRef} type="file" accept=".pdf,image/*" className="hidden" aria-label="Elegir PDF o foto para importar"
+          onChange={(e) => { void importar(e.target.files?.[0], archivos.length > 0); e.target.value = ''; }} />
+        <button id="btn-importar-compra" type="button" data-nav={`${FILA_PIE},0`} disabled={importando || guardando}
+          title={archivos.length ? 'Reemplazar el archivo importado' : 'Importar PDF o foto de la factura'}
+          onClick={() => void pedirArchivo()} className={`${claseBoton} shrink-0 whitespace-nowrap bg-white text-[var(--color-ink)]`}>
+          {importando ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} {archivos.length ? 'Importar de nuevo' : 'Importar PDF o foto'}
+        </button>
         <button id="btn-guardar-compra" type="button" data-nav={`${FILA_PIE},1`} aria-disabled={guardando} onClick={() => void guardar()}
           className={`${claseBoton} bg-[var(--color-ink)] text-[var(--color-accent)] ${guardando ? 'opacity-60' : ''}`}>{guardando ? 'Guardando...' : 'Guardar lista'}</button>
+        {archivos.length > 0 && <button id="btn-quitar-importado-compra" type="button" data-nav={`${FILA_PIE},2`} onClick={() => { setArchivos([]); setTimeout(() => enfocar(document.getElementById('btn-importar-compra')), 30); }}
+          className={`${claseBoton} shrink-0 whitespace-nowrap bg-white text-[var(--color-muted)]`}><X size={14} /> Quitar</button>}
       </>}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="space-y-1">

@@ -7,6 +7,12 @@
 
 ---
 
+## 27/11/2026 - Importar factura en «Nueva lista», cartel de ya adjuntada y reemplazo — HECHO EN LOCALHOST, SIN PUBLICAR
+- El dueño pidió: *«en nueva lista puedes agregar un opción para adjuntarlo … cuando ya lo adjunte tiene que mostrarme en el detalle que ya esta adjuntado y una opción para volver hacerlo si me equivoque y puedes cambiar adjuntar por importar»*. Se mostró la propuesta y eligió **«Reemplazarla (Recommended)»**.
+- **`PanelCompras.tsx`:** en «Nueva lista» (y al editar) hay un botón **«Importar PDF o foto»** en el pie; el archivo se guarda en `compras.archivos` junto con la lista. Si ya hay archivo, el botón dice **«Importar de nuevo»**, pide confirmación y **reemplaza** el anterior; también hay **«Quitar»**. En el detalle aparece **`✅ Archivo importado: nombre`** (azul/verde sobrio); si es un PDF viejo de la migración dice **«Archivo antiguo (puede no estar disponible)»** para no afirmar que está. Se cambió «Adjuntar» por **«Importar»** en avisos y botones. Todo por teclado y sin internet; límite de 4 MB.
+- **Prueba:** `herramientas-pruebas/verificar-facturas-compras-localhost.mjs` ampliada a **23/23** en **3 corridas seguidas**, 0 errores JS, todo por teclado. Cubre cartel, fila única, visor, descarga, aviso del PDF caído, confirmación y reemplazo, importar desde Nueva lista, guardar con el archivo y verlo ya adjuntado en la compra creada. Regresiones: devoluciones 2/2 corridas y proveedores 2/2 corridas, `tsc` 0 errores. Solo escrituras simuladas (2 PATCH + 1 POST + detalle).
+- **No publicado.** Sin SQL en producción, sin push, sin reinicio de API. Falta el OK del dueño para subir el bundle a los tres sitios.
+
 ## 27/11/2026 - PUBLICADO el arreglo de facturas de Compras en Nego, ecosistema y Evicamp
 - El dueño respondió **«sí»** al preguntarle si se subía a los tres sitios.
 - Se compiló en worktree limpio (`siumax-facturas`, HEAD `38bd3f4`) con los **34 archivos del WIP ajeno de `src/`** copiados encima; el trabajo del dueño no se tocó ni se commiteó. Bundle **`index-CFIwfujX.js` / `index-Di8Dfc2n.css`**.
