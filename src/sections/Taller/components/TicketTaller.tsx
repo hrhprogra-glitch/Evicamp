@@ -89,9 +89,9 @@ export const generarHtmlTicketTaller = (
     <div class="font-bold">IMPORTES Y PAGOS:</div>
     <div class="fila"><span>Mano de obra:</span><span>S/ ${Number(orden.costo_mano_obra || 0).toFixed(2)}</span></div>
     <div class="fila"><span>Repuestos:</span><span>S/ ${Number(orden.costo_repuestos || 0).toFixed(2)}</span></div>
-    <div class="fila font-bold" style="font-size:11px;"><span>TOTAL ESTIMADO:</span><span>S/ ${Number(orden.total || 0).toFixed(2)}</span></div>
+    <div class="fila font-bold" style="font-size:12px;"><span>TOTAL ESTIMADO:</span><span>S/ ${Number(orden.total || 0).toFixed(2)}</span></div>
     <div class="fila"><span>Adelanto pagado:</span><span>S/ ${Number(orden.adelanto || 0).toFixed(2)}</span></div>
-    <div class="fila font-bold" style="font-size:11px;"><span>SALDO PENDIENTE:</span><span>S/ ${Number(orden.saldo || 0).toFixed(2)}</span></div>
+    <div class="fila font-bold" style="font-size:13px;"><span>SALDO PENDIENTE:</span><span>S/ ${Number(orden.saldo || 0).toFixed(2)}</span></div>
   </div>
 
   ${esEntrega && orden.meses_garantia > 0 ? `

@@ -903,6 +903,7 @@ const DetalleCompra: React.FC<{
   }, []);
 
   return (
+    <>
     <Ventana cuerpo={cuerpo} titulo={`Pedido #${String(c.id).slice(-6)} · ${c.estado}`} onCerrar={onCerrar}
       pie={<>{botones.length === 0 && <span className="mr-auto self-center text-[10px] font-bold uppercase text-[var(--color-muted)]">Solo lectura · Esc para cerrar</span>}
         {botones.map((b, i) => (
@@ -917,32 +918,38 @@ const DetalleCompra: React.FC<{
         </p>
         {notasVisibles && <p className="text-xs font-bold text-[var(--color-ink)] mt-1">📝 {notasVisibles}</p>}
       </div>
-      {/* Fase 4: PDF y fotos de la compra (los migrados se abren desde nuestro VPS; los nuevos se guardan en la base) */}
+      {/* Fase 4: PDF y fotos de la compra. Ver / Descargar / Adjuntar quedan en UNA SOLA FILA (27/11/2026). */}
       {(adjuntos.length > 0 || !soloRecibe) && (
         <div className="border-y-2 border-[var(--color-border)] py-2">
           <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)] mb-1 flex items-center gap-1"><Paperclip size={12} /> Archivos de la compra</p>
-          {adjuntos.length === 0
-            ? <p className="text-[11px] font-bold text-[var(--color-muted)]">Sin archivos adjuntos.</p>
-            : <div className="flex flex-wrap gap-2">
-              {adjuntos.map((a, i) => {
-                const imagen = a.tipo === 'FOTO' || /\.(jpe?g|png|gif|webp)$/i.test(a.nombre);
-                return (
-                  <button key={i} id={`btn-detalle-archivo-${i}`} type="button" data-nav={`1,${i}`}
-                    onClick={() => abrirArchivoCompra(a)} title={`Abrir ${a.nombre}`}
+          {adjuntos.length === 0 && <p className="mb-2 text-[11px] font-bold text-[var(--color-muted)]">Sin archivos adjuntos.</p>}
+          <div className="flex flex-wrap items-center gap-2">
+            {adjuntos.map((a, i) => {
+              const imagen = a.tipo === 'FOTO' || /\.(jpe?g|png|gif|webp)$/i.test(a.nombre);
+              return (
+                <React.Fragment key={i}>
+                  <button id={`btn-detalle-archivo-${i}`} type="button" data-nav={`1,${2 * i}`}
+                    onClick={() => void verArchivo(a, i)} title={`Ver ${a.nombre}`}
                     className={`${claseBoton} bg-white text-[var(--color-ink)]`}>
                     {imagen ? <Eye size={14} /> : <FileText size={14} />} {imagen ? 'Ver foto' : 'Ver factura'}
                   </button>
-                );
-              })}
-            </div>}
-          {!soloRecibe && <>
-            <input ref={archivoRef} type="file" accept=".pdf,image/*" className="hidden" aria-label="Elegir PDF o foto para adjuntar"
-              onChange={(e) => { adjuntar(e.target.files?.[0]); e.target.value = ''; }} />
-            <button id="btn-detalle-adjuntar" type="button" data-nav={`1,${adjuntos.length}`} disabled={subiendo}
-              onClick={() => archivoRef.current?.click()} className={`${claseBoton} bg-white text-[var(--color-ink)] mt-2`}>
-              {subiendo ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Adjuntar PDF o foto
-            </button>
-          </>}
+                  <button id={`btn-detalle-descargar-${i}`} type="button" data-nav={`1,${2 * i + 1}`}
+                    onClick={() => void bajarArchivo(a, i)} title={`Descargar ${a.nombre}`}
+                    className={`${claseBoton} bg-white text-[var(--color-ink)]`}>
+                    <Download size={14} /> Descargar
+                  </button>
+                </React.Fragment>
+              );
+            })}
+            {!soloRecibe && <>
+              <input ref={archivoRef} type="file" accept=".pdf,image/*" className="hidden" aria-label="Elegir PDF o foto para adjuntar"
+                onChange={(e) => { adjuntar(e.target.files?.[0]); e.target.value = ''; }} />
+              <button id="btn-detalle-adjuntar" type="button" data-nav={`1,${2 * adjuntos.length}`} disabled={subiendo}
+                onClick={() => archivoRef.current?.click()} className={`${claseBoton} bg-white text-[var(--color-ink)]`}>
+                {subiendo ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Adjuntar PDF o foto
+              </button>
+            </>}
+          </div>
         </div>
       )}
       <table className="w-full text-xs">
@@ -984,6 +991,8 @@ const DetalleCompra: React.FC<{
         )}
       </div>
     </Ventana>
+    {visor && <VisorArchivo archivo={visor} onCerrar={cerrarVisor} />}
+    </>
   );
 };
 

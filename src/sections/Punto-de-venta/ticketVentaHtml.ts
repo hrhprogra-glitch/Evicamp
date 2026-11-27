@@ -176,32 +176,32 @@ export const generarTicketVentaHtml = async (input: TicketVentaHtmlInput): Promi
   @page { size: 80mm auto; margin: 0; }
   * { box-sizing: border-box; overflow-wrap: break-word; word-break: break-word; }
   html, body { margin: 0; background: #fff; color: #000; }
-  body { width: calc(100% - 6mm); margin: 0 3mm; padding: 2mm 3.5mm 3mm 3.5mm; font: 700 10px/1.3 'Courier New', Courier, monospace; }
-  .cab { text-align: center; border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 4px; }
-  .logo { max-width: 42mm; max-height: 18mm; object-fit: contain; display: block; margin: 0 auto 3px; }
-  .emp { font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
-  .mut { font-size: 9px; font-weight: 700; }
-  .doc { font-size: 11px; font-weight: 900; text-transform: uppercase; margin-top: 3px; }
-  .num { font-size: 12px; font-weight: 900; letter-spacing: .08em; }
-  .box { border: 1px solid #000; padding: 3px; margin-top: 3px; text-align: left; font-size: 9px; text-transform: uppercase; }
-  table { width: 100%; border-collapse: collapse; margin: 4px 0; table-layout: fixed; font-size: 9px; }
-  th { border-bottom: 1px solid #000; padding: 2px 1px; text-align: left; font-size: 9px; }
-  td { padding: 2px 1px; vertical-align: top; }
+  body { width: calc(100% - 6mm); margin: 0 3mm; padding: 3mm 4.5mm 4mm 4.5mm; font: 700 12px/1.35 'Courier New', Courier, monospace; }
+  .cab { text-align: center; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 6px; }
+  .logo { max-width: 50mm; max-height: 22mm; object-fit: contain; display: block; margin: 0 auto 4px; }
+  .emp { font-size: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
+  .mut { font-size: 11px; font-weight: 700; }
+  .doc { font-size: 13px; font-weight: 900; text-transform: uppercase; margin-top: 4px; }
+  .num { font-size: 15px; font-weight: 900; letter-spacing: .08em; }
+  .box { border: 1px solid #000; padding: 4px; margin-top: 4px; text-align: left; font-size: 11px; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0; table-layout: fixed; font-size: 10px; }
+  th { border-bottom: 2px solid #000; padding: 2px 1px; text-align: left; font-size: 10px; }
+  td { padding: 3px 1px; vertical-align: top; }
   .c { width: 12%; }
   .r { width: 29%; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; padding-right: 1mm; }
   .nom { font-weight: 900; text-transform: uppercase; line-height: 1.2; }
-  .det { font-size: 9px; font-weight: 700; color: #111; }
-  .tot { border-top: 1px solid #000; padding-top: 3px; font-size: 10px; text-transform: uppercase; }
-  .tot-sub { font-size: 9px; margin-bottom: 2px; }
-  .fila { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 3px; align-items: baseline; }
+  .det { font-size: 11px; font-weight: 700; color: #111; }
+  .tot { border-top: 2px solid #000; padding-top: 4px; font-size: 12px; text-transform: uppercase; }
+  .tot-sub { font-size: 11px; margin-bottom: 2px; }
+  .fila { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px; align-items: baseline; }
   .fila > span:first-child { min-width: 0; }
   .fila > span:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .total { font-size: 11px; font-weight: 900; margin: 2px 0; }
-  .sep { border-top: 1px solid #000; margin: 2px 0; }
-  .sec { font-size: 10px; font-weight: 900; margin: 2px 0; }
-  .pie { text-align: center; margin-top: 6px; border-top: 1px dashed #666; padding-top: 4px; font-size: 9px; text-transform: uppercase; }
-  .qr { width: 26mm; height: 26mm; display: block; margin: 3px auto; image-rendering: pixelated; }
-  .aviso { border: 1px solid #000; padding: 3px; font-size: 9px; margin-top: 3px; font-weight: 900; text-transform: uppercase; }
+  .total { font-size: 13px; font-weight: 900; margin: 2px 0; }
+  .sep { border-top: 1px solid #000; margin: 3px 0; }
+  .sec { font-size: 12px; font-weight: 900; margin: 2px 0; }
+  .pie { text-align: center; margin-top: 8px; border-top: 2px dashed #666; padding-top: 6px; font-size: 11px; text-transform: uppercase; }
+  .qr { width: 30mm; height: 30mm; display: block; margin: 4px auto; image-rendering: pixelated; }
+  .aviso { border: 2px solid #000; padding: 3px; font-size: 11px; margin-top: 4px; font-weight: 900; text-transform: uppercase; }
 </style></head><body>
   <div class="cab">
     ${logo ? `<img class="logo" src="${logo}" alt="">` : ''}
