@@ -1869,4 +1869,6 @@
 - **Investigación (solo lectura):** en ecosistema, 36 compras tienen `archivos` tipo `[{"url":"/api/uploads/factura/<uuid>.pdf","tipo":"pdf"}]`; en el VPS **no están esos archivos** y la URL responde `HTTP 200 text/html` con la página del sistema. Por eso «Ver factura» mostraba una pantalla vacía. No se borró ni se reescribió nada en la base.
 - **Hecho en `PanelCompras.tsx`:** fila única con `flex-nowrap` + desplazamiento horizontal, visor con `iframe`/`img` y Esc propio, botón Descargar, aviso del PDF caído y confirmación al adjuntar. Todo con el mismo estilo sobrio y navegación por teclado.
 - **Probado en localhost:** `verificar-facturas-compras-localhost.mjs` **13/13** en 3 corridas seguidas, 0 errores JS, `tsc` 0; solo un PATCH simulado al adjuntar. Sin SQL en producción, sin publicar, sin push, sin reiniciar API.
-- **Falta:** el OK del dueño para publicar el bundle en los sitios y su revisión visual con Ctrl+F5.
+- **Dueño (después):** *«sí»*. Autorizó publicar en los tres sitios.
+- **Publicado:** bundle **`index-CFIwfujX.js` / `index-Di8Dfc2n.css`** en Nego, ecosistema y Evicamp: 22 archivos por sitio, nginx recargado e iconos de ecosistema repuestos (logo `c159d216…`). Compilado en worktree con el WIP ajeno copiado encima, sin commitearlo ni tocarlo. Verificación HTTP **18 OK / 0 fallos**: los tres sirven el mismo hash y el JS trae los marcadores nuevos. Sin SQL, push ni reinicio de API.
+- **Falta:** la revisión visual del dueño con **Ctrl+F5**.

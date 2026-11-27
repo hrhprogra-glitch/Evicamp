@@ -7,12 +7,19 @@
 
 ---
 
+## 27/11/2026 - PUBLICADO el arreglo de facturas de Compras en Nego, ecosistema y Evicamp
+- El dueño respondió **«sí»** al preguntarle si se subía a los tres sitios.
+- Se compiló en worktree limpio (`siumax-facturas`, HEAD `38bd3f4`) con los **34 archivos del WIP ajeno de `src/`** copiados encima; el trabajo del dueño no se tocó ni se commiteó. Bundle **`index-CFIwfujX.js` / `index-Di8Dfc2n.css`**.
+- `publicar-bundle-combinado.cjs` subió **22 archivos por sitio** a Nego (`siumax`), ecosistema y Evicamp, con `chown www-data` y `systemctl reload nginx`. Después se repusieron los iconos de ecosistema (logo `c159d216…`).
+- Verificación HTTP: **18 OK / 0 fallos**; los tres sirven el mismo hash y el JS trae `btn-detalle-descargar-`, `btn-visor-cerrar` y `btn-unidad-busqueda-salida`.
+- Sin SQL, push, cambios en clientes/panel ni reinicio de API. Falta la revisión visual del dueño con **Ctrl+F5**.
+
 ## 27/11/2026 - COMPRAS: botones en una fila, visor de factura y descarga — HECHO EN LOCALHOST, SIN PUBLICAR
 - El dueño aprobó **«Sí, así»** la propuesta para la foto marcada: botones en una fila, visor dentro de la ventana, descarga y aviso claro cuando el PDF viejo ya no existe.
 - **Causa de «Ver factura» (solo lectura):** en ecosistema, 36 compras tienen `archivos` con URLs `/api/uploads/factura/….pdf`, pero **esos PDF no están en el VPS**: la URL devuelve `HTTP 200 text/html` con la página del sistema (2677 bytes). Antes se abría esa URL en pestaña nueva y salía la pantalla vacía del sistema. No se pueden recuperar desde acá; sí se puede avisar y volver a adjuntar.
 - **Cambio en `src/sections/Inventario/components/PanelCompras.tsx`:** `Ver factura / Descargar / Adjuntar PDF o foto` quedan en **una sola fila** (`flex-nowrap` con desplazamiento horizontal). «Ver factura» abre un **visor dentro de la ventana** (PDF con `iframe`, foto con `img`); Esc cierra solo el visor y devuelve el foco al botón. «Descargar» guarda el archivo con su nombre. Si el PDF migrado no es un PDF real, muestra aviso claro invitando a adjuntarlo de nuevo. Adjuntar confirma por escrito que el archivo quedó guardado.
 - **Prueba:** `herramientas-pruebas/verificar-facturas-compras-localhost.mjs` con REST/RPC falsos, todo por teclado: **13/13** en **3 corridas seguidas**, 0 errores JS, 0 escrituras reales (solo 1 PATCH simulado del adjunto). `tsc --noEmit` 0 errores.
-- **No publicado.** Sin SQL, sin tocar Evicamp, sin push y sin reiniciar la API. Falta el visto bueno del dueño para subir el bundle a los sitios.
+- **Publicado después** con el OK del dueño (ver entrada de arriba). En este momento aún no estaba en los sitios; sin SQL, sin push y sin reiniciar la API.
 
 ## 27/11/2026 - PROVEEDORES de ecosistema restaurados (16) y probados en localhost — SIN PUBLICAR
 - El dueño avisó: *«no tenemos ningún proveedor en ecosistema eso es error critico todos esos errores lo encontre en ecosistema arregla eso primero y luego prueba en el localhost»*. Se mostró la propuesta y aprobó **«Sí, copiarlos (Recommended)»**.
