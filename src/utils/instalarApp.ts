@@ -51,6 +51,11 @@ export const usePuedeInstalar = () => {
 };
 
 // === APP DE ESCRITORIO (PC de la caja) ===
+const esEcosistema = () => /^(www\.)?ecosistema123\.duckdns\.org$/i.test(window.location.hostname);
+export const nombreInstaladorPC = () => (esEcosistema() ? 'Ecosistema-Setup.exe' : 'SiuMax-Setup.exe');
+export const rutaInstaladorPC = () => `/descargas/${nombreInstaladorPC()}`;
+
+// Compatibilidad con imports existentes
 export const RUTA_INSTALADOR_PC = '/descargas/SiuMax-Setup.exe';
 
 // true en una PC con Windows, fuera de la app de escritorio, si el instalador está publicado
@@ -60,7 +65,7 @@ export const useHayInstaladorPC = () => {
     const enEscritorio = !!(window as Window & { siuhubEscritorio?: unknown }).siuhubEscritorio;
     if (enEscritorio || !/Windows/i.test(navigator.userAgent)) return;
     // El servidor responde index.html (200) a rutas que no existen; por eso se revisa el tipo de archivo
-    fetch(RUTA_INSTALADOR_PC, { method: 'HEAD' })
+    fetch(rutaInstaladorPC(), { method: 'HEAD' })
       .then((r) => setHay(r.ok && !(r.headers.get('content-type') || '').includes('text/html')))
       .catch(() => {});
   }, []);
@@ -69,9 +74,10 @@ export const useHayInstaladorPC = () => {
 
 // Botón (no enlace) para que entre en la navegación con flechas del menú lateral
 export const descargarInstaladorPC = () => {
+  const nombre = nombreInstaladorPC();
   const enlace = document.createElement('a');
-  enlace.href = RUTA_INSTALADOR_PC;
-  enlace.download = 'SiuMax-Setup.exe';
+  enlace.href = `/descargas/${nombre}`;
+  enlace.download = nombre;
   document.body.appendChild(enlace);
   enlace.click();
   enlace.remove();
