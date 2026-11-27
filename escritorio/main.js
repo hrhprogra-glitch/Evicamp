@@ -175,26 +175,33 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
   try {
     oculta.webContents.setZoomFactor(1);
     await oculta.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
-    // Esperar que el logo/data URL y estilos se asienten antes de medir/imprimir.
-    await new Promise((r) => setTimeout(r, 250));
-    // El papel mide lo que mide el ticket: sin esto la impresora usa su hoja por defecto y un ticket
-    // largo se cortaba abajo. 1 px = 25400/96 micras; 80 mm de ancho; pequeño margen final.
-    const altoPx = await oculta.webContents.executeJavaScript(
-      '(() => { const b = document.body, d = document.documentElement; return Math.ceil(Math.max(b?.scrollHeight||0, b?.offsetHeight||0, d?.scrollHeight||0, d?.offsetHeight||0)); })()'
-    ).catch(() => 0);
-    const altoFinal = altoPx > 0 ? Math.max(altoPx + 24, 200) : 900;
+    await new Promise((r) => setTimeout(r, 300));
+    // Medir contenido real y fijar @page al alto exacto. Evita blanco arriba cuando
+    // el motor de impresión centra o desplaza dentro de un pageSize mayor.
+    const altoPx = await oculta.webContents.executeJavaScript(`(() => {
+      const b = document.body, d = document.documentElement;
+      [b, d].forEach((el) => { if (el) { el.style.marginTop = '0'; el.style.paddingTop = el.style.paddingTop || '0'; } });
+      const h = Math.ceil(Math.max(b?.scrollHeight||0, b?.offsetHeight||0, b?.getBoundingClientRect?.().height||0, d?.scrollHeight||0, d?.offsetHeight||0));
+      const mm = Math.max(Math.ceil((h * 25.4) / 96) + 2, 50);
+      const style = document.createElement('style');
+      style.textContent = '@page{size:80mm ' + mm + 'mm;margin:0!important}@media print{html,body{margin:0!important;padding-top:0!important}}';
+      document.head.appendChild(style);
+      return h;
+    })()`).catch(() => 0);
+    const altoFinal = altoPx > 0 ? Math.max(altoPx + 8, 200) : 900;
     oculta.setContentSize(ancho80mm, altoFinal);
     await new Promise((r) => setTimeout(r, 150));
     const pageSize = altoPx > 0
-      ? { width: 80000, height: Math.max(Math.round((altoFinal * 25400) / 96) + 2000, 50000) }
+      ? { width: 80000, height: Math.max(Math.round((altoFinal * 25400) / 96) + 800, 50000) }
       : undefined;
     return await new Promise((resolve) => {
       oculta.webContents.print(
         {
           silent: true,
           printBackground: true,
-          deviceName: impresora || undefined, // sin elegir: usa la impresora predeterminada de Windows
+          deviceName: impresora || undefined,
           margins: { marginType: 'none' },
+          preferCSSPageSize: true,
           header: '',
           footer: '',
           ...(pageSize ? { pageSize } : {}),

@@ -34,7 +34,13 @@ const iconoEcosistema = path.join(__dirname, '..', 'escritorio', 'icono-ecosiste
 const carpeta = path.join(__dirname, '..', 'escritorio');
 const salida = path.join(carpeta, 'salida');
 const instalador = path.join(salida, nombreInstalador);
-const CANAL_ACTUALIZACIONES = '/var/www/siuhub/html/actualizaciones';
+// Canal compartido SiuMax/genérico. Ecosistema usa su PROPIO canal para nunca recibir marca SiuMax.
+const CANAL_ACTUALIZACIONES = esEcosistema
+  ? '/var/www/ecosistema123/html/actualizaciones'
+  : '/var/www/siuhub/html/actualizaciones';
+const URL_ACTUALIZACIONES = esEcosistema
+  ? 'https://ecosistema123.duckdns.org/actualizaciones/'
+  : 'https://siumax.duckdns.org/actualizaciones/';
 
 // 0. Nueva versión: las apps solo se actualizan si ven un número MAYOR (1.1.0 -> 1.1.1)
 const archivoPaquete = path.join(carpeta, 'package.json');
@@ -51,6 +57,7 @@ if (esEcosistema) {
   paquete.build = paquete.build || {};
   paquete.build.productName = nombreProducto;
   paquete.build.nsis = { ...(paquete.build.nsis || {}), shortcutName: nombreProducto, artifactName: nombreInstalador };
+  paquete.build.publish = [{ provider: 'generic', url: URL_ACTUALIZACIONES }];
 }
 fs.writeFileSync(archivoPaquete, JSON.stringify(paquete, null, 2) + '\n');
 if (esEcosistema && fs.existsSync(iconoEcosistema) && iconoOriginal) {
@@ -96,19 +103,20 @@ if (soloLocal) process.exit(0);
     await ssh.execCommand(`chown -R www-data:www-data ${remoto}`);
     console.log(destino.generico ? `Publicado: ${remoto}/${nombreInstalador}` : `Publicado: ${destino.url}/descargas/${nombreInstalador}`);
 
-    if (destino.generico) {
-      // Los clientes creados desde el panel (y el sistema de pruebas) descargan siempre el genérico más reciente
+        if (destino.generico) {
+      // Los clientes creados desde el panel (y el sistema de pruebas) descargan siempre el gen�rico m�s reciente
       await ssh.execCommand(`for d in /var/www/clientes/*/descargas /var/www/siuhub/html/descargas; do [ -d "$d" ] && cp ${remoto}/${nombreInstalador} "$d/"; done`);
+    }
 
-      // Canal de actualizaciones: primero el instalador y su mapa, al final latest.yml
-      // (así ninguna app ve la versión nueva antes de que el archivo esté completo)
-      console.log('Publicando la actualización automática...');
+    // Canal de actualizaciones: gen�rico -> canal SiuMax compartido; ecosistema -> canal propio Ecosistema.
+    if (destino.generico || esEcosistema) {
+      console.log(`Publicando la actualizaci�n autom�tica en ${CANAL_ACTUALIZACIONES}...`);
       await ssh.execCommand(`mkdir -p ${CANAL_ACTUALIZACIONES}`);
       await ssh.putFile(instalador, `${CANAL_ACTUALIZACIONES}/${nombreInstalador}`);
       await ssh.putFile(`${instalador}.blockmap`, `${CANAL_ACTUALIZACIONES}/${nombreInstalador}.blockmap`);
       await ssh.putFile(path.join(salida, 'latest.yml'), `${CANAL_ACTUALIZACIONES}/latest.yml`);
       await ssh.execCommand(`chown -R www-data:www-data ${CANAL_ACTUALIZACIONES}`);
-      console.log(`Actualización ${paquete.version} publicada: las apps instaladas la descargarán solas.`);
+      console.log(`Actualizaci�n ${paquete.version} publicada (${esEcosistema ? 'Ecosistema' : 'SiuMax'}).`);
     }
   } finally {
     ssh.dispose();
