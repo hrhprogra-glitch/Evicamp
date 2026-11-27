@@ -7,6 +7,12 @@
 
 ---
 
+## 27/11/2026 - PUBLICADO el ajuste de Dirección/Ubicación en el detalle de salida (3 sitios)
+- El dueño eligió **«Publicar ahora (Recommended)»**. Se compiló en worktree limpio (`siumax-direccion`, HEAD `85f6c40`) con los **39 archivos del WIP ajeno de `src/`** copiados encima, sin tocarlos ni commitearlos. Bundle **`index-C7IucTHC.js` / `index-Di8Dfc2n.css`**.
+- `publicar-bundle-combinado.cjs` subió **22 archivos por sitio** a Nego (`siumax`), ecosistema y Evicamp, con `chown www-data` y `systemctl reload nginx`. Iconos de ecosistema repuestos (logo `c159d216…`).
+- `verificar-bundles-salidas.mjs` ahora comprueba también `min-w-0 flex-1 truncate`: **24 OK / 0 fallos**; los tres sirven el mismo hash y conservan todos los marcadores anteriores.
+- Sin SQL, push, clientes/panel ni reinicio de API. Falta la revisión visual del dueño con **Ctrl+F5**.
+
 ## 27/11/2026 - Detalle de salida: dirección y link largos en una sola línea — HECHO EN LOCALHOST, SIN PUBLICAR
 - El dueño envió una captura de `SAL-0032` donde **DIRECCIÓN** se partía en dos líneas y chocaba visualmente con **UBICACIÓN**, que estaba vacía («-»). Pidió un ajuste para no arruinar la estética.
 - Se mostró la propuesta y eligió **«Una línea con … (Recommended)»**. En `ModalDetalleSalida.tsx` los campos Dirección y Ubicación ahora usan un `<span class="min-w-0 flex-1 truncate">` dentro del recuadro sobrio de siempre: se ven en **una línea**, con `…` si son largos, y el texto completo queda en `title` y `aria-label`. Sigue seleccionable y copiable. No se tocó el valor en la base ni la vista de impresión.

@@ -31,6 +31,7 @@ for (const sitio of sitios) {
   comprobar(`${sitio}: el JS trae Descargar y el visor de Compras`, jsTxt.includes('btn-detalle-descargar-') && jsTxt.includes('btn-visor-cerrar'));
   comprobar(`${sitio}: el JS trae Importar en Nueva lista y el cartel de adjuntado`,
     jsTxt.includes('btn-importar-compra') && jsTxt.includes('estado-adjuntos') && jsTxt.includes('Importar de nuevo'));
+  comprobar(`${sitio}: el JS trae Dirección/Ubicación en una línea`, jsTxt.includes('min-w-0 flex-1 truncate'));
 }
 
 console.log(`\nRESULTADO: ${ok} OK, ${fallos} fallos`);
