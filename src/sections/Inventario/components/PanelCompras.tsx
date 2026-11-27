@@ -9,7 +9,7 @@
 // Teclado (patrón "selector" del sistema): cada elemento navegable lleva data-nav="fila,columna" y las
 // flechas van al vecino más cercano en esa dirección (moverEnGrilla). En los campos de número ↑ ↓ ya no
 // cambian el valor sin querer; Enter pasa al siguiente campo. Esc cierra las ventanas.
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { filaEnMedio } from '../../../utils/flechasEspaciales';
 import { BOTONES_INVENTARIO } from '../tecladoInventario';
@@ -45,21 +45,63 @@ interface Compra {
 }
 interface ArchivoCompra { tipo?: 'PDF' | 'FOTO'; nombre: string; url?: string; datos?: string }
 
-/** Abre un archivo adjunto: el migration va a nuestro VPS y el nuevo se arma desde la base (sin internet). */
-const abrirArchivoCompra = (a: ArchivoCompra) => {
-  if (a.url) { window.open(a.url, '_blank', 'noopener'); return; }
-  if (!a.datos) return;
+type ArchivoVisto = { url: string; nombre: string; imagen: boolean; temporal: boolean };
+type PreparadoArchivo = ArchivoVisto | { motivo: string };
+
+const nombreDescarga = (nombre: string, imagen: boolean) =>
+  /\.[a-z0-9]+$/i.test(nombre) ? nombre : `${nombre}${imagen ? '.jpg' : '.pdf'}`;
+
+const esImagen = (mime: string, bytes: Uint8Array, nombre: string) => {
+  if (/^image\//i.test(mime) || /\.(jpe?g|png|gif|webp)$/i.test(nombre)) return true;
+  const empieza = (...firma: number[]) => firma.every((b, i) => bytes[i] === b);
+  return empieza(0xff, 0xd8, 0xff) || empieza(0x89, 0x50, 0x4e, 0x47) || empieza(0x47, 0x49, 0x46, 0x38);
+};
+
+/** Guarda el archivo en la PC (Descargas, o la carpeta que elija la app de escritorio). */
+const descargarArchivo = (archivo: ArchivoVisto) => {
+  const a = document.createElement('a');
+  a.href = archivo.url;
+  a.download = nombreDescarga(archivo.nombre, archivo.imagen);
+  document.body.appendChild(a); a.click(); a.remove();
+};
+
+/**
+ * Prepara un adjunto para verlo o descargarlo DENTRO del sistema.
+ * Los nuevos vienen en base64 (base de datos); los migrados apuntan a nuestro VPS y se leen con fetch.
+ * Antes se abría la URL directa y, como esos PDF viejos ya no están, salía la página del sistema en vez del archivo.
+ * Ahora se comprueba el contenido y se avisa claro si no es un PDF/foto real.
+ */
+const prepararArchivo = async (a: ArchivoCompra): Promise<PreparadoArchivo> => {
+  if (a.datos) {
+    try {
+      const [cabecera, base64 = ''] = a.datos.split(',');
+      const mime = /:(.*?);/.exec(cabecera)?.[1] || 'application/octet-stream';
+      const binario = atob(base64);
+      const bytes = new Uint8Array(binario.length);
+      for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+      return {
+        url: URL.createObjectURL(new Blob([bytes], { type: mime })),
+        nombre: a.nombre, imagen: esImagen(mime, bytes, a.nombre), temporal: true,
+      };
+    } catch {
+      return { motivo: 'el archivo guardado está dañado' };
+    }
+  }
+  if (!a.url) return { motivo: 'el adjunto no tiene archivo' };
   try {
-    const [cabecera, base64] = a.datos.split(',');
-    const mime = /:(.*?);/.exec(cabecera)?.[1] || 'application/octet-stream';
-    const binario = atob(base64);
-    const bytes = new Uint8Array(binario.length);
-    for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
-    const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
-    window.open(url, '_blank', 'noopener');
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    const respuesta = await fetch(a.url, { cache: 'no-store' });
+    if (!respuesta.ok) return { motivo: `el servidor devolvió el error ${respuesta.status}` };
+    const tipo = respuesta.headers.get('content-type') || '';
+    const bytes = new Uint8Array(await respuesta.arrayBuffer());
+    const pdf = bytes.length > 5 && new TextDecoder().decode(bytes.slice(0, 5)) === '%PDF-';
+    const imagen = esImagen(tipo, bytes, a.nombre);
+    if (!pdf && !imagen) return { motivo: 'el archivo ya no está en el servidor (salió la página del sistema)' };
+    return {
+      url: URL.createObjectURL(new Blob([bytes], { type: pdf ? 'application/pdf' : (tipo || 'image/jpeg') })),
+      nombre: a.nombre, imagen, temporal: true,
+    };
   } catch {
-    void avisar('No se pudo abrir el archivo adjunto.');
+    return { motivo: 'no se pudo leer el archivo del servidor' };
   }
 };
 
@@ -831,6 +873,42 @@ const Ventana: React.FC<{ titulo: string; onCerrar: () => void; children: React.
   );
 };
 
+// Visor del PDF/foto DENTRO de Compras: no abre pestaña nueva y Esc cierra solo el visor, no la compra.
+// data-dialogo-sistema hace que la ventana de atrás sepa que hay algo encima y no se cierre con Esc.
+const VisorArchivo: React.FC<{ archivo: ArchivoVisto; onCerrar: () => void }> = ({ archivo, onCerrar }) => {
+  useEffect(() => {
+    const teclas = (e: KeyboardEvent) => {
+      if (document.getElementById('dialogo-sistema-aceptar')) return; // hay un aviso encima
+      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.key === 'Tab') {
+        e.preventDefault(); e.stopImmediatePropagation(); onCerrar();
+      }
+    };
+    window.addEventListener('keydown', teclas, true);
+    const t = setTimeout(() => document.getElementById('btn-visor-cerrar')?.focus(), 0);
+    return () => { clearTimeout(t); window.removeEventListener('keydown', teclas, true); };
+  }, [onCerrar]);
+  return createPortal(
+    <div data-dialogo-sistema role="dialog" aria-modal="true" aria-label={`Ver ${archivo.nombre}`}
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 p-3 font-mono">
+      <div className="ventana-sobria flex max-h-[92vh] w-full max-w-5xl flex-col border-2 border-[var(--color-ink)] bg-white">
+        <div className="ventana-cabecera">
+          <h3 className="ventana-cabecera__titulo"><FileText size={18} /> {archivo.nombre}</h3>
+          <button id="btn-visor-cerrar" type="button" onClick={onCerrar} aria-label="Cerrar vista (Esc)" title="Cerrar vista (Esc)"
+            className="ventana-cerrar"><X size={18} /></button>
+        </div>
+        <div className="min-h-[50vh] flex-1 overflow-auto bg-[var(--color-bg)] p-2">
+          {archivo.imagen
+            ? <img src={archivo.url} alt={archivo.nombre} className="mx-auto max-h-[78vh] max-w-full object-contain" />
+            : <iframe src={archivo.url} title={archivo.nombre} className="h-[78vh] w-full border-0 bg-white" />}
+        </div>
+        <div className="border-t-2 border-[var(--color-ink)] px-4 py-2 text-right">
+          <button id="btn-visor-descargar" type="button" onClick={() => descargarArchivo(archivo)}
+            className={`${claseBoton} bg-[var(--color-ink)] text-[var(--color-accent)]`}><Download size={14} /> Descargar</button>
+        </div>
+      </div>
+    </div>, document.body);
+};
+
 // ======================================================= Detalle (Enter sobre una lista). Tamaño de letra normal: Ajustes > Apariencia lo agranda
 // Con 'soloRecibe' (cajero con 'Recibir pedidos'): sin costos ni totales; solo Recibir y, si él lo recibió, Devolver.
 // Abajo, el registro de modificaciones (compras_historial): quién creó, editó, recibió, devolvió o anuló, y cuándo.
@@ -844,7 +922,10 @@ const DetalleCompra: React.FC<{
   const cuerpo = useRef<HTMLDivElement>(null);
   const archivoRef = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const [visor, setVisor] = useState<(ArchivoVisto & { id: string }) | null>(null);
+  const temporales = useRef<string[]>([]);
   const adjuntos = Array.isArray(c.archivos) ? c.archivos : [];
+  useEffect(() => () => { temporales.current.forEach((u) => URL.revokeObjectURL(u)); }, []);
   // Los enlaces viejos de Eco ya salen como botones, no como texto dentro de las notas
   const notasVisibles = (c.notas || '').split('\n').filter((l) => !/^\s*(PDF|Fotos)\s*:/i.test(l)).join('\n').trim();
   const adjuntar = (archivo?: File) => {
@@ -859,11 +940,41 @@ const DetalleCompra: React.FC<{
       setSubiendo(false);
       if (error) { void avisar('No se pudo guardar el archivo: ' + error.message); return; }
       onAdjuntosCambio?.(lista);
-      setTimeout(() => enfocar(document.getElementById('btn-detalle-adjuntar')), 40);
+      setTimeout(() => {
+        enfocar(document.getElementById('btn-detalle-adjuntar'));
+        void avisar(`Archivo guardado: "${archivo.name}". Ya puedes verlo o descargarlo.`);
+      }, 40);
     };
     lector.onerror = () => { setSubiendo(false); void avisar('No se pudo leer el archivo.'); };
     lector.readAsDataURL(archivo);
   };
+
+  const sinArchivo = (motivo: string, nombre: string, id: string) => {
+    enfocar(document.getElementById(id));
+    void avisar(`No se pudo abrir "${nombre}": ${motivo}.\n\nSi es la factura antigua, adjunta el PDF o la foto de nuevo con «Adjuntar PDF o foto».`);
+  };
+  const verArchivo = async (a: ArchivoCompra, i: number) => {
+    const id = `btn-detalle-archivo-${i}`;
+    const preparado = await prepararArchivo(a);
+    if ('motivo' in preparado) return sinArchivo(preparado.motivo, a.nombre, id);
+    if (preparado.temporal) temporales.current.push(preparado.url);
+    setVisor({ ...preparado, id });
+  };
+  const bajarArchivo = async (a: ArchivoCompra, i: number) => {
+    const id = `btn-detalle-descargar-${i}`;
+    const preparado = await prepararArchivo(a);
+    if ('motivo' in preparado) return sinArchivo(preparado.motivo, a.nombre, id);
+    descargarArchivo(preparado);
+    void avisar(`📄 Descargado: "${nombreDescarga(preparado.nombre, preparado.imagen)}". Lo encuentras en Descargas.`);
+    if (preparado.temporal) setTimeout(() => URL.revokeObjectURL(preparado.url), 60_000);
+    setTimeout(() => enfocar(document.getElementById(id)), 40);
+  };
+  const cerrarVisor = useCallback(() => {
+    const id = visor?.id;
+    setVisor(null);
+    setTimeout(() => enfocar(document.getElementById(id || 'btn-detalle-adjuntar')), 30);
+  }, [visor]);
+
   const recibida = c.estado === 'RECIBIDO';
   const parcial = c.compras_detalle.some((d) => d.batch_id != null);
   const filas = c.compras_detalle.map((d) => ({ ...d, mostrar: recibida ? Number(d.cantidad_recibida ?? 0) : Number(d.cantidad) }));
@@ -923,19 +1034,19 @@ const DetalleCompra: React.FC<{
         <div className="border-y-2 border-[var(--color-border)] py-2">
           <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-muted)] mb-1 flex items-center gap-1"><Paperclip size={12} /> Archivos de la compra</p>
           {adjuntos.length === 0 && <p className="mb-2 text-[11px] font-bold text-[var(--color-muted)]">Sin archivos adjuntos.</p>}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto custom-scrollbar pb-1">
             {adjuntos.map((a, i) => {
               const imagen = a.tipo === 'FOTO' || /\.(jpe?g|png|gif|webp)$/i.test(a.nombre);
               return (
                 <React.Fragment key={i}>
                   <button id={`btn-detalle-archivo-${i}`} type="button" data-nav={`1,${2 * i}`}
                     onClick={() => void verArchivo(a, i)} title={`Ver ${a.nombre}`}
-                    className={`${claseBoton} bg-white text-[var(--color-ink)]`}>
+                    className={`${claseBoton} shrink-0 whitespace-nowrap bg-white text-[var(--color-ink)]`}>
                     {imagen ? <Eye size={14} /> : <FileText size={14} />} {imagen ? 'Ver foto' : 'Ver factura'}
                   </button>
                   <button id={`btn-detalle-descargar-${i}`} type="button" data-nav={`1,${2 * i + 1}`}
                     onClick={() => void bajarArchivo(a, i)} title={`Descargar ${a.nombre}`}
-                    className={`${claseBoton} bg-white text-[var(--color-ink)]`}>
+                    className={`${claseBoton} shrink-0 whitespace-nowrap bg-white text-[var(--color-ink)]`}>
                     <Download size={14} /> Descargar
                   </button>
                 </React.Fragment>
@@ -945,7 +1056,7 @@ const DetalleCompra: React.FC<{
               <input ref={archivoRef} type="file" accept=".pdf,image/*" className="hidden" aria-label="Elegir PDF o foto para adjuntar"
                 onChange={(e) => { adjuntar(e.target.files?.[0]); e.target.value = ''; }} />
               <button id="btn-detalle-adjuntar" type="button" data-nav={`1,${2 * adjuntos.length}`} disabled={subiendo}
-                onClick={() => archivoRef.current?.click()} className={`${claseBoton} bg-white text-[var(--color-ink)]`}>
+                onClick={() => archivoRef.current?.click()} className={`${claseBoton} shrink-0 whitespace-nowrap bg-white text-[var(--color-ink)]`}>
                 {subiendo ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Adjuntar PDF o foto
               </button>
             </>}

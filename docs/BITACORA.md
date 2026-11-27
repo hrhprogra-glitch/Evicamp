@@ -7,6 +7,13 @@
 
 ---
 
+## 27/11/2026 - COMPRAS: botones en una fila, visor de factura y descarga — HECHO EN LOCALHOST, SIN PUBLICAR
+- El dueño aprobó **«Sí, así»** la propuesta para la foto marcada: botones en una fila, visor dentro de la ventana, descarga y aviso claro cuando el PDF viejo ya no existe.
+- **Causa de «Ver factura» (solo lectura):** en ecosistema, 36 compras tienen `archivos` con URLs `/api/uploads/factura/….pdf`, pero **esos PDF no están en el VPS**: la URL devuelve `HTTP 200 text/html` con la página del sistema (2677 bytes). Antes se abría esa URL en pestaña nueva y salía la pantalla vacía del sistema. No se pueden recuperar desde acá; sí se puede avisar y volver a adjuntar.
+- **Cambio en `src/sections/Inventario/components/PanelCompras.tsx`:** `Ver factura / Descargar / Adjuntar PDF o foto` quedan en **una sola fila** (`flex-nowrap` con desplazamiento horizontal). «Ver factura» abre un **visor dentro de la ventana** (PDF con `iframe`, foto con `img`); Esc cierra solo el visor y devuelve el foco al botón. «Descargar» guarda el archivo con su nombre. Si el PDF migrado no es un PDF real, muestra aviso claro invitando a adjuntarlo de nuevo. Adjuntar confirma por escrito que el archivo quedó guardado.
+- **Prueba:** `herramientas-pruebas/verificar-facturas-compras-localhost.mjs` con REST/RPC falsos, todo por teclado: **13/13** en **3 corridas seguidas**, 0 errores JS, 0 escrituras reales (solo 1 PATCH simulado del adjunto). `tsc --noEmit` 0 errores.
+- **No publicado.** Sin SQL, sin tocar Evicamp, sin push y sin reiniciar la API. Falta el visto bueno del dueño para subir el bundle a los sitios.
+
 ## 27/11/2026 - PROVEEDORES de ecosistema restaurados (16) y probados en localhost — SIN PUBLICAR
 - El dueño avisó: *«no tenemos ningún proveedor en ecosistema eso es error critico todos esos errores lo encontre en ecosistema arregla eso primero y luego prueba en el localhost»*. Se mostró la propuesta y aprobó **«Sí, copiarlos (Recommended)»**.
 - **Causa (solo lectura):** `providers` de ecosistema tenía **0 filas**, sin RLS. Las **37 compras** apuntaban a **16 IDs** que sí existen en Nego (`siumax`) con los mismos nombres. El ID de los lotes (`fa173ec6…`) es «Migración - stock inicial», no un proveedor real; no se copió.

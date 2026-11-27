@@ -1861,4 +1861,12 @@
 - **Propuesta mostrada:** copiar los 16 proveedores de Nego a ecosistema conservando sus IDs, con respaldo y `lock_timeout`, sin tocar compras/lotes/stock ni API. Aprobó **«Sí, copiarlos (Recommended)»**.
 - **Hecho:** respaldo `respaldo-ecosistema-antes-proveedores-20261127165544.dump`, ensayo con `ROLLBACK` y copia real. Resultado: **16 proveedores activos**, **37 compras**, **627 lotes**, **0 compras sin proveedor**, **0 IDs repetidos**. El ID de lotes `fa173ec6…` es «Migración - stock inicial» y no se copió. Sin push ni publicación.
 - **Probado en localhost:** `verificar-proveedores-localhost.mjs` con los 16 del vivo y datos falsos: **15/15** en 3 corridas, por teclado, 0 errores JS y 0 escrituras.
-- **Sigue pendiente:** la parte de la foto de Compras (botones en una fila, ver factura, descarga del adjunto). El dueño quiere que se atienda después de esto.
+- **Sigue pendiente (en ese momento):** la parte de la foto de Compras (botones en una fila, ver factura, descarga del adjunto). El dueño quiere que se atienda después de esto.
+
+## 27/11/2026 (dueño: arreglar la foto de Compras; aprobó «Sí, así»)
+- **Fiabilidad de la foto:** se delegó la lectura de la imagen a un modelo con visión; confirmó que «VER FACTURA» y «ADJUNTAR PDF O FOTO» estaban uno debajo del otro y los dos dentro del círculo rojo. No se tocó código hasta tener la aprobación.
+- **Propuesta mostrada y aprobada:** botones en una fila, visor interno (no pestaña nueva), Descargar y aviso claro si el PDF migrado ya no existe, sin publicar hasta su OK. El dueño eligió **«Sí, así (Recommended)»**.
+- **Investigación (solo lectura):** en ecosistema, 36 compras tienen `archivos` tipo `[{"url":"/api/uploads/factura/<uuid>.pdf","tipo":"pdf"}]`; en el VPS **no están esos archivos** y la URL responde `HTTP 200 text/html` con la página del sistema. Por eso «Ver factura» mostraba una pantalla vacía. No se borró ni se reescribió nada en la base.
+- **Hecho en `PanelCompras.tsx`:** fila única con `flex-nowrap` + desplazamiento horizontal, visor con `iframe`/`img` y Esc propio, botón Descargar, aviso del PDF caído y confirmación al adjuntar. Todo con el mismo estilo sobrio y navegación por teclado.
+- **Probado en localhost:** `verificar-facturas-compras-localhost.mjs` **13/13** en 3 corridas seguidas, 0 errores JS, `tsc` 0; solo un PATCH simulado al adjuntar. Sin SQL en producción, sin publicar, sin push, sin reiniciar API.
+- **Falta:** el OK del dueño para publicar el bundle en los sitios y su revisión visual con Ctrl+F5.
