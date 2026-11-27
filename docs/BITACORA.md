@@ -7,6 +7,14 @@
 
 ---
 
+## 27/11/2026 - PROVEEDORES de ecosistema restaurados (16) y probados en localhost — SIN PUBLICAR
+- El dueño avisó: *«no tenemos ningún proveedor en ecosistema eso es error critico todos esos errores lo encontre en ecosistema arregla eso primero y luego prueba en el localhost»*. Se mostró la propuesta y aprobó **«Sí, copiarlos (Recommended)»**.
+- **Causa (solo lectura):** `providers` de ecosistema tenía **0 filas**, sin RLS. Las **37 compras** apuntaban a **16 IDs** que sí existen en Nego (`siumax`) con los mismos nombres. El ID de los lotes (`fa173ec6…`) es «Migración - stock inicial», no un proveedor real; no se copió.
+- **Arreglo:** respaldo `/var/lib/postgresql/respaldo-ecosistema-antes-proveedores-20261127165544.dump`, ensayo con `ROLLBACK`, copia de los 16 proveedores con `lock_timeout='5s'` y sus mismos IDs. Después: **proveedores 16**, activos 16, compras 37, lotes 627, compras sin proveedor **0**, IDs repetidos **0**. No se tocó stock, lotes, compras ni la API; sin push.
+- **Prueba en localhost:** `herramientas-pruebas/verificar-proveedores-localhost.mjs` con los 16 proveedores del vivo y RPC/REST falsos: **15/15** chequeos en 3 corridas seguidas, todo por teclado, 0 errores JS y 0 escrituras a la base.
+- **Trampa del script:** `pg_dump --data-only` deja `search_path` vacío; las comprobaciones posteriores deben usar `public.providers` o restaurar `SET search_path = public;` dentro de la transacción. Ya quedó corregido en `ai-scripts/copiar-proveedores-a-ecosistema.cjs`.
+- Queda pendiente, por pedido del dueño, la revisión de la foto de **Compras**: botones «Ver factura» y «Adjuntar foto» en una fila; «Ver factura» no muestra la factura y «Adjuntar PDF/foto» no descarga nada. No se tocó todavía.
+
 ## 27/11/2026 - PUBLICADO el botón TUBO/M en Nego, ecosistema y Evicamp
 - El dueño dijo: *«perfecto subelo a negosiumax, ecosistema y evicamp para que esten actualizados»*. Se publicó el bundle **`index-ZLw_rwzg.js` / `index-Ct6Zd1Td.css`** (22 archivos por sitio) con `ai-scripts/publicar-bundle-combinado.cjs <dist>`, nginx recargado. Los 3 sitios sirven el mismo hash y el JS contiene `btn-unidad-busqueda-salida`. Verificación HTTP **`15 OK, 0 fallos`**.
 - Se compiló en worktree limpio pegado a `HEAD` (`52e51b9`) con el WIP actual de `src/` copiado encima, para no publicar solo una parte: el `HEAD` traía importaciones (`imprimirTicket80mm`, `puntajeBusqueda`) cuyas definiciones estaban sin commitear y la compilación limpia fallaba. No se tocó el WIP del dueño ni se hicieron commits de esos archivos.
