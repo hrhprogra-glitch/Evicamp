@@ -43,17 +43,24 @@ const MARCAS_POR_DOMINIO = {
   'ecosistema123.duckdns.org': 'ECO SISTEMAS URH',
 };
 
+const aplicarIconoRemoto = async (origen) => {
+  if (!ventana || ventana.isDestroyed() || !origen) return;
+  const urlIcono = `${origen}/icons/icon-192.png`;
+  try {
+    const res = await net.fetch(urlIcono, { cache: 'no-store' });
+    if (!res.ok) return;
+    const buf = Buffer.from(await res.arrayBuffer());
+    const img = nativeImage.createFromBuffer(buf);
+    if (img.isEmpty() || ventana.isDestroyed()) return;
+    ventana.setIcon(img);
+    iconoActual = urlIcono;
+  } catch { /* sin icono remoto: se mantiene el icono local */ }
+};
+
 const actualizarMarcaVentana = async (tituloForzado) => {
   const origen = origenNegocio();
   if (!ventana || ventana.isDestroyed() || !origen) return;
-  try {
-    const res = await net.fetch(`${origen}/icons/icon-192.png`, { cache: 'no-store' });
-    if (res.ok) {
-      const buf = Buffer.from(await res.arrayBuffer());
-      const img = nativeImage.createFromBuffer(buf);
-      if (!img.isEmpty() && !ventana.isDestroyed()) ventana.setIcon(img);
-    }
-  } catch { /* sin icono remoto: se mantiene el icono local */ }
+  await aplicarIconoRemoto(origen);
   try {
     let limpio = String(tituloForzado || '').trim().slice(0, 120);
     if (!limpio) {
@@ -63,18 +70,18 @@ const actualizarMarcaVentana = async (tituloForzado) => {
       const host = new URL(origen).hostname.toLowerCase();
       limpio = MARCAS_POR_DOMINIO[host] || limpio;
     }
-    if (limpio && !ventana.isDestroyed() && limpio !== marcaActual) {
+    if (limpio && !ventana.isDestroyed()) {
+      const cambio = limpio !== marcaActual;
       marcaActual = limpio;
       ventana.setTitle(limpio);
-      construirMenu().catch(() => {});
-    } else if (limpio && !ventana.isDestroyed()) {
-      ventana.setTitle(limpio);
+      if (cambio) construirMenu().catch(() => {});
     }
   } catch { /* sin titulo */ }
 };
 
 let ventana = null;
 let marcaActual = 'SiuMax';
+let iconoActual = '';
 const nombreMarca = () => marcaActual || 'SiuMax';
 
 // Una sola ventana: si abren el ícono otra vez, se trae la que ya está abierta
@@ -148,6 +155,7 @@ const crearVentana = () => {
     e.preventDefault();
     void actualizarMarcaVentana(titulo);
   });
+  ventana.webContents.on('did-navigate', () => { void aplicarIconoRemoto(origenNegocio()); });
 
   cargarSistema();
 };
