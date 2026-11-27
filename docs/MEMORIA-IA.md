@@ -16,6 +16,7 @@
 - Para cambiar de opinión en un diálogo, `Space` activa el botón enfocado sin que la regla de Enter de los campos mueva el foco.
 - La prueba de la función real en ecosistema se hace dentro de `BEGIN ... ROLLBACK` (`ai-scripts/pruebas/verificar-arreglo-devolucion-ecosistema.cjs`); imprime `NOTICE` por stderr en PowerShell, pero `exit=0` y no deja datos. El estado final se confirma con `ai-scripts/pruebas/verificar-estado-final-devolucion-ecosistema.cjs` (solo lectura).
 - Anti patrón: no dejar `console.log('DEBUG ...')` en el script de pruebas entregado; se quitan después de entender el fallo.
+- Si la prueba salta a veces con `TimeoutError` esperando `#btn-abrir-devoluciones` después de la X, no es un fallo de la app: queda un aviso en la cola y el foco no entra al botón. Hay que vaciar **todos** los diálogos (`aceptarDialogos()`) antes de volver a enfocarlo; avecinar un solo `aviso()` no basta. Tras ese ajuste, 9 corridas seguidas quedaron en `TODO BIEN: true`.
 - **Precaución documental:** hay entradas del 26/11 que dicen que «Continuar salida edita la original» y está publicado, pero la prueba de hoy sobre el localhost ejerce `fn_registrar_salida` con `salida_raiz_id`. Antes de cambiar ese flujo, preguntar al dueño cuál versión quiere.
 
 ## 26/11/2026 — Entrar al VPS sí se puede; lo que no se puede es mostrar claves
