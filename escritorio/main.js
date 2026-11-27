@@ -175,27 +175,39 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
   try {
     oculta.webContents.setZoomFactor(1);
     await oculta.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
-    await new Promise((r) => setTimeout(r, 400));
-    // Medir contenido real del ticket. Usar preferCSSPageSize con @page size 80mm auto
-    // para que el alto de p�gina sea el del contenido y no se desperdicie papel.
+    await new Promise((r) => setTimeout(r, 450));
+    // Ticketera 80mm: medir alto real y usar pageSize expl�cito en micras.
+    // NO usar preferCSSPageSize: con 'auto' algunos drivers usan tama�o carta/A4
+    // y generan papel en blanco antes o despu�s del contenido.
     const altoPx = await oculta.webContents.executeJavaScript(`(() => {
       const b = document.body, d = document.documentElement;
-      [d,b].forEach(el => { if (el) { el.style.margin='0'; el.style.paddingTop=el===b? (el.style.paddingTop||'0') : '0'; el.style.height='auto'; el.style.minHeight='0'; el.style.overflow='visible'; }});
+      [d, b].forEach((el) => {
+        if (!el) return;
+        el.style.margin = '0';
+        el.style.marginTop = '0';
+        el.style.paddingTop = el === b ? (el.style.paddingTop || '0') : '0';
+        el.style.height = 'auto';
+        el.style.minHeight = '0';
+        el.style.overflow = 'visible';
+      });
       const st = document.createElement('style');
-      st.textContent = '@page{size:80mm auto;margin:0!important}@media print{html,body{margin:0!important;height:auto!important;min-height:0!important;overflow:visible!important}}';
+      st.setAttribute('data-siumax-print', '1');
+      st.textContent = '@page{margin:0!important}html,body{margin:0!important;height:auto!important;min-height:0!important;overflow:visible!important}';
       document.head.appendChild(st);
+      if (document.fonts && document.fonts.ready) { /* medida tras reflow */ }
       void (b && b.offsetHeight);
-      const bottom = Math.ceil(Math.max(
-        b?.getBoundingClientRect?.().bottom || 0,
+      window.scrollTo(0, 0);
+      const rect = b ? b.getBoundingClientRect() : { bottom: 0 };
+      return Math.ceil(Math.max(
+        rect.bottom || 0,
         b?.scrollHeight || 0, b?.offsetHeight || 0,
         d?.scrollHeight || 0, d?.offsetHeight || 0
       ));
-      window.scrollTo(0,0);
-      return bottom;
     })()`).catch(() => 0);
-    const altoFinal = altoPx > 0 ? Math.max(altoPx + 4, 120) : 1200;
+    const altoFinal = altoPx > 0 ? Math.max(altoPx + 2, 120) : 1200;
     oculta.setContentSize(ancho80mm, altoFinal);
     await new Promise((r) => setTimeout(r, 200));
+    const altoMicras = Math.max(Math.round((altoFinal * 25400) / 96) + 150, 40000);
     return await new Promise((resolve) => {
       oculta.webContents.print(
         {
@@ -203,7 +215,8 @@ ipcMain.handle('imprimir', async (_e, { html, titulo }) => {
           printBackground: true,
           deviceName: impresora || undefined,
           margins: { marginType: 'none' },
-          preferCSSPageSize: true,
+          pageSize: { width: 80000, height: altoMicras },
+          scaleFactor: 100,
         },
         (ok, motivo) => resolve({ ok, motivo: ok ? null : motivo || 'No se pudo imprimir' })
       );
