@@ -11,7 +11,8 @@
 - El dueño eligió **«Publicar en los 3 (Recommended)»**. Se compiló en el worktree `siumax-direccion` (HEAD `109fb65`) con los **39 archivos del WIP ajeno de `src/`** copiados encima, sin tocarlos ni commitearlos. Bundle **`index-CBtEOYAt.js` / `index-Di8Dfc2n.css`**.
 - `publicar-bundle-combinado.cjs` subió **22 archivos por sitio** a Nego (`siumax`), ecosistema y Evicamp, con `chown www-data` y `systemctl reload nginx`. Iconos de ecosistema repuestos (logo `c159d216…`).
 - `verificar-bundles-salidas.mjs` ahora comprueba también la limpieza del JSON (`codigo_postal` y `calle2`): **30 OK / 0 fallos**; los tres sirven el mismo hash.
-- Sin SQL, push, panel/clientes ni reinicio de API. Falta la revisión visual del dueño con **Ctrl+F5**.
+- El dueño preguntó si volverá a salir el JSON y qué cliente tiene esa dirección para probarlo. Cliente encontrado en ecosistema: **300002 | ACL REPRESENTACIONES S.A.C. | activo=true**, con la dirección guardada tal cual en la base. Consulta **solo de lectura** (`lock_timeout=3s`, sin escribir ni mostrar credenciales). La base no se limpia: la app convierte el JSON a texto al mostrarlo, así que no debe volver a salir ni en Nueva salida ni en el detalle.
+- Sin SQL de escritura, push, panel/clientes ni reinicio de API. Falta la revisión visual del dueño con **Ctrl+F5**.
 
 ## 27/11/2026 - Dirección JSON crudo al elegir cliente en ecosistema — HECHO Y PROBADO, SIN PUBLICAR
 - El dueño reportó: *«ingrese un cliente y la dirección me salió así {"zip":"","pais":"","calle":"MZA. 3A LOTE. 35 SOL DE LA MOLINA LIMA - LIMA - LA MOLINA","calle2":"","ciudad":"","estado":"","distrito":""}»*, en **ecosistema**.
