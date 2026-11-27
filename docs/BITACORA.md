@@ -7,6 +7,10 @@
 
 ---
 
+## 27/11/2026 - PUBLICADO el cambio de unidades en Nueva salida (Nego, ecosistema y Evicamp)
+- Con OK explícito del dueño («Sí, a los tres») se subió el bundle combinado probado **`index-Cm7GRPLM.js` / `index-B6juBlGS.css`** a los 3 sitios (22 archivos por sitio) y se recargó nginx. Verificado: ecosistema y Evicamp sirven esos hashes; en Nego el archivo servido `/var/www/siuhub/html/index.html` también los referencia (el `curl` local desde Windows falla por TLS, no por la publicación).
+- Sin SQL, sin reinicio de API, sin push. Queda la revisión visual del dueño con Ctrl+F5.
+
 ## 27/11/2026 (Nueva salida: el tubo se elige por unidad en pantalla, sin tocar la base) · OpenCode (Big Pickle) — HECHO Y PROBADO, SIN PUBLICAR
 
 - **Dueño:** pidió cambiar solo Nueva salida: *«ahí va aparecer el buscador la unidad y la cantidad que saldrá ahora»* y aprobó el mockup con **«Sí, así (Recommended)»**. Precisó: *«ojo si sale por unidad no debe permitirme salir con decimales los metros sí»*. Rechazó tocar base, detalle ni comprobante (queda supersedida la opción «1 TUBO en todo»).
