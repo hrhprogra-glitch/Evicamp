@@ -169,6 +169,9 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
     document.getElementById(`sugerencia-salida-${indiceSugerencia}`)?.scrollIntoView({ block: 'nearest' });
   }, [indiceSugerencia]);
   const [cantItem, setCantItem] = useState('1');
+  // 27/11/2026 (dueño): la unidad se elige en el buscador, ANTES de agregar (TUBO / M).
+  // true = lo escrito cuenta presentaciones (1 tubo); false = lo escrito es metros directos.
+  const [modoPresBusqueda, setModoPresBusqueda] = useState(true);
   const [esExterno, setEsExterno] = useState(false);
   const [descExterno, setDescExterno] = useState('');
   const [unidadExterno, setUnidadExterno] = useState('UNID');
@@ -574,11 +577,19 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       // Lo escrito cuenta presentaciones (1 tubo) y se guarda en METROS para no mezclar unidades en stock.
       const pres = presDeProducto(idReal);
       const factor = pres?.factor || 1;
-      const metros = Number((c * factor).toFixed(4));
+      // 27/11/2026 (dueño): el botón del buscador decide si lo escrito cuenta TUBOS o es METROS.
+      const enPresentacion = factor > 1 && modoPresBusqueda;
+      if (enPresentacion && !Number.isInteger(c)) {
+        avisar(`En ${pres?.unidad || 'presentación'} solo se permite un número entero. Cambia la unidad a ${prodBase?.unit || 'M'} para decimales.`);
+        inputCantRef.current?.focus();
+        return;
+      }
+      const metros = Number((c * (enPresentacion ? factor : 1)).toFixed(4));
       if (factor > 1) {
         const stockMetros = Number(prodBase?.quantity ?? prodAAgregar.quantity) || 0;
         if (metros > stockMetros) {
-          avisar(`Stock insuficiente: solo hay ${stockMetros} ${prodBase?.unit || 'M'} para ${pres?.unidad || 'esa presentación'}.`);
+          const unidadEscrita = enPresentacion ? (pres?.unidad || 'esa presentación') : (prodBase?.unit || 'M');
+          avisar(`Stock insuficiente: solo hay ${stockMetros} ${prodBase?.unit || 'M'} para ${unidadEscrita}.`);
           return;
         }
       }
@@ -589,11 +600,14 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
         const idxExistente = prev.findIndex((it) => Number(it.product_id) === idReal);
         if (idxExistente !== -1) {
           const actual = prev[idxExistente];
+          const cantidadFinal = Number((actual.cantidad + metros).toFixed(4));
+          // Si la suma ya no da tubos enteros, se muestra en metros para no perder decimales.
+          const modoPresFinal = !!pres && enPresentacion
+            && Number.isInteger(Number((cantidadFinal / factor).toFixed(4)));
           const actualizado = {
             ...actual,
-            cantidad: Number((actual.cantidad + metros).toFixed(4)),
-            // Al agregar otra vez, vuelve a metros: así nunca queda una cantidad con decimales en TUBO.
-            modoPres: false,
+            cantidad: cantidadFinal,
+            modoPres: modoPresFinal,
           };
           return [actualizado, ...prev.filter((_, i) => i !== idxExistente)];
         } else {
@@ -605,7 +619,8 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
               cantidad: metros,
               costo_unitario: Number(prodBase?.cost_price ?? prodAAgregar.cost_price ?? 0),
               es_externo: false,
-              modoPres: false,
+              // La fila sale en la unidad que eligió en el buscador (TUBO o M).
+              modoPres: enPresentacion,
             },
             ...prev,
           ];
@@ -623,6 +638,15 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
       }, 30);
     }
   };
+
+  // Producto que se agregaría si se aprieta Enter ahora (el ya elegido o la sugerencia activa).
+  const prodEnBuscador = prodSeleccionado || (prodsFiltrados.length > 0
+    ? (prodsFiltrados[indiceSugerencia] || prodsFiltrados[0])
+    : null);
+  const idProdEnBuscador = prodEnBuscador ? Number(prodEnBuscador.productoId ?? prodEnBuscador.id) : null;
+  const presEnBuscador = presDeProducto(idProdEnBuscador);
+  const prodBaseEnBuscador = productos.find((p) => Number(p.id) === idProdEnBuscador);
+  const unidadBaseEnBuscador = prodBaseEnBuscador?.unit || 'M';
 
   // Manejo de teclado en el buscador de productos (flechas, Enter, escáner)
   const handleKeyDownBuscador = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -1414,17 +1438,32 @@ export const ModalNuevaSalida: React.FC<ModalNuevaSalidaProps> = ({
                       ref={inputCantRef}
                       id="input-cant-item-salida"
                       type="number"
-                      step="any"
-                      min="0.001"
+                      step={presEnBuscador && modoPresBusqueda ? '1' : 'any'}
+                      min={presEnBuscador && modoPresBusqueda ? '1' : '0.001'}
                       value={cantItem}
                       onChange={(e) => setCantItem(e.target.value)}
                       onKeyDown={handleKeyDownCant}
                       onFocus={(e) => e.currentTarget.select()}
                       onClick={(e) => e.currentTarget.select()}
                       className="w-full p-3 sm:p-2.5 min-h-[48px] sm:min-h-0 border-2 border-[var(--color-border)] focus:border-[var(--color-ink)] font-black text-center outline-none rounded-none bg-[var(--color-surface)]"
-                      placeholder="Cant."
+                      placeholder={presEnBuscador
+                        ? (modoPresBusqueda ? `Nº ${presEnBuscador.unidad}` : unidadBaseEnBuscador)
+                        : 'Cant.'}
                     />
                   </div>
+
+                  {presEnBuscador && (
+                    <button
+                      id="btn-unidad-busqueda-salida"
+                      type="button"
+                      title={`Cambiar entre ${unidadBaseEnBuscador} y ${presEnBuscador.unidad} antes de agregar`}
+                      aria-label={`Unidad de la cantidad: ${modoPresBusqueda ? presEnBuscador.unidad : unidadBaseEnBuscador}`}
+                      onClick={() => setModoPresBusqueda((v) => !v)}
+                      className="px-2 sm:px-3 py-3 sm:py-2.5 min-h-[48px] sm:min-h-0 border-2 border-[var(--color-ink)] bg-[var(--color-surface)] text-[var(--color-ink)] font-black uppercase text-xs cursor-pointer rounded-none shrink-0"
+                    >
+                      {modoPresBusqueda ? presEnBuscador.unidad : unidadBaseEnBuscador}
+                    </button>
+                  )}
 
                   <button
                     id="btn-agregar-material-salida"

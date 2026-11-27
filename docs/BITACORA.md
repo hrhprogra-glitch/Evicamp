@@ -7,6 +7,14 @@
 
 ---
 
+## 27/11/2026 - Unidad TUBO/M también en el buscador, antes de agregar — OpenCode (Big Pickle) — HECHO Y PROBADO, SIN PUBLICAR
+- El dueño dijo: *«así me gusto lo de cambiar unidad a tubo puedes agregarlo en el buscador a la hora de agregar para poder cambiarlo antes»*. Se mostró la propuesta y aprobó **«Sí, así (Recommended)»**.
+- Cambio solo en `src/sections/Salidas/components/ModalNuevaSalida.tsx`: botón **`#btn-unidad-busqueda-salida`** junto a la cantidad del buscador. Aparece solo si el producto tiene presentación (por ejemplo «1 TUBO = 5 M»). Dice **TUBO** o **M**; por defecto queda en TUBO, como antes. En TUBO solo enteros (`step=1`); en M se permiten decimales. Se maneja con **Tab + Espacio/Enter**.
+- Lo escrito sigue guardándose en **metros** para la base y el almacén. Si se elige TUBO, `1` entra como `5 M` y la fila se ve en `1 TUBO`; si se elige M, `5` entra como `5 M`. Al volver a agregar el mismo producto, si la suma ya no da tubos enteros la fila pasa a metros.
+- Prueba ampliada en `herramientas-pruebas/verificar-devoluciones-entradas-localhost.mjs`: se agregó un producto falso con presentación TUBO x5 y dos casos nuevos (M antes de agregar y TUBO por defecto). **10/10** chequeos en 3 corridas seguidas, `0 errores JS`, `0 escrituras directas`. `tsc --noEmit` da 0.
+- Durante la prueba apareció un fallo intermitente: justo tras elegir la sugerencia con Enter, la regla global devuelve el foco al buscador y el Espacio no llegaba al botón. La prueba ahora espera y vuelve a enfocar hasta que la etiqueta cambia (`asegurarUnidadBuscador`). No era fallo de la app.
+- Sin SQL, sin publicar en Nego/ecosistema/Evicamp, sin push y sin reiniciar la API. Falta la revisión visual del dueño y su OK para publicar.
+
 ## 27/11/2026 - Devoluciones: arreglo en ecosistema + muchas pruebas en localhost — OpenCode (Big Pickle) — HECHO, SIN PUBLICAR NI PUSH
 - El dueño pidió: *«eso paso en ecosistema arreglalo ahi primero luego as las pruebas»* y luego *«ahora harás pruebas en localhost muchas pruebas de salida cuando devuelvas productos y cuando ingreses productos todo tiene que funcionar bien»*. Autorizó: *«Sí, arregla y prueba»*.
 - **Causa del desajuste (SAL-0018, ítem 2003006):** una devolución (`DEVOLUCION 1`) se contabilizó en `inventory_movements` pero no sumó `cantidad_devuelta`; después un ajuste interno (`DEVOLUCION 4`) más dos `ANULACION -1` por la X dejaron `Devuelto=3` con `4` unidades realmente devueltas. La función `fn_devolver_stock_salida` mezclaba ajustes internos (editar cantidad, quitar material, borrar salida) con devoluciones reales.
